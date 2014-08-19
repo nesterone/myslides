@@ -1,0 +1,918 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>JavaScript Package Management Overview - accents on frontend</title>
+
+		<meta name="description" content="Overview of current state of package manager for javascript">
+		<meta name="author" content="Igor Nesterenko">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.min.css">
+		<link rel="stylesheet" href="css/theme/default.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+		<script>
+			if( window.location.search.match( /print-pdf/gi ) ) {
+				var link = document.createElement( 'link' );
+				link.rel = 'stylesheet';
+				link.type = 'text/css';
+				link.href = 'css/print/pdf.css';
+				document.getElementsByTagName( 'head' )[0].appendChild( link );
+			}
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+
+        <style type="text/css">
+            .left-side {
+                text-align: left;
+
+            }
+        </style>
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+				<section>
+					<h1>JavaScript Package Management Overview</h1>
+					<h4>accents on frontend</h4>
+					<p>
+						<small>Created by Igor Nesterenko / <a href="http://twitter.com/nesterone">@nesterone</a></small>
+					</p>
+				</section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ## About me
+                        * Software Enginer in Globallogic
+                        * like everything what's start from Java
+                        * REST evangelist
+                        * work with JasperServer frontend/backend
+                        * leading development of Visualize.js
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ## Jargon
+                        * assets
+                        * build tool
+                        * semver
+                        * amd
+                        * CommonJs
+                        * es6
+                        * shim
+                        * register
+                    </script>
+                </section>
+				<section data-markdown>
+                    <script type="text/template">
+                        ## Intro
+                        Let's concentrate on frontend because with server it's clear on what package manager to choose
+
+                        * What's the difference between client and server? <!-- .element: class="fragment" data-fragment-index="0" -->
+                    </script>
+				</section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ## Client requirements
+                        * Minimal size of application
+                        * Share assets
+                        * Load parts of application on demand
+                    </script>
+                    <aside class="notes" data-markdown>
+                        * Nested dependency tree - big size
+                        * Flat dependency tree - small size
+                    </aside>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ##Package managers
+                        * npm
+                        * volo
+                        * ender
+                        * jam
+                        * component
+                        * bower
+                        * jspm
+
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ###Installation
+
+                        Install NodeJs (bundled with NPM)
+
+                        Other packages
+                                
+                        ```bash
+                        npm install ${pkg} -g
+                        ```
+
+                    </script>
+                </section>
+
+                <!--NPM-->
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ### NPM
+
+                        Search
+                        ```bash
+                        npm search backbone
+                        ```
+
+                        Install
+                        ```bash
+                        npm install backbone --save
+                        ```
+
+                        Use
+                        ```javascript
+                        var backbone = require('backbone');
+                        console.log(backbone.VERSION);
+                        ```
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### NPM
+                        package.json
+                        ```json
+                        {
+                            "name": "hello-npm",
+                            "description": "bla bla",
+                            "version": "1.2.3",
+                            "devDependencies": {
+                                 "grunt": "~0.4.0"
+                            },
+                            "dependencies": {
+                                 "backbone": "~1.1.0"
+                            },
+                            "main": "main.js"
+                        }
+                        ```
+                        Publish
+                        ```bash
+                        npm publish hello-npm
+                        ```
+
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ##### hello-npm/
+                        ````
+                        .
+                        |-- main.js
+                        |-- node_modules
+                        |   `-- backbone
+                        |       |-- backbone.js
+                        |       |-- bower.json
+                        |       |-- ...
+                        |       |-- node_modules
+                        |       |   `-- underscore
+                        |       |       |-- LICENSE
+                        |       |       |-- README.md
+                        |       |       |-- package.json
+                        |       |       |-- underscore-min.js
+                        |       |       `-- underscore.js
+                        |       `-- package.json
+                        `-- package.json
+                        ````
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Metrix
+                        [![Metrix](img/npm.png)](http://goo.gl/WNmLfJ)
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Pluses
+                        + big, evolving community
+                        + simple in use
+                        + straightforward project structure
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Minuses
+                        - no special search criteria to distinguish platforms
+                           - nodejs
+                           - browser
+                        - need additional tools to make it work in browser
+                        - nested dependencies tree
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Recommendation
+                        * JavaScript is on server and client
+                        * games
+                        * team of NodeJs experts
+                    </script>
+                </section>
+
+                <!-- volo -->
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## volo
+
+                        Search
+                        ```bash
+                        volo search backbone
+                        ```
+
+                        Install
+                        ```bash
+                        volo add backbone
+                        ```
+
+                        Use
+                        ```javascript
+                        define(function(require){
+                            var backbone = require('backbone');
+                             console.log(backbone.VERSION);
+                        });
+                        ```
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ### volo
+                        package.json
+                        ```json
+                        {
+                           "name": "hello-volo",
+                            "version": "1.2.3",
+                            "devDependencies": {
+                               "volo": "~0.3.3"
+                            },
+                            "amd": {},
+                            "volo": {
+                                "baseUrl": "scripts/lib",
+                                "dependencies": {
+                                    "underscore": "github:documentcloud/underscore/1.2.3",
+                                    "backbone": "documentcloud/backbone/0.9.0",
+                                    "jquery": "jquery"
+                                },
+                                 "ignore": [".gitignore", "test", "examples", "**/*.txt"]
+                            }
+                        }
+                        ```
+                        Publish
+                        ```
+                        Just create project on GitHub
+                        ```
+
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ##### hello-volo/
+
+                        ````
+                        .
+                        |-- package.json
+                        |-- tools
+                        |   |-- build.js
+                        |   `-- r.js
+                        `-- scripts
+                            |-- app
+                            |   |-- main.js
+                            |   `-- messages.js
+                            |-- app.js
+                            |-- index.html
+                            `-- lib
+                                |-- backbone.js
+                                |-- jquery.js
+                                |-- print.js
+                                |-- require.js
+                                `-- underscore.js
+                        ````
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Metrix
+                        [![Metrix](img/volo.png)](http://goo.gl/BkgKfb)
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Pluses
+                        + full workflow for AMD modules
+                        + async module loading (of course)
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Minuses
+                        - not evolving
+                        - no special register
+                        - AMDfy first approach (need to configure deps for no-AMD)
+                        - you need to know on how to work with RequireJs...
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Recommendation
+                        * use as learn tool to understand best-practice workflows with RequireJS ;-)
+                    </script>
+                </section>
+
+                <!-- Ender -->
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## ender
+
+                        Search
+                        ```bash
+                        ender search domready
+                        ```
+
+                        Install
+                        ```bash
+                        volo add domready
+                        ```
+
+                        Use
+                        ```javascript
+                        $.domReady(function(){
+                             alert('DOM ready');
+                        });
+                        ```
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ### ender
+                        package.json
+                        ```json
+                        {
+                             "name": "hello-ender",
+                             "version": "0.0.0",
+                             "description": "Test ender project",
+                             "license": "MIT",
+                             "dependencies": {
+                                "domready": "~1.0.6"
+                             },
+                            "keywords": [
+                                "ender"
+                            ],
+                            "main": "./src/main.js",
+                            "ender": "./src/exports/ender.js"
+                        }
+                        ```
+
+                        Publish
+                        ```
+                        npm publish hello-ender
+                        ```
+
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ##### hello-ender/
+
+                        ````
+                        .
+                        |-- ender.js
+                        |-- ender.js.map
+                        |-- ender.min.js
+                        |-- ender.min.js.map
+                        |-- index.html
+                        |-- node_modules
+                        |   |-- domready
+                        |   |-- ender-commonjs
+                        |   |-- ender-core
+                        |   `-- underscore
+                        |-- package.json
+                        `-- src
+                            |-- ender.js
+                            `-- main.js
+                        ````
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Metrix
+                        [![Metrix](img/ender.png)](http://goo.gl/EeuFtv)
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Pluses
+                        + full workflow from installing to building whole app
+                        + straightforward project structure
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Minuses
+                        - relatively small community
+                        - has client api which is not always desirable
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Recommendation
+                        * experiments
+                        * not for complex web apps (too small repo)
+                    </script>
+                </section>
+
+                <!-- Jam -->
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## jam
+
+                        Search
+                        ```bash
+                        jam search backbone
+                        ```
+
+                        Install
+                        ```bash
+                        jam install backbone
+                        ```
+
+                        Use
+                        ```javascript
+                        require(['backbone'], function (Backbone) {
+                        console.log(Backbone);
+                        });
+                        ```
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ### jam
+
+                        package.json
+                        ```json
+                        {
+                             "name": "hello-jam",
+                             "version": "0.0.1",
+                              "description": "An example of Jam project",
+                              "jam": {
+                                      "dependencies": {
+                                         "backbone": "1.0.0"
+                                       }
+                              }
+                        }
+                        ```
+
+                        Publish
+                        ```
+                        jam publish hello-jam
+                        ```
+
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ##### hello-jam/
+
+                        ````
+                        .
+                        |-- index.html
+                        |-- jam
+                        |   |-- backbone
+                        |   |-- jquery
+                        |   |-- require.config.js
+                        |   |-- require.js
+                        |   `-- underscore
+                        |-- myapp
+                        |   `-- app.js
+                        `-- package.json
+                        ````
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Metrix
+                        [![Metrix](img/jam.png)](https://openvision.atlassian.net/wiki/display/JSLEAR/JavaScript+Package+Managers+overview#JavaScriptPackageManagersoverview-Jam)
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Pluses
+                        + full workflow out of box
+                        + simple in use
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Minuses
+                        - small community
+                        - outdated packages of common libs in repo
+                        - you need to understand on how RequireJs works
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Recommendation
+                        * use as learn tool to understand best-practice workflows with RequireJS
+                        * not for complex web apps (too small repo)
+                    </script>
+                </section>
+
+                <!-- Component -->
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## component
+
+                        Search
+                        ```bash
+                        component search backbone
+                        ```
+
+                        Install
+                        ```bash
+                        component install jashkenas/backbone
+                        ```
+
+                        Use
+                        ```javascript
+                        var backbone = require('backbone');
+                        console.log(backbone.VERSION);
+                        ```
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ### component
+
+                        component.json
+                        ```json
+                        {
+                             "name": "hello-component",
+                             "dependencies": {
+                                "jashkenas/backbone": "*"
+                             },
+                            "main": "index.js",
+                            "scripts": [
+                              "index.js"
+                            ],
+                            "templates": [
+                                  "template.html"
+                             ],
+                            "styles": [
+                                "mycomponent.css"
+                             ]
+                        }
+                        ```
+
+                        Publish
+                        ```
+                        To publish package you need to create GitHub project and add it to Component Wiki
+                        ```
+
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ##### hello-component/
+
+                        ````
+                        .
+                        |-- build
+                        |   |-- build.css
+                        |   `-- build.js
+                        |-- component.json
+                        |-- components
+                        |   |-- component-classes
+                        |   ...
+                        |   |-- guille-ms.js
+                        |   |-- jashkenas-backbone
+                        |   |-- jashkenas-underscore
+                        |   |-- matthewp-keys
+                        |   |-- matthewp-text
+                        |   |-- visionmedia-debug
+                        |   |-- yields-isarray
+                        |   `-- yields-traverse
+                        `-- index.html
+                        ````
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Metrix
+                        [![Metrix](img/component.png)](https://openvision.atlassian.net/wiki/display/JSLEAR/JavaScript+Package+Managers+overview#JavaScriptPackageManagersoverview-Metrix.4)
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Pluses
+                        + unification of  build process
+                        + good ideas behind (unix philosophy)
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Minuses
+                        - not a big repo, community
+                        - customization of build process could be a problem
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Recommendation
+                        * it's for new projects
+                        * be aware that team need to follow strict principles behind of component
+                    </script>
+                </section>
+
+                <!-- Bower -->
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## bower
+
+                        Search
+                        ```bash
+                        bower search backbone
+                        ```
+
+                        Install
+                        ```bash
+                        bower install backbone
+                        ```
+
+                        Use
+                        ````
+                        As you wish
+                        ````
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ### bower
+
+                        bower.json
+                        ```json
+                        {
+                            "name": "hello-bower",
+                            "version": "0.0.1",
+                            "main": "main.js",
+                            "dependencies": {
+                                "backbone": "~1.1.2"
+                            }
+                        }
+                        ```
+
+                        Register
+                        ```
+                        bower register mypackage
+                        ```
+
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ##### hello-bower/
+
+                        ````
+                        .
+                        |-- bower.json
+                        `-- bower_components
+                            |-- backbone
+                            `-- underscore
+                        ````
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Metrix
+                        [![Metrix](img/bower.png)](https://openvision.atlassian.net/wiki/display/JSLEAR/JavaScript+Package+Managers+overview#JavaScriptPackageManagersoverview-Metrix.5)
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Pluses
+                        + big, evolving community
+                        + very simple in use
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Minuses
+                        - your project could be a really messy 'bower' (mud, grass and feathers)
+                        - lack of metadata in package descriptor for unifying build process
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Recommendation
+                        * use for your projects
+                            * but with other tools like grunt, gulp etc <!-- .element: class="fragment" data-fragment-index="0" -->
+                    </script>
+                </section>
+
+                <!-- jspm -->
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## jspm
+
+                        Search
+                        ```
+                        Inspect The jspm registry or use projects from github
+                        ```
+
+                        Install
+                        ```bash
+                        jspm install github:jashkenas/backbone
+                        ```
+
+                        Use
+                        ```javascript
+                        var Backbone = require('github:jashkenas/backbone');
+                        console.log(Backbone.VERSION);
+                        ```
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ### jspm
+
+                        package.json
+                        ```json
+                        {
+                            "jspm": {
+                                 "registry": "jspm",
+                                 "dependencies": {
+                                      "github:jashkenas/backbone": "^1.1.2"
+                                 }
+                            }
+                        }
+                        ```
+
+                        Register
+                        ```
+                        Create pull request to jspm register
+                        ```
+
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ##### hello-jspm/
+                        ````
+                        |-- app.js
+                        |-- build.js
+                        |-- config.js
+                        |-- jspm-test.html
+                        |-- jspm_packages
+                        |   |-- es6-module-loader@0.7.1.js
+                        |   |-- github
+                        |   |-- npm
+                        |   |-- system-csp@0.6.js
+                        |   |-- system@0.6.js
+                        |   |-- traceur-runtime@0.0.49.js
+                        |   `-- traceur@0.0.49.js
+                        `-- package.json
+                        ````
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Metrix
+                        [![Metrix](img/jspm.png)](https://openvision.atlassian.net/wiki/display/JSLEAR/JavaScript+Package+Managers+overview#JavaScriptPackageManagersoverview-Metrix.6)
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Pluses
+                        + it tries to filling gap between es6 and reality
+                        + unify build process
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Minuses
+                        - very 'young' project
+                        - not much community around yet
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Recommendation
+                        * play with it
+                        * learn es6
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ##Comparison Table
+                        [![Metrix](img/comparation.png)](https://openvision.atlassian.net/wiki/display/JSLEAR/JavaScript+Package+Managers+overview#JavaScriptPackageManagersoverview-ComparisonTable)
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ##Conclusion
+
+                        volo and jam losing battle because looks like AMD wouldn't be a first to go module format,
+                        not all application need to on demand loading of modules <!-- .element: class="fragment" data-fragment-index="0" -->
+
+                        ender is more build tool than package manager <!-- .element: class="fragment" data-fragment-index="1" -->
+
+                        From metrics we see that winners are npm and bower, they has
+                        big repos and strong community support. Looks like bowe just filled a gap with asserts management
+                        for browser platform which wasn't included in npm by design. <!-- .element: class="fragment" data-fragment-index="2" -->
+
+                        Component is promising tool but  community need some time to learn on how to create and
+                        reusable small components for frontend <!-- .element: class="fragment" data-fragment-index="3" -->
+
+                        jspm gives a good playground to work with es6 standard <!-- .element: class="fragment" data-fragment-index="4" -->
+
+                    </script>
+                </section>
+
+
+                <section data-markdown>
+                    <script type="text/template">
+                    ##In a wider scope
+                    Let's compare our winners with other languages. I found [next statistic](https://http://www.modulecounts.com) in the net.
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ###Questions
+                    </script>
+                </section>
+
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.min.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+                slideNumber: true,
+
+				theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+				transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+				// Parallax scrolling
+				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+				// parallaxBackgroundSize: '2100px 900px',
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
