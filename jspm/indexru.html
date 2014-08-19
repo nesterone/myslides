@@ -35,6 +35,10 @@
 		<script src="lib/js/html5shiv.js"></script>
 		<![endif]-->
 
+        <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+        <script src="http://code.highcharts.com/highcharts.js"></script>
+
+
         <style type="text/css">
             .left-side {
                 text-align: left;
@@ -847,6 +851,16 @@
                     </script>
                 </section>
 
+                <section>
+                    <h3>Статус</h3>
+                    <div id="container1" style=" width: 800px; height: 400px;"></div>
+                </section>
+
+                <section>
+                    <h3>Статус</h3>
+                    <div id="container2" style=" width: 800px; height: 400px;"></div>
+                </section>
+
                 <section data-markdown>
                     <script type="text/template">
                         ##Проигравшие
@@ -903,6 +917,123 @@
 
 		<script src="lib/js/head.min.js"></script>
 		<script src="js/reveal.min.js"></script>
+		<script>
+            $(function () {
+
+                $('#container1').highcharts({
+                    chart: {
+                        type: 'bar'
+                    },
+                    title: {
+                        text: 'Package Managers Status'
+                    },
+                    xAxis: {
+                        categories: ['npm','volo', 'ender', 'jam', 'component', 'bower', 'jspm'],
+                        title: {
+                            text: null
+                        }
+                    },
+                    yAxis: {
+                        min: 0,
+                        title: {
+                            text: 'packages/descriptors (count)',
+                            align: 'high'
+                        },
+                        labels: {
+                            overflow: 'justify'
+                        }
+                    },
+                    plotOptions: {
+                        bar: {
+                            dataLabels: {
+                                enabled: true
+                            }
+                        }
+                    },
+                    legend: {
+                        layout: 'vertical',
+                        align: 'right',
+                        verticalAlign: 'top',
+                        x: -40,
+                        y: 100,
+                        floating: true,
+                        borderWidth: 1,
+                        backgroundColor: ((Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'),
+                        shadow: true
+                    },
+                    credits: {
+                        enabled: false
+                    },
+                    series: [{
+                        name: '2013-Jan',
+                        data: [20000,0, 212, 279, 431, 698, 0]
+                    }, {
+                        name: '2014-Aug',
+                        data: [87411, 1204, 749, 1930, 17356, 70]
+                    }, {
+                        name: 'github 2014-Aug',
+                        data: [255730, 264, 591, 11149, 48677, 175]
+                    }]
+                });
+
+
+                $('#container2').highcharts({
+                    chart: {
+                        type: 'bar'
+                    },
+                    title: {
+                        text: 'Package Managers Status'
+                    },
+                    xAxis: {
+                        categories: ['volo', 'ender', 'jam', 'component', 'bower', 'jspm'],
+                        title: {
+                            text: null
+                        }
+                    },
+                    yAxis: {
+                        min: 0,
+                        title: {
+                            text: 'packages/descriptors (count)',
+                            align: 'high'
+                        },
+                        labels: {
+                            overflow: 'justify'
+                        }
+                    },
+                    plotOptions: {
+                        bar: {
+                            dataLabels: {
+                                enabled: true
+                            }
+                        }
+                    },
+                    legend: {
+                        layout: 'vertical',
+                        align: 'right',
+                        verticalAlign: 'top',
+                        x: -40,
+                        y: 100,
+                        floating: true,
+                        borderWidth: 1,
+                        backgroundColor: ((Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'),
+                        shadow: true
+                    },
+                    credits: {
+                        enabled: false
+                    },
+                    series: [{
+                        name: '2013-Jan',
+                        data: [0, 212, 279, 431, 698, 0]
+                    }, {
+                        name: '2014-Aug',
+                        data: [0, 1204, 749, 1930, 17356, 70]
+                    }, {
+                        name: 'github 2014-Aug',
+                        data: [603, 264, 591, 11149, 48677, 175]
+                    }]
+                });
+            });
+		</script>
 
 		<script>
 
