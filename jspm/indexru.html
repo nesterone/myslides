@@ -1,0 +1,922 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Обзор иструментов управления пакетами в JavaScript - акценты на фронтенде</title>
+
+		<meta name="description" content="Обзор иструментов управления пакетами в JavaScript - акценты на фронтенде">
+		<meta name="author" content="Игорь Нестеренко">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.min.css">
+		<link rel="stylesheet" href="css/theme/default.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+		<script>
+			if( window.location.search.match( /print-pdf/gi ) ) {
+				var link = document.createElement( 'link' );
+				link.rel = 'stylesheet';
+				link.type = 'text/css';
+				link.href = 'css/print/pdf.css';
+				document.getElementsByTagName( 'head' )[0].appendChild( link );
+			}
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+
+        <style type="text/css">
+            .left-side {
+                text-align: left;
+
+            }
+        </style>
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+				<section>
+					<h2>Обзор иструментов управления пакетами в JavaScript</h2>
+					<h6>акценты на фронтенде</h6>
+					<p>
+						<small>Игорь Нестеренко / <a href="http://twitter.com/nesterone">@nesterone</a></small>
+					</p>
+				</section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ## О себе
+                        * разработчик программного обеспечения в Globallogic
+                        * нарвиться все что начинаеться с Java
+                        * REST евангелист
+                        * работаю с фронтентои и бакендом JasperServer'а
+                        * руковожу разработкой Visualize.js
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ## Жаргон
+                        * ассеты
+                        * средства сборки
+                        * semver
+                        * amd
+                        * CommonJs
+                        * es6
+                        * shim
+                        * реестр
+                        * клиент
+                    </script>
+                </section>
+				<section data-markdown>
+                    <script type="text/template">
+                        ## Вступление
+
+                        Предлагаю сосредоточиться на вронтенде т.к для сервера выбор средства управления пакетами очевиден
+
+                        * В чем разница между сервером и клиентм ?  <!-- .element: class="fragment" data-fragment-index="0" -->
+                    </script>
+				</section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ## Требования к клиенту
+                        * Минимальный размер приложения
+                        * Обменн ассетами
+                        * Загрузка частей приложения по требованию
+                    </script>
+                    <aside class="notes" data-markdown>
+                        * Вложенное дерево зависимостей - большой размер
+                        * Плоское дерево зависимостей - меньший размер (пользователь)
+                    </aside>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ##Средства управления пакетами
+                        * npm
+                        * volo
+                        * ender
+                        * jam
+                        * component
+                        * bower
+                        * jspm
+
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ###Установка
+
+                        Устанавливаем NodeJs (NPM внутри)
+
+                        А другие как-то так
+                                
+                        ```bash
+                        npm install ${pkg} -g
+                        ```
+
+                    </script>
+                </section>
+
+                <!--NPM-->
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ### NPM
+
+                        Поиск
+                        ```bash
+                        npm search backbone
+                        ```
+
+                        Установка
+                        ```bash
+                        npm install backbone --save
+                        ```
+
+                        Использование
+                        ```javascript
+                        var backbone = require('backbone');
+                        console.log(backbone.VERSION);
+                        ```
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### NPM
+                        package.json
+                        ```json
+                        {
+                            "name": "hello-npm",
+                            "description": "bla bla",
+                            "version": "1.2.3",
+                            "devDependencies": {
+                                 "grunt": "~0.4.0"
+                            },
+                            "dependencies": {
+                                 "backbone": "~1.1.0"
+                            },
+                            "main": "main.js"
+                        }
+                        ```
+                        Публикуем
+                        ```bash
+                        npm publish hello-npm
+                        ```
+
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ##### hello-npm/
+                        ````
+                        .
+                        |-- main.js
+                        |-- node_modules
+                        |   `-- backbone
+                        |       |-- backbone.js
+                        |       |-- bower.json
+                        |       |-- ...
+                        |       |-- node_modules
+                        |       |   `-- underscore
+                        |       |       |-- LICENSE
+                        |       |       |-- README.md
+                        |       |       |-- package.json
+                        |       |       |-- underscore-min.js
+                        |       |       `-- underscore.js
+                        |       `-- package.json
+                        `-- package.json
+                        ````
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Метрики
+                        [![Metrix](img/npm.png)](http://goo.gl/WNmLfJ)
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Плюсы
+                        + большое, развивающиеся сообщество
+                        + прост в использовании
+                        + простая структура проекта
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Minuses
+                        - нет спецалного критерия для разделения платформ
+                           - nodejs
+                           - browser
+                        - дла работы в браузере нужны доп. средства
+                           - browserify
+                           - rework-npm
+                        - вложенное дерево зависимостей
+                           - npm-dedupe
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Рекомендации
+                        * JavaScript на сервере и на клиенте
+                        * Игры
+                        * команда NodeJs спецов
+                    </script>
+                </section>
+
+                <!-- volo -->
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## volo
+
+                        Поиск
+                        ```bash
+                        volo search backbone
+                        ```
+
+                        Установка
+                        ```bash
+                        volo add backbone
+                        ```
+
+                        Использование
+                        ```javascript
+                        define(function(require){
+                            var backbone = require('backbone');
+                             console.log(backbone.VERSION);
+                        });
+                        ```
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ### volo
+                        package.json
+                        ```json
+                        {
+                           "name": "hello-volo",
+                            "version": "1.2.3",
+                            "devDependencies": {
+                               "volo": "~0.3.3"
+                            },
+                            "amd": {},
+                            "volo": {
+                                "baseUrl": "scripts/lib",
+                                "dependencies": {
+                                    "underscore": "github:documentcloud/underscore/1.2.3",
+                                    "backbone": "documentcloud/backbone/0.9.0",
+                                    "jquery": "jquery"
+                                },
+                                 "ignore": [".gitignore", "test", "examples", "**/*.txt"]
+                            }
+                        }
+                        ```
+                        Публикуем
+                        ```
+                        Just create project on GitHub
+                        ```
+
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ##### hello-volo/
+
+                        ````
+                        .
+                        |-- package.json
+                        |-- tools
+                        |   |-- build.js
+                        |   `-- r.js
+                        `-- scripts
+                            |-- app
+                            |   |-- main.js
+                            |   `-- messages.js
+                            |-- app.js
+                            |-- index.html
+                            `-- lib
+                                |-- backbone.js
+                                |-- jquery.js
+                                |-- print.js
+                                |-- require.js
+                                `-- underscore.js
+                        ````
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Метрики
+                        [![Metrix](img/volo.png)](http://goo.gl/BkgKfb)
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Плюсы
+                        + полный цикл для AMD
+                        + загрузка частей приложения по требованию
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Минусы
+                        - не развиваеться
+                        - нет реестра
+                        - надо знать как работать с RequireJs...
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ###Рекомендации
+                        * отличное средство для изучения best-practice при работе с RequireJs ;-)
+                    </script>
+                </section>
+
+                <!-- Ender -->
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## ender
+
+                        Поиск
+                        ```bash
+                        ender search domready
+                        ```
+
+                        Установка
+                        ```bash
+                        volo add domready
+                        ```
+
+                        Использование
+                        ```javascript
+                        $.domReady(function(){
+                             alert('DOM ready');
+                        });
+                        ```
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ### ender
+                        package.json
+                        ```json
+                        {
+                             "name": "hello-ender",
+                             "version": "0.0.0",
+                             "description": "Test ender project",
+                             "license": "MIT",
+                             "dependencies": {
+                                "domready": "~1.0.6"
+                             },
+                            "keywords": [
+                                "ender"
+                            ],
+                            "main": "./src/main.js",
+                            "ender": "./src/exports/ender.js"
+                        }
+                        ```
+
+                        Публикация
+                        ```
+                        npm publish hello-ender
+                        ```
+
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ##### hello-ender/
+
+                        ````
+                        .
+                        |-- ender.js
+                        |-- ender.js.map
+                        |-- ender.min.js
+                        |-- ender.min.js.map
+                        |-- index.html
+                        |-- node_modules
+                        |   |-- domready
+                        |   |-- ender-commonjs
+                        |   |-- ender-core
+                        |   `-- underscore
+                        |-- package.json
+                        `-- src
+                            |-- ender.js
+                            `-- main.js
+                        ````
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Метрики
+                        [![Metrix](img/ender.png)](http://goo.gl/EeuFtv)
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Плюсы
+                        + full workflow from installing to building whole app
+                        + straightforward project structure
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Минусы
+                        - relatively small community
+                        - has client api which is not always desirable
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Рекомендации
+                        * экперимены
+                        * не для сложных проектов (сравнительно маленький реестр)
+                    </script>
+                </section>
+
+                <!-- Jam -->
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## jam
+
+                        Поиск
+                        ```bash
+                        jam search backbone
+                        ```
+
+                        Установка
+                        ```bash
+                        jam install backbone
+                        ```
+
+                        Использование
+                        ```javascript
+                        require(['backbone'], function (Backbone) {
+                            console.log(Backbone);
+                        });
+                        ```
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ### jam
+
+                        package.json
+                        ```json
+                        {
+                             "name": "hello-jam",
+                             "version": "0.0.1",
+                              "description": "An example of Jam project",
+                              "jam": {
+                                      "dependencies": {
+                                         "backbone": "1.0.0"
+                                       }
+                              }
+                        }
+                        ```
+
+                        Публикуем
+                        ```
+                        jam publish hello-jam
+                        ```
+
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ##### hello-jam/
+
+                        ````
+                        .
+                        |-- index.html
+                        |-- jam
+                        |   |-- backbone
+                        |   |-- jquery
+                        |   |-- require.config.js
+                        |   |-- require.js
+                        |   `-- underscore
+                        |-- myapp
+                        |   `-- app.js
+                        `-- package.json
+                        ````
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Метрики
+                        [![Metrix](img/jam.png)](https://openvision.atlassian.net/wiki/display/JSLEAR/JavaScript+Package+Managers+overview#JavaScriptPackageManagersoverview-Jam)
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Плюсы
+                        + полный цикл
+                        + прост в использовании
+                        + возможност перейти на общий стандарт (es6)
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Минусы
+                        - маленькое комьюнити
+                        - не своевремменное обновление популярный библиотек
+                        - надо знать как работать с RequireJs...
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Recommendation
+                        * отличное средство для изучения best-practice при работе с RequireJs ;-)
+                    </script>
+                </section>
+
+                <!-- Component -->
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## component
+
+                        Поиск
+                        ```bash
+                        component search backbone
+                        ```
+
+                        Установка
+                        ```bash
+                        component install jashkenas/backbone
+                        ```
+
+                        Использование
+                        ```javascript
+                        var backbone = require('backbone');
+                        console.log(backbone.VERSION);
+                        ```
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ### component
+
+                        component.json
+                        ```json
+                        {
+                             "name": "hello-component",
+                             "dependencies": {
+                                "jashkenas/backbone": "*"
+                             },
+                            "main": "index.js",
+                            "scripts": [
+                              "index.js"
+                            ],
+                            "templates": [
+                                  "template.html"
+                             ],
+                            "styles": [
+                                "mycomponent.css"
+                             ]
+                        }
+                        ```
+
+                        Публикуем
+                        ```
+                        Создаем проект на GitHub и добавляем на Coponent Wiki
+                        ```
+
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ##### hello-component/
+
+                        ````
+                        .
+                        |-- build
+                        |   |-- build.css
+                        |   `-- build.js
+                        |-- component.json
+                        |-- components
+                        |   |-- component-classes
+                        |   ...
+                        |   |-- guille-ms.js
+                        |   |-- jashkenas-backbone
+                        |   |-- jashkenas-underscore
+                        |   |-- matthewp-keys
+                        |   |-- matthewp-text
+                        |   |-- visionmedia-debug
+                        |   |-- yields-isarray
+                        |   `-- yields-traverse
+                        `-- index.html
+                        ````
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Метрики
+                        [![Metrix](img/component.png)](https://openvision.atlassian.net/wiki/display/JSLEAR/JavaScript+Package+Managers+overview#JavaScriptPackageManagersoverview-Metrix.4)
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Плюсы
+                        + унификация процесса сборки
+                        + unix philosophy
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Минусы
+                        - сравнительно небольшой реестр/комьюнити
+                        - кастомизация процесса сборки
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Рекомендации
+                        * для новых проектов
+                    </script>
+                </section>
+
+                <!-- Bower -->
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## bower
+
+                        Поиск
+                        ```bash
+                        bower search backbone
+                        ```
+
+                        Установка
+                        ```bash
+                        bower install backbone
+                        ```
+
+                        Использование
+                        ````
+                        Как пожелаешь
+                        ````
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ### bower
+
+                        bower.json
+                        ```json
+                        {
+                            "name": "hello-bower",
+                            "version": "0.0.1",
+                            "main": "main.js",
+                            "dependencies": {
+                                "backbone": "~1.1.2"
+                            }
+                        }
+                        ```
+
+                        Регистрируем
+                        ```
+                        bower register mypackage
+                        ```
+
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ##### hello-bower/
+
+                        ````
+                        .
+                        |-- bower.json
+                        `-- bower_components
+                            |-- backbone
+                            `-- underscore
+                        ````
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Метрики
+                        [![Metrix](img/bower.png)](https://openvision.atlassian.net/wiki/display/JSLEAR/JavaScript+Package+Managers+overview#JavaScriptPackageManagersoverview-Metrix.5)
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Плюсы
+                        + большое, развивающиеся комьюнити
+                        + очень прост в использовании
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Минусы
+                        - ваш проект постепенно превращается а 'гнездо' ( пруится, трава и перья)
+                        - недостает метаданных для унификации процесса сборки
+                            - новае проперти появляются но разработчики не спешат их использовать
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Рекомендации
+                        * используйте для своего проекта
+                            * но не забудте вооружиться grunt, gulp etc <!-- .element: class="fragment" data-fragment-index="0" -->
+                    </script>
+                </section>
+
+                <!-- jspm -->
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## jspm
+
+                        Поиск
+                        ```
+                        Просмотрите jspm реестр или используйте GitHub
+                        ```
+
+                        Установка
+                        ```bash
+                        jspm install github:jashkenas/backbone
+                        ```
+
+                        Использование
+                        ```javascript
+                        var Backbone = require('github:jashkenas/backbone');
+                        console.log(Backbone.VERSION);
+                        ```
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ### jspm
+
+                        package.json
+                        ```json
+                        {
+                            "jspm": {
+                                 "registry": "jspm",
+                                 "dependencies": {
+                                      "github:jashkenas/backbone": "^1.1.2"
+                                 }
+                            }
+                        }
+                        ```
+
+                        Регистрируем
+                        ```
+                        Coздаем пулл реквест на jspm register
+                        ```
+
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ##### hello-jspm/
+                        ````
+                        |-- app.js
+                        |-- build.js
+                        |-- config.js
+                        |-- jspm-test.html
+                        |-- jspm_packages
+                        |   |-- es6-module-loader@0.7.1.js
+                        |   |-- github
+                        |   |-- npm
+                        |   |-- system-csp@0.6.js
+                        |   |-- system@0.6.js
+                        |   |-- traceur-runtime@0.0.49.js
+                        |   `-- traceur@0.0.49.js
+                        `-- package.json
+                        ````
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Метрики
+                        [![Metrix](img/jspm.png)](https://openvision.atlassian.net/wiki/display/JSLEAR/JavaScript+Package+Managers+overview#JavaScriptPackageManagersoverview-Metrix.6)
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Плюсы
+                        + возможност перейти на общий стандарт (es6)
+                        + unify build process
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Minuses
+                        - очень 'молодой' проект
+                        - небольшая группа энтузиастов
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Рекомендации
+                        * изучение es6
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ##Сравнение
+                        [![Metrix](img/comparation.png)](https://openvision.atlassian.net/wiki/display/JSLEAR/JavaScript+Package+Managers+overview#JavaScriptPackageManagersoverview-ComparisonTable)
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ##Заключение
+
+                        volo и jam похоже приграли битву, возможно потому что AMD не стал и не станет основным форматом,
+                        далеко не для всем приложений необходима загрузка по требованию <!-- .element: class="fragment" data-fragment-index="0" -->
+
+                        ender больше средство сборки чем манаджер пакетов (grunt, gulp гораздо лучше) <!-- .element: class="fragment" data-fragment-index="1" -->
+
+                        из метрик мы видим, что победители - это bower и npm. У обоих сильная поддержка комьюнити. Похоже что
+                        bower просто заполнил недостающую нишу с менеджментом ассетами и ориентацией на разработку под клиент,что
+                        совершенно естественно, не бало включено в дизайн npm <!-- .element: class="fragment" data-fragment-index="2" -->
+
+                        component - это много обешающий инструмент, но комьюнити необходимо время чтобы научиться
+                        работать в таком стиле для фронтенда <!-- .element: class="fragment" data-fragment-index="3" -->
+
+                        jspm - это отличная игровая площадка для работы с es6 стандартом <!-- .element: class="fragment" data-fragment-index="4" -->
+
+                    </script>
+                </section>
+
+
+                <section data-markdown>
+                    <script type="text/template">
+                    ## В масштабе
+                    Давайте соравним наших победителей с решениями для других языков.
+                    Я нашел следующую [статистику](https://http://www.modulecounts.com)
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ###Вопросы ?
+                    </script>
+                </section>
+
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.min.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+                slideNumber: true,
+
+				theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+				transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+				// Parallax scrolling
+				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+				// parallaxBackgroundSize: '2100px 900px',
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
