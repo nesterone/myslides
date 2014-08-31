@@ -1,0 +1,1271 @@
+<h1><img class="editor-inline-macro"
+         src="/wiki/plugins/servlet/confluence/placeholder/macro?definition=e3RvY30&amp;locale=en_GB&amp;version=2"
+         data-macro-name="toc"></h1><h1>Jargon</h1>
+<ul>
+    <li><strong><em>Package Manager </em></strong><em>-</em><strong><em> </em></strong> fetch scripts from some
+        repository, taking dependencies into account.
+    </li>
+    <li><strong>Build Tool </strong><em>-</em> combine scripts and other assets together into something usable by
+        browsers.
+    </li>
+    <li><strong>Register</strong> - register of available packages</li>
+    <li><strong>Repository</strong> - place to store packages</li>
+    <li><strong><em>Module System </em></strong><em>-</em> A way to programmatically load scripts when they’re needed
+    </li>
+    <li><strong>Semantic Versioning</strong> (<a href="http://semver.org/">semver</a>) - aka standart convention in
+        nodejs community
+    </li>
+    <li><em><strong>Asynchronous Module Definition</strong> (<a class="confluence-link"
+                                                                href="/wiki/pages/viewpage.action?pageId=6717543"
+                                                                data-linked-resource-id="6717543"
+                                                                data-linked-resource-type="page"
+                                                                data-linked-resource-default-alias="amdjs/amdjs-api"
+                                                                data-base-url="https://openvision.atlassian.net/wiki">AMD</a>)
+        -</em> specifies a mechanism for defining modules such that the module and its dependencies can be
+        asynchronously loaded
+    </li>
+    <li><em><strong>CommonJS</strong> (<a class="confluence-link" href="/wiki/display/JSLEAR/CommonJS+Spec+Wiki"
+                                          data-linked-resource-id="6717544" data-linked-resource-type="page"
+                                          data-linked-resource-default-alias="CommonJS Spec Wiki"
+                                          data-base-url="https://openvision.atlassian.net/wiki">CJS</a>) - </em></li>
+    <li><em><strong>ES6 Modules </strong>(<a class="confluence-link" href="/wiki/pages/viewpage.action?pageId=6717542"
+                                             data-linked-resource-id="6717542" data-linked-resource-type="page"
+                                             data-linked-resource-default-alias="ECMAScript Language Specification ECMA-262 6th Edition &amp;ndash; DRAFT"
+                                             data-base-url="https://openvision.atlassian.net/wiki">es6</a>) - upcoming
+        standard for </em>module definition
+    </li>
+    <li><em><strong>Shim</strong></em> - javascript files which should be wrapped in some boilerplate code to support
+        your module type
+    </li>
+    <li><strong>Assets</strong> - resources of your module/package in general, for example: css, images, fonts,
+        javascript etc.
+    </li>
+</ul><h1>Intro</h1><p>There is still no best answer to client-side package managers and dependency management.</p><p>We
+    still have to cobble together the solutions that work best in the context of each project,</p><p>but at least we’re
+    not downloading js/css manually through the browser,</p><p>or using wget, or writing bash scripts to download/update
+    our client-side dependencies.</p><p>Before we start to look on current state of package management in javascript
+    community let's separate </p><p>server from client, because requirement are different</p><h3>Client
+    requirements </h3>
+<ol>
+    <li>Small size of application<br/>
+        <ul>
+            <li><strong>Nested dependency tree </strong>- big size, not a problem for server, simplify resolving same
+                dependencies
+            </li>
+            <li><strong>Flat dependency tree</strong> - small size, good for client, puts the burden of dependency
+                resolution on the use
+            </li>
+        </ul>
+    </li>
+    <li>Client packages need to be able to share css, fonts, images etc.</li>
+    <li>Clients often need to be able to load additional scripts for application by demand</li>
+</ol><p></p><h1>Package Managers</h1><p>Let's look on package managers one by one in chronological order. </p><h2>
+    npm </h2><p>Npm is the package manager that comes preinstalled with the Node.js server platform.</p><p>It is used to
+    install node programs from the npm registry. In short, it is a tool that aids a developer as they install and
+    manager third party node programs.</p><p>Don't confuse npm with the commonJS <code style="line-height: 1.4285715;">require()</code>
+    statement. It is not used to load code, it is used to install code and manage code dependencies from the command
+    line</p><h3>Overview</h3><h4>Install dependencies</h4><p>In project scope</p>
+<table class="wysiwyg-macro" data-macro-name="code"
+       data-macro-parameters="language=bash|title=Project scope installation"
+       style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6dGl0bGU9UHJvamVjdCBzY29wZSBpbnN0YWxsYXRpb258bGFuZ3VhZ2U9YmFzaH0&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+       data-macro-body-type="PLAIN_TEXT">
+    <tr>
+        <td class="wysiwyg-macro-body">
+            <pre>npm install backbone --save</pre>
+        </td>
+    </tr>
+</table><p>and later in code</p>
+<table class="wysiwyg-macro" data-macro-name="code" data-macro-parameters="language=js|title=main.js"
+       style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6dGl0bGU9bWFpbi5qc3xsYW5ndWFnZT1qc30&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+       data-macro-body-type="PLAIN_TEXT">
+    <tr>
+        <td class="wysiwyg-macro-body">
+            <pre>var backbone = require('backbone') console.log(backbone.VERSION)</pre>
+        </td>
+    </tr>
+</table><p>In global scope</p>
+<table class="wysiwyg-macro" data-macro-name="code"
+       data-macro-parameters="language=bash|title=Project scope installation"
+       style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6dGl0bGU9UHJvamVjdCBzY29wZSBpbnN0YWxsYXRpb258bGFuZ3VhZ2U9YmFzaH0&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+       data-macro-body-type="PLAIN_TEXT">
+    <tr>
+        <td class="wysiwyg-macro-body">
+            <pre>npm install jshint -g </pre>
+        </td>
+    </tr>
+</table><p>So you would have a nice to play with until to check your quality of any js file</p>
+<table class="wysiwyg-macro" data-macro-name="code" data-macro-parameters="language=bash"
+       style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6bGFuZ3VhZ2U9YmFzaH0&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+       data-macro-body-type="PLAIN_TEXT">
+    <tr>
+        <td class="wysiwyg-macro-body">
+            <pre>jshint --show-non-errors main.js</pre>
+        </td>
+    </tr>
+</table><h4>Package descriptor </h4><p>Rules:</p>
+<ul style="margin-left: 25.0px;">
+    <li>[a] a folder containing a program described by a package.json file</li>
+    <li>[b] a gzipped tarball containing [a]</li>
+    <li>[c] a url that resolves to [b]</li>
+    <li>[d] a <code>&lt;name&gt;@&lt;version&gt;</code> that is published on the registry with [c]</li>
+    <li>[e] a <code>&lt;name&gt;@&lt;tag&gt;</code> that points to [d]</li>
+    <li>[f] a <code>&lt;name&gt;</code> that has a &quot;latest&quot; tag satisfying [e]</li>
+    <li>[g] a git url that, when cloned, results in [a]<br/><br/></li>
+</ul>
+<table class="wysiwyg-macro" data-macro-name="code" data-macro-parameters="language=js|title=package.json"
+       style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6dGl0bGU9cGFja2FnZS5qc29ufGxhbmd1YWdlPWpzfQ&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+       data-macro-body-type="PLAIN_TEXT">
+    <tr>
+        <td class="wysiwyg-macro-body">
+            <pre>{  "name": "hello-npm", "description": "a delightfully fruity coffee varietal", "version": "1.2.3", "devDependencies": { "grunt": "~0.4.0" }, "dependencies": { "backbone": "~1.1.0" }, "main": "main.js" } </pre>
+        </td>
+    </tr>
+</table><h4>Project tree</h4>
+<table class="wysiwyg-macro" data-macro-name="code" data-macro-parameters="title=hello-npm/"
+       style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6dGl0bGU9aGVsbG8tbnBtL30&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+       data-macro-body-type="PLAIN_TEXT">
+    <tr>
+        <td class="wysiwyg-macro-body">
+            <pre>. |-- main.js |-- node_modules | `-- backbone | |-- CNAME | |-- CONTRIBUTING.md | |-- LICENSE | |-- README.md | |-- backbone-min.js | |-- backbone-min.map | |-- backbone.js | |-- bower.json | |-- component.json | |-- favicon.ico | |-- index.js | |-- node_modules | | `-- underscore | | |-- LICENSE | | |-- README.md | | |-- package.json | | |-- underscore-min.js | | `-- underscore.js | `-- package.json `-- package.json</pre>
+        </td>
+    </tr>
+</table><h3>Metrix </h3>
+<table class="confluenceTable">
+    <thead>
+    <tr>
+        <th class="confluenceTh"></th>
+        <th colspan="1" style="text-align: center;" class="confluenceTh"><a href="http://npmjs.org/">Npm</a></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th style="text-align: right;" class="confluenceTh">License</th>
+        <td colspan="1" class="confluenceTd"><p class="with-tabs" style="text-align: center;"><a
+                href="https://github.com/npm/npm/blob/master/LICENSE">Artistic License 2.0</a></p></td>
+    </tr>
+    <tr>
+        <th style="text-align: right;" class="confluenceTh">Appeared</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd">2010-Jul</td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Version</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd"><span style="color: rgb(0,0,0);"> 1.3.25</span>
+        </td>
+    </tr>
+    <tr>
+        <th style="text-align: right;" class="confluenceTh">Package Registry</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd"><a href="http://npmjs.org/">npm</a></td>
+    </tr>
+    <tr>
+        <th style="text-align: right;" class="confluenceTh">Module Pattern</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd">CommonJS</td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Build Tool</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd">No</td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Packages on 2013-Jan</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd"><span
+                style="color: rgb(68,68,68);">20000</span></td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Packages on 2014-Aug</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd">87411</td>
+    </tr>
+    <tr>
+        <th colspan="1" class="confluenceTh">Github Usage on 2014-Aug</th>
+        <td colspan="1" class="confluenceTd"><p style="text-align: center;"><a
+                href="https://github.com/search?utf8=%E2%9C%93&amp;q=name++in%3Afile+path%3A%2Fpackage.json+language%3Ajson&amp;type=Code&amp;ref=searchresults">255730</a>
+        </p></td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Grows</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd">4.3</td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Pkg/Month</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd"><span
+                style="color: rgb(34,34,34);"> 4495</span></td>
+    </tr>
+    </tbody>
+</table><h4>Pluses</h4>
+<ul>
+    <li>big, evolving community</li>
+    <li>one package descriptor for all dependencies</li>
+    <li>straightforward project structure</li>
+</ul><h4>Minuses</h4>
+<ul>
+    <li>need experience in NodeJs platform</li>
+    <li>need to know on what can be reused on frontend</li>
+    <li>no special search criteria to distinguish platforms (nodejs, browser (which browser, which feature supports) )
+    </li>
+    <li>nested dependencies tree</li>
+    <li>designed to share assets</li>
+</ul><h4>Recommendation</h4>
+<ul>
+    <li>you use NodeJs platform as for server as for client (code reuse)</li>
+    <li>adepts of NodeJs culture</li>
+    <li>games</li>
+    <li>has private repos (plus for enterprise)</li>
+</ul><h3>Resources</h3>
+<ul>
+    <li><a class="confluence-link"
+           href="/wiki/display/JSLEAR/Package+Managers%3A+An+Introductory+Guide+For+The+Uninitiated+Front-End+Developer"
+           data-linked-resource-id="6717475" data-linked-resource-type="page"
+           data-linked-resource-default-alias="Package Managers: An Introductory Guide For The Uninitiated Front-End Developer"
+           data-base-url="https://openvision.atlassian.net/wiki">Package Managers: An Introductory Guide For The
+        Uninitiated Front-End Developer</a></li>
+    <li><a class="confluence-link" href="/wiki/display/JSLEAR/AMD+is+Not+the+Answer+%3A++Tom+Dale"
+           data-linked-resource-id="6717553" data-linked-resource-type="page"
+           data-linked-resource-default-alias="AMD is Not the Answer : Tom Dale"
+           data-base-url="https://openvision.atlassian.net/wiki">AMD is Not the Answer : Tom Dale</a></li>
+    <li><a class="confluence-link" href="/wiki/pages/viewpage.action?pageId=6717496" data-linked-resource-id="6717496"
+           data-linked-resource-type="page"
+           data-linked-resource-default-alias="NPM Everywhere by Azer Ko&amp;ccedil;ulu"
+           data-base-url="https://openvision.atlassian.net/wiki">NPM Everywhere by Azer Ko&ccedil;ulu</a></li>
+    <li><a class="confluence-link"
+           href="/wiki/display/JSLEAR/Untangle+Your+JavaScript+with+Browserify+%7C+Blog+%7C++Django+Development+%7C+Lincoln+Loop"
+           data-linked-resource-id="6717476" data-linked-resource-type="page"
+           data-linked-resource-default-alias="Untangle Your JavaScript with Browserify | Blog | Django Development | Lincoln Loop"
+           data-base-url="https://openvision.atlassian.net/wiki">Untangle Your JavaScript with Browserify | Blog |
+        Django Development | Lincoln Loop</a></li>
+</ul><h2><strong>volo</strong></h2><p>Logical extension of <a href="http://requirejs.org/">RequireJS</a> project by his
+    maintainer. The idea is to provide build environment for javascript projects on top of AMD modules.</p><p>Bundled
+    with <a class="confluence-link" href="/wiki/pages/viewpage.action?pageId=6717558" data-linked-resource-id="6717558"
+            data-linked-resource-type="page" data-linked-resource-default-alias="jrburke/r.js"
+            data-base-url="https://openvision.atlassian.net/wiki">r.js</a> optimizer, for node modules it uses <a
+            class="confluence-link" href="/wiki/pages/viewpage.action?pageId=6717557" data-linked-resource-id="6717557"
+            data-linked-resource-type="page" data-linked-resource-default-alias="jrburke/amdefine"
+            data-base-url="https://openvision.atlassian.net/wiki">amdefine</a> to convert from CJS to AMD </p><h3>
+    Overview</h3><h4>Search for repository</h4>
+<table class="wysiwyg-macro" data-macro-name="code"
+       style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGV9&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+       data-macro-body-type="PLAIN_TEXT">
+    <tr>
+        <td class="wysiwyg-macro-body">
+            <pre>volo search backbone</pre>
+        </td>
+    </tr>
+</table><h4>Install dependencies</h4>
+<table class="wysiwyg-macro" data-macro-name="code"
+       style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGV9&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+       data-macro-body-type="PLAIN_TEXT">
+    <tr>
+        <td class="wysiwyg-macro-body">
+            <pre>volo add backbone</pre>
+        </td>
+    </tr>
+</table><p>and later in code </p>
+<table class="wysiwyg-macro" data-macro-name="code"
+       style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGV9&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+       data-macro-body-type="PLAIN_TEXT">
+    <tr>
+        <td class="wysiwyg-macro-body">
+            <pre>define(function(require){ var backbone = require('backbone'); console.log(backbone.VERSION); });  </pre>
+        </td>
+    </tr>
+</table><h4>Package descriptor </h4>
+<table class="wysiwyg-macro" data-macro-name="code" data-macro-parameters="language=js|title=package.json"
+       style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6dGl0bGU9cGFja2FnZS5qc29ufGxhbmd1YWdlPWpzfQ&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+       data-macro-body-type="PLAIN_TEXT">
+    <tr>
+        <td class="wysiwyg-macro-body">
+            <pre>{  "name": "volo-waza", "description": "a delightfully fruity volo varietal", "version": "1.2.3", "devDependencies": { "volo": "~0.3.3" }, "amd": {}, "volo": { "url": "http://your.domain.com/path/to/1.2.3/lib.js", "baseUrl": "scripts/lib", "dependencies": { "underscore": "github:documentcloud/underscore/1.2.3", "backbone": "documentcloud/backbone/0.9.0", "jquery": "jquery", "swfobject": "http://swfobject.googlecode.com/files/swfobject_2_2.zip" } "type": "", "ignore": [".gitignore", "test", "examples", "**/*.txt"] } } </pre>
+        </td>
+    </tr>
+</table><h4>Project tree</h4>
+<table class="wysiwyg-macro" data-macro-name="code" data-macro-parameters="title=hello-volo/"
+       style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6dGl0bGU9aGVsbG8tdm9sby99&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+       data-macro-body-type="PLAIN_TEXT">
+    <tr>
+        <td class="wysiwyg-macro-body">
+            <pre>. |-- README.md |-- package.json |-- tools | |-- build.js | `-- r.js `-- scripts |-- app | |-- main.js | `-- messages.js |-- app.js |-- index.html `-- lib |-- backbone.js |-- jquery.js |-- print.js |-- require.js `-- underscore.js</pre>
+        </td>
+    </tr>
+</table><h3>Metrix</h3>
+<table class="confluenceTable">
+    <thead>
+    <tr>
+        <th class="confluenceTh"></th>
+        <th colspan="1" style="text-align: center;" class="confluenceTh"><a href="http://volojs.org/">Volo</a></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th style="text-align: right;" class="confluenceTh">License</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd">MIT/New BSD</td>
+    </tr>
+    <tr>
+        <th style="text-align: right;" class="confluenceTh">Appeared</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd">2010-Oct</td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Version</th>
+        <td colspan="1" class="confluenceTd"><p class="p1" style="text-align: center;">0.3.3</p></td>
+    </tr>
+    <tr>
+        <th style="text-align: right;" class="confluenceTh">Package Registry</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd"><a href="https://github.com/">github</a></td>
+    </tr>
+    <tr>
+        <th style="text-align: right;" class="confluenceTh">Module Pattern</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd">AMD/CommonJS</td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Build Tool</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd">Yes</td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Packages on 2013-Jan</th>
+        <th colspan="1" class="confluenceTh"></th>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Packages on 2014-Aug</th>
+        <th colspan="1" class="confluenceTh"></th>
+    </tr>
+    <tr>
+        <th colspan="1" class="confluenceTh">Github Usage on 2014-Aug</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd"><a
+                href="https://github.com/search?l=json&amp;o=desc&amp;q=volo++in%3Afile+path%3A%2Fpackage.json+language%3Ajson&amp;ref=searchresults&amp;s=&amp;type=Code&amp;utf8=%E2%9C%93">603</a>
+        </td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Grows</th>
+        <th colspan="1" class="confluenceTh"></th>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Avg Velocity (pkg/month)</th>
+        <th colspan="1" class="confluenceTh"></th>
+    </tr>
+    </tbody>
+</table><h4><span>Minuses</span></h4>
+<ul>
+    <li><a href="https://github.com/volojs/volo/pulse/monthly">not evolving</a></li>
+    <li>no special register</li>
+    <li>AMDfy first approach (need to configure deps for no-AMD)</li>
+    <li>you need to know on how to work with RequireJs</li>
+</ul><h4>Pluses </h4>
+<ul>
+    <li>full workflow for AMD modules</li>
+    <li>async module loading (of course)</li>
+</ul><h3>Recommendation </h3>
+<ul>
+    <li>use as learn tool to understand best-practice workflows with RequireJS</li>
+</ul><h3>Resources</h3>
+<ul>
+    <li><a class="confluence-link" href="/wiki/display/JSLEAR/Volo%3A+Library-Best-Practices+-+package.json"
+           data-linked-resource-id="6717564" data-linked-resource-type="page"
+           data-linked-resource-default-alias="Volo: Library-Best-Practices - package.json"
+           data-base-url="https://openvision.atlassian.net/wiki">Volo: Library-Best-Practices - package.json</a></li>
+    <li><a class="confluence-link"
+           href="/wiki/display/JSLEAR/Create+front+end+projects+from+templates%2C+add+dependencies%2C+and+automate+the+resulting+projects"
+           data-linked-resource-id="6717565" data-linked-resource-type="page"
+           data-linked-resource-default-alias="Create front end projects from templates, add dependencies, and automate the resulting projects"
+           data-base-url="https://openvision.atlassian.net/wiki">Create front end projects from templates, add
+        dependencies, and automate the resulting projects</a></li>
+</ul><h2>Ender</h2><p><em>&quot;<span style="color: rgb(0,0,0);">the no-library library</span>&quot;</em></p><p>It's
+    npm's little sister. Provide piggyback solution on top of npm package manager.</p><p>It's hard to say that ender is
+    a 100% package manager, it's more a build tool. Let's name it as build tool on top of npm. </p><p>Ender can load any
+    npm packages but has it's own reserved keyword '<em>ender</em>' to form some sort of ender specific register </p>
+<div><strong><strong><br/></strong></strong></div>
+<div><h3>Overview</h3><h4>Search package</h4>
+    <table class="wysiwyg-macro" data-macro-name="code"
+           style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGV9&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+           data-macro-body-type="PLAIN_TEXT">
+        <tr>
+            <td class="wysiwyg-macro-body">
+                <pre>ender search backbone</pre>
+            </td>
+        </tr>
+    </table>
+    <h4>Install dependencies</h4>
+    <table class="wysiwyg-macro" data-macro-name="code"
+           style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGV9&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+           data-macro-body-type="PLAIN_TEXT">
+        <tr>
+            <td class="wysiwyg-macro-body">
+                <pre>ender add domready</pre>
+            </td>
+        </tr>
+    </table>
+    <p>and later in code </p>
+    <table class="wysiwyg-macro" data-macro-name="code"
+           style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGV9&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+           data-macro-body-type="PLAIN_TEXT">
+        <tr>
+            <td class="wysiwyg-macro-body">
+                <pre>$.domReady(function(){ alert('DOM ready'); });</pre>
+            </td>
+        </tr>
+    </table>
+    <p>include ender.js or ender.min.js to your html file.</p>
+
+    <p>To make your API accessible from <strong>$ </strong>object (The Ender Client API) you need to wrap it in <a
+            href="http://enderjs.com/#intro">bridge boilerplate</a></p>
+    <table class="wysiwyg-macro" data-macro-name="note"
+           style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e25vdGV9&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+           data-macro-body-type="RICH_TEXT">
+        <tr>
+            <td class="wysiwyg-macro-body"><p>Ender doesn't add dependencies to package.json, you need to take care of
+                it.</p>
+
+                <p>Also, I've not found any commands which would install all dependencies, so you need to run</p>
+
+                <p style="margin-left: 30.0px;"><em>npm install</em></p></td>
+        </tr>
+    </table>
+    <h4>Package descriptor </h4>
+    <table class="wysiwyg-macro" data-macro-name="code" data-macro-parameters="language=js|title=package.json"
+           style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6dGl0bGU9cGFja2FnZS5qc29ufGxhbmd1YWdlPWpzfQ&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+           data-macro-body-type="PLAIN_TEXT">
+        <tr>
+            <td class="wysiwyg-macro-body">
+                <pre>{ "name": "hello-ender", "version": "0.0.0", "description": "Test ender project", "license": "MIT", "dependencies": { "domready": "~1.0.6" }, "keywords": [ "ender" ], "main": "./src/main.js", "ender": "./src/exports/ender.js" }</pre>
+            </td>
+        </tr>
+    </table>
+    <h3>Project tree</h3>
+    <table class="wysiwyg-macro" data-macro-name="code" data-macro-parameters="title=hello-volo"
+           style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6dGl0bGU9aGVsbG8tdm9sb30&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+           data-macro-body-type="PLAIN_TEXT">
+        <tr>
+            <td class="wysiwyg-macro-body">
+                <pre>. |-- ender.js |-- ender.js.map |-- ender.min.js |-- ender.min.js.map |-- index.html |-- node_modules | |-- domready | |-- ender-commonjs | |-- ender-core | `-- underscore |-- package.json `-- src |-- ender.js `-- main.js</pre>
+            </td>
+        </tr>
+    </table>
+    <h3>Metrix</h3>
+    <table class="confluenceTable">
+        <thead>
+        <tr>
+            <th class="confluenceTh"></th>
+            <th colspan="1" class="confluenceTh"><a href="http://ender.jit.su/">Ender</a></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <th style="text-align: right;" class="confluenceTh">License</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd">MIT</td>
+        </tr>
+        <tr>
+            <th style="text-align: right;" class="confluenceTh">Appeared</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd">2011-Apr</td>
+        </tr>
+        <tr>
+            <th colspan="1" style="text-align: right;" class="confluenceTh">Version</th>
+            <td colspan="1" class="confluenceTd"><p class="p1" style="text-align: center;">2.0.5</p></td>
+        </tr>
+        <tr>
+            <th style="text-align: right;" class="confluenceTh">Package Registry</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd"><a href="https://npmjs.org/">npm</a></td>
+        </tr>
+        <tr>
+            <th style="text-align: right;" class="confluenceTh">Module Pattern</th>
+            <td colspan="1" class="confluenceTd">CommonJS</td>
+        </tr>
+        <tr>
+            <th colspan="1" style="text-align: right;" class="confluenceTh">Build Tool</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd">Yes</td>
+        </tr>
+        <tr>
+            <th colspan="1" class="confluenceTh">Packages on 2013-Jan</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd">212</td>
+        </tr>
+        <tr>
+            <th colspan="1" class="confluenceTh">Packages on 2014-Aug</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd">1204</td>
+        </tr>
+        <tr>
+            <th colspan="1" class="confluenceTh">Github Usage on 2014-Aug</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd"><a
+                    href="https://github.com/search?utf8=%E2%9C%93&amp;q=ender++in%3Afile+path%3A%2Fpackage.json+language%3Ajson&amp;type=Code&amp;ref=searchresults">264</a>
+            </td>
+        </tr>
+        <tr>
+            <th colspan="1" style="text-align: right;" class="confluenceTh">Grows</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd">5.7</td>
+        </tr>
+        <tr>
+            <th colspan="1" style="text-align: right;" class="confluenceTh">Pkg/Month</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd">52</td>
+        </tr>
+        </tbody>
+    </table>
+    <h4>Pluses</h4>
+    <ul>
+        <li>full workflow from installing to building whole app</li>
+        <li>straightforward project structure</li>
+    </ul>
+    <h4>Minuses</h4>
+    <ul>
+        <li>relatively small community</li>
+        <li>has client api which is not always desirable</li>
+    </ul>
+    <h4>Recommendation</h4>
+    <ul>
+        <li>experiments</li>
+        <li>projects for one person 'web-site' creation</li>
+        <li>not for complex web apps (too small repo)</li>
+    </ul>
+    <h3>Resources</h3>
+    <ul>
+        <li><a href="http://enderjs.com/#intro">Intro Ender</a></li>
+        <li><a href="http://enderjs.com/#learn">Learn Ender </a></li>
+        <li><a class="confluence-link" href="/wiki/display/JSLEAR/DailyJS%3A+Confused+About+Components"
+               data-linked-resource-id="6717535" data-linked-resource-type="page"
+               data-linked-resource-default-alias="DailyJS: Confused About Components"
+               data-base-url="https://openvision.atlassian.net/wiki">DailyJS: Confused About Components</a></li>
+        <li><a class="confluence-link" href="/wiki/pages/viewpage.action?pageId=6717537"
+               data-linked-resource-id="6717537" data-linked-resource-type="page"
+               data-linked-resource-default-alias="NPM vs JAM, RequireJS vs Browserify vs Ender &amp;bull; /r/javascript"
+               data-base-url="https://openvision.atlassian.net/wiki">NPM vs JAM, RequireJS vs Browserify vs Ender &bull;
+            /r/javascript</a></li>
+    </ul>
+    <h2>Jam</h2>
+
+    <p><em>'<em>We put the <strong style="text-align: center;">browser</strong> first</em>' </em></p>
+
+    <p>Package manager which is totally concentrated on front-end accests.</p>
+
+    <p>The idea is to create front-end <span> a 100% browser-focused community. It's yet one </span></p>
+
+    <p><span>solution on top of <a href="http://requirejs.org/">RequireJs</a> project, so main focus on AMD and asynchronous loading of scripts. </span>
+    </p>
+
+    <h3>Overview</h3><h4>Search for package</h4>
+
+    <p>Go to <a href="http://jamjs.org/packages/#/">Jam Package</a> and search by name or use categories to filter
+        specific packages</p>
+    <table class="wysiwyg-macro" data-macro-name="code" data-macro-parameters="language=bash"
+           style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6bGFuZ3VhZ2U9YmFzaH0&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+           data-macro-body-type="PLAIN_TEXT">
+        <tr>
+            <td class="wysiwyg-macro-body">
+                <pre>jam search backbone</pre>
+            </td>
+        </tr>
+    </table>
+    <h4><span style="line-height: 1.5;">Install dependencies</span></h4>
+    <table class="wysiwyg-macro" data-macro-name="code" data-macro-parameters="language=bash"
+           style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6bGFuZ3VhZ2U9YmFzaH0&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+           data-macro-body-type="PLAIN_TEXT">
+        <tr>
+            <td class="wysiwyg-macro-body">
+                <pre>jam install backbone </pre>
+            </td>
+        </tr>
+    </table>
+    <p>use in your code</p>
+    <table class="wysiwyg-macro" data-macro-name="code" data-macro-parameters="language=js|title=main.js"
+           style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6dGl0bGU9bWFpbi5qc3xsYW5ndWFnZT1qc30&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+           data-macro-body-type="PLAIN_TEXT">
+        <tr>
+            <td class="wysiwyg-macro-body">
+                <pre>require(['backbone'], function (Backbone) { console.log(Backbone); });</pre>
+            </td>
+        </tr>
+    </table>
+    <h4>Package descriptor</h4>
+    <table class="wysiwyg-macro" data-macro-name="code" data-macro-parameters="language=js|title=package.json"
+           style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6dGl0bGU9cGFja2FnZS5qc29ufGxhbmd1YWdlPWpzfQ&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+           data-macro-body-type="PLAIN_TEXT">
+        <tr>
+            <td class="wysiwyg-macro-body">
+                <pre>{ "name": "hello-jam", "version": "0.0.1", "description": "An example of Jam project", "jam": { "dependencies": { "backbone": "1.0.0" } } }</pre>
+            </td>
+        </tr>
+    </table>
+    <h4>Project tree</h4>
+    <table class="wysiwyg-macro" data-macro-name="code" data-macro-parameters="language=text|title=hello-jam/"
+           style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6dGl0bGU9aGVsbG8tamFtL3xsYW5ndWFnZT10ZXh0fQ&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+           data-macro-body-type="PLAIN_TEXT">
+        <tr>
+            <td class="wysiwyg-macro-body">
+                <pre>. |-- index.html |-- jam | |-- backbone | |-- jquery | |-- require.config.js | |-- require.js | `-- underscore |-- myapp | `-- app.js `-- package.json</pre>
+            </td>
+        </tr>
+    </table>
+    <h4>Publish package</h4>
+    <table class="wysiwyg-macro" data-macro-name="code"
+           style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGV9&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+           data-macro-body-type="PLAIN_TEXT">
+        <tr>
+            <td class="wysiwyg-macro-body">
+                <pre>jam publish hello-jam</pre>
+            </td>
+        </tr>
+    </table>
+    <h3>Metrix </h3>
+    <table class="confluenceTable">
+        <thead>
+        <tr>
+            <th class="confluenceTh"></th>
+            <th colspan="1" style="text-align: center;" class="confluenceTh"><a href="http://jamjs.org/">Jam</a></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <th style="text-align: right;" class="confluenceTh">License</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd">MIT</td>
+        </tr>
+        <tr>
+            <th style="text-align: right;" class="confluenceTh">Appeared</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd">2012-May</td>
+        </tr>
+        <tr>
+            <th colspan="1" style="text-align: right;" class="confluenceTh">Version</th>
+            <td colspan="1" class="confluenceTd"><p class="p1" style="text-align: center;">0.2.17</p></td>
+        </tr>
+        <tr>
+            <th style="text-align: right;" class="confluenceTh">Package Registry</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd"><a href="http://jamjs.org/packages/#/">server</a>
+            </td>
+        </tr>
+        <tr>
+            <th style="text-align: right;" class="confluenceTh">Module Pattern</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd">AMD</td>
+        </tr>
+        <tr>
+            <th colspan="1" style="text-align: right;" class="confluenceTh">Build Tool</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd">Yes</td>
+        </tr>
+        <tr>
+            <th colspan="1" style="text-align: right;" class="confluenceTh">Packages on 2013-Jan</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd">279</td>
+        </tr>
+        <tr>
+            <th colspan="1" style="text-align: right;" class="confluenceTh">Packages on 2014-Aug</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd">749</td>
+        </tr>
+        <tr>
+            <th colspan="1" class="confluenceTh">Github Usage on 2014-Aug</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd"><a
+                    href="https://github.com/search?utf8=%E2%9C%93&amp;q=ender++in%3Afile+path%3A%2Fpackage.json+language%3Ajson&amp;type=Code&amp;ref=searchresults">591</a>
+            </td>
+        </tr>
+        <tr>
+            <th colspan="1" style="text-align: right;" class="confluenceTh">Grows</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd">2.7</td>
+        </tr>
+        <tr>
+            <th colspan="1" style="text-align: right;" class="confluenceTh">Pkg/Month</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd">25</td>
+        </tr>
+        </tbody>
+    </table>
+    <h4>Pluses</h4>
+    <ul>
+        <li>full workflow out of box</li>
+        <li>simple in use</li>
+    </ul>
+    <h4>Minuses</h4>
+    <ul>
+        <li>small community
+            <ul>
+                <li>outdated packages of common libs in repo</li>
+            </ul>
+        </li>
+        <li>you need to understand on how RequireJs works</li>
+    </ul>
+    <h4>Recommendation</h4>
+    <ul>
+        <li>use as learn tool to understand best-practice workflows with RequireJS</li>
+        <li>not for complex web apps (too small repo)<br/><br/></li>
+    </ul>
+    <h3>Resources</h3>
+    <ul>
+        <li><a class="confluence-link" href="/wiki/display/JSLEAR/Package+Management+with+Jam+JS"
+               data-linked-resource-id="6717474" data-linked-resource-type="page"
+               data-linked-resource-default-alias="Package Management with Jam JS"
+               data-base-url="https://openvision.atlassian.net/wiki">Package Management with Jam JS</a></li>
+        <li><a class="confluence-link"
+               href="/wiki/display/JSLEAR/Package+Manager+Odyssey+Part+II%3A+JAM+So+Close+But+Not+There+Yet"
+               data-linked-resource-id="6717520" data-linked-resource-type="page"
+               data-linked-resource-default-alias="Package Manager Odyssey Part II: JAM So Close But Not There Yet"
+               data-base-url="https://openvision.atlassian.net/wiki">Package Manager Odyssey Part II: JAM So Close But
+            Not There Yet</a></li>
+    </ul>
+    <h2>Component</h2>
+
+    <p>Component is one of many frontend solutions. One of the major differences between Component and other solutions
+        is that it is vertically integrated,</p>
+
+    <p>meaning it does everything from package management to building. Of course, to do so, it is opinionated and is not
+        suitable for every workflow.</p>
+    <ul>
+        <li>component is currently a stopgap for ES6 modules and Web Components<strong><br
+                class="_mce_tagged_br"/></strong></li>
+        <li><span>UNIX philosophy</span></li>
+    </ul>
+    <h3>Overview</h3><h4>Search for package</h4>
+
+    <p>You need to search for it on <a href="https://github.com/component/component/wiki/Components">Component Wiki</a>
+    </p>
+    <table class="wysiwyg-macro" data-macro-name="code"
+           style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGV9&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+           data-macro-body-type="PLAIN_TEXT">
+        <tr>
+            <td class="wysiwyg-macro-body">
+                <pre>component search backbone</pre>
+            </td>
+        </tr>
+    </table>
+    <h4><span>Install dependencies</span></h4>
+    <table class="wysiwyg-macro" data-macro-name="code" data-macro-parameters="language=bash"
+           style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6bGFuZ3VhZ2U9YmFzaH0&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+           data-macro-body-type="PLAIN_TEXT">
+        <tr>
+            <td class="wysiwyg-macro-body">
+                <pre>component install jashkenas/backbone  </pre>
+            </td>
+        </tr>
+    </table>
+    <p>use in your code</p>
+    <table class="wysiwyg-macro" data-macro-name="code" data-macro-parameters="language=js|title=main.js"
+           style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6dGl0bGU9bWFpbi5qc3xsYW5ndWFnZT1qc30&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+           data-macro-body-type="PLAIN_TEXT">
+        <tr>
+            <td class="wysiwyg-macro-body">
+                <pre>var backbone = require('backbone'); console.log(backbone.VERSION);</pre>
+            </td>
+        </tr>
+    </table>
+    <h4>Package descriptor</h4>
+    <table class="wysiwyg-macro" data-macro-name="code" data-macro-parameters="language=js|title=package.json"
+           style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6dGl0bGU9cGFja2FnZS5qc29ufGxhbmd1YWdlPWpzfQ&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+           data-macro-body-type="PLAIN_TEXT">
+        <tr>
+            <td class="wysiwyg-macro-body">
+                <pre>{ "name": "hello-component", "dependencies": { "jashkenas/backbone": "*" }, "main": "index.js", "scripts": [ "index.js" ], "templates": [ "template.html" ], "styles": [ "mycomponent.css" ] }</pre>
+            </td>
+        </tr>
+    </table>
+    <h4>Project tree</h4>
+    <table class="wysiwyg-macro" data-macro-name="code" data-macro-parameters="language=text|title=hello-component/"
+           style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6dGl0bGU9aGVsbG8tY29tcG9uZW50L3xsYW5ndWFnZT10ZXh0fQ&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+           data-macro-body-type="PLAIN_TEXT">
+        <tr>
+            <td class="wysiwyg-macro-body">
+                <pre>. |-- build | |-- build.css | `-- build.js |-- component.json |-- components | |-- component-classes | |-- component-css | |-- component-delegate | |-- component-dialog | |-- component-dom | |-- component-domify | |-- component-each | |-- component-emitter | |-- component-event | |-- component-indexof | |-- component-matches-selector | |-- component-overlay | |-- component-props | |-- component-query | |-- component-to-function | |-- component-trim | |-- component-type | |-- component-value | |-- component-within-document | |-- discore-closest | |-- guille-ms.js | |-- ianstormtaylor-to-camel-case | |-- ianstormtaylor-to-no-case | |-- ianstormtaylor-to-space-case | |-- jashkenas-backbone | |-- jashkenas-underscore | |-- matthewp-keys | |-- matthewp-text | |-- visionmedia-debug | |-- yields-isarray | `-- yields-traverse `-- index.html</pre>
+            </td>
+        </tr>
+    </table>
+    <h4>Publish package</h4>
+
+    <p>To publish package you need to create GitHub project and add it to <a
+            href="https://github.com/component/component/wiki/Components">Component Wiki</a></p>
+
+    <h3>Metrix</h3>
+    <table class="confluenceTable">
+        <thead>
+        <tr>
+            <th class="confluenceTh"></th>
+            <th colspan="1" class="confluenceTh"><a href="https://github.com/component/component">Component</a></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <th style="text-align: right;" class="confluenceTh">License</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd">MIT</td>
+        </tr>
+        <tr>
+            <th style="text-align: right;" class="confluenceTh">Appeared</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd">Aug 2012</td>
+        </tr>
+        <tr>
+            <th colspan="1" style="text-align: right;" class="confluenceTh">Version</th>
+            <td colspan="1" class="confluenceTd"><p class="p1" style="text-align: center;">0.19.9</p></td>
+        </tr>
+        <tr>
+            <th style="text-align: right;" class="confluenceTh">Package Registry</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd"><a
+                    href="https://github.com/component/component/wiki/Components">wiki</a></td>
+        </tr>
+        <tr>
+            <th style="text-align: right;" class="confluenceTh">Module Pattern</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd">CommonJS</td>
+        </tr>
+        <tr>
+            <th colspan="1" style="text-align: right;" class="confluenceTh">Build Tool</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd">Yes</td>
+        </tr>
+        <tr>
+            <th colspan="1" style="text-align: right;" class="confluenceTh">Packages on 2013-Jan</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd"><span
+                    style="color: rgb(68,68,68);">431</span></td>
+        </tr>
+        <tr>
+            <th colspan="1" style="text-align: right;" class="confluenceTh">Packages on 2014-Aug</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd">1930</td>
+        </tr>
+        <tr>
+            <th colspan="1" class="confluenceTh">Github Usage on 2014-Aug</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd"><a
+                    href="https://github.com/search?p=98&amp;q=name++in%3Afile+path%3A%2Fcomponent.json+language%3Ajson&amp;ref=searchresults&amp;type=Code&amp;utf8=%E2%9C%93">11149</a>
+            </td>
+        </tr>
+        <tr>
+            <th colspan="1" style="text-align: right;" class="confluenceTh">Grows</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd">4.5</td>
+        </tr>
+        <tr>
+            <th colspan="1" style="text-align: right;" class="confluenceTh">Pkg/Month</th>
+            <td colspan="1" style="text-align: center;" class="confluenceTd">79</td>
+        </tr>
+        </tbody>
+    </table>
+    <h4>Pluses </h4>
+    <ul>
+        <li>unification of build process</li>
+        <li>good ideas behind (unix philosophy)</li>
+    </ul>
+    <h4>Minuses</h4>
+    <ul>
+        <li>not a big repo, community</li>
+        <li>customization of build process could be a problem</li>
+    </ul>
+    <h4>Recommendation</h4>
+    <ul>
+        <li>experiments and POCs</li>
+        <li>it's for complex apps</li>
+        <li>be aware that team need to follow strict principles behind of component</li>
+    </ul>
+    <h3>Resources </h3>
+    <ul>
+        <li><a class="confluence-link" href="/wiki/pages/viewpage.action?pageId=6717527"
+               data-linked-resource-id="6717527" data-linked-resource-type="page"
+               data-linked-resource-default-alias="component/guide"
+               data-base-url="https://openvision.atlassian.net/wiki">Comparison of component with other tools</a></li>
+        <li><a class="confluence-link" href="/wiki/display/JSLEAR/DailyJS%3A+Confused+About+Components"
+               data-linked-resource-id="6717535" data-linked-resource-type="page"
+               data-linked-resource-default-alias="DailyJS: Confused About Components"
+               data-base-url="https://openvision.atlassian.net/wiki">DailyJS: Confused About Components</a></li>
+        <li><a class="confluence-link"
+               href="/wiki/display/JSLEAR/Introduction+to+the+Component+JavaScript+Package+Manager+-+Modern+Web"
+               data-linked-resource-id="6717471" data-linked-resource-type="page"
+               data-linked-resource-default-alias="Introduction to the Component JavaScript Package Manager - Modern Web"
+               data-base-url="https://openvision.atlassian.net/wiki">Introduction to the Component JavaScript Package
+            Manager - Modern Web</a></li>
+    </ul>
+</div><h2>Bower </h2><p><span style="color: rgb(74,74,74);">Package manager for the web or, more specifically, browser development. </span><span
+        style="color: rgb(74,74,74);">Bower’s purpose is to manage front-end assets, </span></p><p><span
+        style="color: rgb(74,74,74);">which can include not just javascript files, </span><span
+        style="color: rgb(74,74,74);">but also html, css, image, and font files.</span></p><h3>Overview</h3><h4>Search
+    for package</h4><p>Use <a href="http://bower.io/search/">bower search </a>or</p>
+<table class="wysiwyg-macro" data-macro-name="code"
+       style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGV9&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+       data-macro-body-type="PLAIN_TEXT">
+    <tr>
+        <td class="wysiwyg-macro-body">
+            <pre>bower search backbone</pre>
+        </td>
+    </tr>
+</table><h4>Install dependencies</h4>
+<table class="wysiwyg-macro" data-macro-name="code" data-macro-parameters="language=bash"
+       style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6bGFuZ3VhZ2U9YmFzaH0&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+       data-macro-body-type="PLAIN_TEXT">
+    <tr>
+        <td class="wysiwyg-macro-body">
+            <pre>bower install backbone </pre>
+        </td>
+    </tr>
+</table><p>No requirements for module type it could be as AMD as CommonJS or not javascript at all</p><h4>Package
+    descriptor</h4>
+<ul>
+    <li><a href="https://github.com/bower/bower.json-spec">Bower Spec</a><br/><br/></li>
+</ul>
+<table class="wysiwyg-macro" data-macro-name="code" data-macro-parameters="language=js|title=bower.json"
+       style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6dGl0bGU9Ym93ZXIuanNvbnxsYW5ndWFnZT1qc30&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+       data-macro-body-type="PLAIN_TEXT">
+    <tr>
+        <td class="wysiwyg-macro-body">
+            <pre>{ "name": "hello-bower", "version": "0.0.1", "main": "main.js", "dependencies": { "backbone": "~1.1.2" } }</pre>
+        </td>
+    </tr>
+</table><h4>Project tree</h4>
+<table class="wysiwyg-macro" data-macro-name="code" data-macro-parameters="language=text|title=hello-component/"
+       style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6dGl0bGU9aGVsbG8tY29tcG9uZW50L3xsYW5ndWFnZT10ZXh0fQ&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+       data-macro-body-type="PLAIN_TEXT">
+    <tr>
+        <td class="wysiwyg-macro-body">
+            <pre>. |-- bower.json `-- bower_components |-- backbone `-- underscore</pre>
+        </td>
+    </tr>
+</table><h4>Register package</h4>
+<table class="wysiwyg-macro" data-macro-name="code"
+       style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGV9&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+       data-macro-body-type="PLAIN_TEXT">
+    <tr>
+        <td class="wysiwyg-macro-body">
+            <pre>bower register mypackage </pre>
+        </td>
+    </tr>
+</table><h3>Metrix </h3>
+<table class="confluenceTable">
+    <thead>
+    <tr>
+        <th class="confluenceTh"></th>
+        <th class="confluenceTh"><a href="http://twitter.github.com/bower/">Bower</a></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th style="text-align: right;" class="confluenceTh">License</th>
+        <td style="text-align: center;" class="confluenceTd">MIT</td>
+    </tr>
+    <tr>
+        <th style="text-align: right;" class="confluenceTh">Appeared</th>
+        <td style="text-align: center;" class="confluenceTd">2012-Sep</td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Version</th>
+        <td colspan="1" class="confluenceTd"><p class="p1" style="text-align: center;">1.3.8</p></td>
+    </tr>
+    <tr>
+        <th style="text-align: right;" class="confluenceTh">Package Registry</th>
+        <td style="text-align: center;" class="confluenceTd"><a href="http://bower.io/search/">server</a></td>
+    </tr>
+    <tr>
+        <th style="text-align: right;" class="confluenceTh">Module Pattern</th>
+        <td style="text-align: center;" class="confluenceTd">Any</td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Build Tool</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd">No</td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Packages on 2013-Jan</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd"><span style="color: rgb(68,68,68);">698</span>
+        </td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Packages on 2014-Aug</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd">17356</td>
+    </tr>
+    <tr>
+        <th colspan="1" class="confluenceTh">Github Usage on 2014-Aug</th>
+        <td colspan="1" class="confluenceTd"><p style="text-align: center;"><a
+                href="https://github.com/search?utf8=%E2%9C%93&amp;q=name++in%3Afile+path%3A%2Fbower.json+language%3Ajson&amp;type=Code&amp;ref=searchresults">48677</a>
+        </p></td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Grows</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd">25</td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Pkg/Month</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd">877</td>
+    </tr>
+    </tbody>
+</table><h4>Pluses </h4>
+<ul>
+    <li>big, evolving community</li>
+    <li>very simple in use</li>
+</ul><h4>Minuses</h4>
+<ul>
+    <li>your project could be a really messy 'bower' (mud, grass and feathers)</li>
+    <li>lack of metadata in package descriptor for unifying build process</li>
+</ul><h4>Recommendation</h4>
+<ul>
+    <li>use for frontend projects of any size, but with other tools like grunt, gulp etc</li>
+</ul><h3>Resources</h3>
+<ul>
+    <li><a class="confluence-link"
+           href="/wiki/display/JSLEAR/Package+Managers%3A+An+Introductory+Guide+For+The+Uninitiated+Front-End+Developer"
+           data-linked-resource-id="6717475" data-linked-resource-type="page"
+           data-linked-resource-default-alias="Package Managers: An Introductory Guide For The Uninitiated Front-End Developer"
+           data-base-url="https://openvision.atlassian.net/wiki">Package Managers: An Introductory Guide For The
+        Uninitiated Front-End Developer</a></li>
+    <li><a class="confluence-link" href="/wiki/pages/viewpage.action?pageId=6717497" data-linked-resource-id="6717497"
+           data-linked-resource-type="page"
+           data-linked-resource-default-alias="My strategy for client-side package managers (choosing between npm, bower, and component)"
+           data-base-url="https://openvision.atlassian.net/wiki">My strategy for client-side package managers (choosing
+        between npm, bower, and component)</a></li>
+    <li><a href="http://stackoverflow.com/questions/18641899/difference-between-bower-and-npm?answertab=active#tab-top">npm
+        vs bower</a></li>
+</ul><h2>jspm</h2><p><em>'Frictionless browser package management'</em></p><p>It's a package manager for the <a
+        href="https://github.com/systemjs/systemjs">SystemJS universal module loader</a>, built on top of the dynamic <a
+        href="https://github.com/ModuleLoader/es6-module-loader">ES6 module loader</a></p><h3>Overview</h3><h4>Search
+    for package</h4><p>Inspect <a class="confluence-link" href="/wiki/display/JSLEAR/The+jspm+registry"
+                                  data-linked-resource-id="6717617" data-linked-resource-type="page"
+                                  data-linked-resource-default-alias="The jspm registry"
+                                  data-base-url="https://openvision.atlassian.net/wiki">The jspm registry</a> or use
+    projects from github</p><h4>Install dependencies</h4>
+<table class="wysiwyg-macro" data-macro-name="code" data-macro-parameters="language=bash"
+       style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6bGFuZ3VhZ2U9YmFzaH0&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+       data-macro-body-type="PLAIN_TEXT">
+    <tr>
+        <td class="wysiwyg-macro-body">
+            <pre>jspm install backbone </pre>
+        </td>
+    </tr>
+</table><p>use in your code</p>
+<table class="wysiwyg-macro" data-macro-name="code" data-macro-parameters="language=js|title=main.js"
+       style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6dGl0bGU9bWFpbi5qc3xsYW5ndWFnZT1qc30&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+       data-macro-body-type="PLAIN_TEXT">
+    <tr>
+        <td class="wysiwyg-macro-body">
+            <pre>var Backbone = require('backbone'); console.log(Backbone.VERSION);</pre>
+        </td>
+    </tr>
+</table><h4>Package descriptor</h4>
+<ul>
+    <li><a class="confluence-link" href="/wiki/display/JSLEAR/Configuring+Packages+for+jspm+"
+           data-linked-resource-id="6717618" data-linked-resource-type="page"
+           data-linked-resource-default-alias="Configuring Packages for jspm "
+           data-base-url="https://openvision.atlassian.net/wiki">Configuring Packages for jspm </a><br/><br/></li>
+</ul>
+<table class="wysiwyg-macro" data-macro-name="code" data-macro-parameters="language=js|title=package.json"
+       style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6dGl0bGU9cGFja2FnZS5qc29ufGxhbmd1YWdlPWpzfQ&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+       data-macro-body-type="PLAIN_TEXT">
+    <tr>
+        <td class="wysiwyg-macro-body">
+            <pre>{ "jspm": { "registry": "jspm", "dependencies": { "backbone": "^1.1.2" } } }</pre>
+        </td>
+    </tr>
+</table><h4>Project tree</h4>
+<table class="wysiwyg-macro" data-macro-name="code" data-macro-parameters="language=text|title=hello-jspm/"
+       style="background-image: url(/wiki/plugins/servlet/confluence/placeholder/macro-heading?definition=e2NvZGU6dGl0bGU9aGVsbG8tanNwbS98bGFuZ3VhZ2U9dGV4dH0&amp;locale=en_GB&amp;version=2); background-repeat: no-repeat;"
+       data-macro-body-type="PLAIN_TEXT">
+    <tr>
+        <td class="wysiwyg-macro-body">
+            <pre>. |-- app.js |-- build.js |-- config.js |-- jspm-test.html |-- jspm_packages | |-- es6-module-loader@0.7.1.js | |-- github | |-- npm | |-- system-csp@0.6.js | |-- system@0.6.js | |-- traceur-runtime@0.0.49.js | `-- traceur@0.0.49.js `-- package.json</pre>
+        </td>
+    </tr>
+</table><h4>Register package</h4><p>Create pull request to jspm register</p><h3>Metrix </h3>
+<table class="confluenceTable">
+    <thead>
+    <tr>
+        <th class="confluenceTh"></th>
+        <th colspan="1" class="confluenceTh"><a href="http://jspm.io/">jspm</a></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th style="text-align: right;" class="confluenceTh">License</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd">MIT</td>
+    </tr>
+    <tr>
+        <th style="text-align: right;" class="confluenceTh">Appeared</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd">2013-Sep</td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Version</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd">0.6.12</td>
+    </tr>
+    <tr>
+        <th style="text-align: right;" class="confluenceTh">Package Registry</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd"><a
+                href="https://github.com/jspm/registry/blob/master/registry.json">json</a></td>
+    </tr>
+    <tr>
+        <th style="text-align: right;" class="confluenceTh">Module Pattern</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd">Any</td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Build Tool</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd">Yes</td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Packages on 2013-Jan</th>
+        <td class="highlight-grey confluenceTd" colspan="1" data-highlight-colour="grey"></td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Packages on 2014-Aug</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd">70</td>
+    </tr>
+    <tr>
+        <th colspan="1" class="confluenceTh">Github Usage on 2014-Aug</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd"><a
+                href="https://github.com/search?utf8=%E2%9C%93&amp;q=jspm++in%3Afile+path%3A%2Fpackage.json+language%3Ajson&amp;type=Code&amp;ref=searchresults">175</a>
+        </td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Grows</th>
+        <td class="highlight-grey confluenceTd" colspan="1" data-highlight-colour="grey"></td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Pkg/Month</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd">7</td>
+    </tr>
+    </tbody>
+</table><h4>Pluses</h4>
+<ul>
+    <li>it tries to filling gap between es6 and reality</li>
+    <li>unify build process</li>
+</ul><h4>Minuses</h4>
+<ul>
+    <li>very 'young' project</li>
+    <li>not much community around yet</li>
+</ul><h4>Recommendation </h4>
+<ul>
+    <li> play with it</li>
+    <li> learn es6</li>
+</ul><h3>Resources</h3>
+<ul>
+    <li><a href="http://jspm.io/">Frictionless browser package managemen</a></li>
+</ul><h1 style="text-align: left;">Comparison Table</h1>
+<table class="confluenceTable">
+    <thead>
+    <tr>
+        <th class="confluenceTh"></th>
+        <th colspan="1" style="text-align: center;" class="confluenceTh"><a href="http://npmjs.org">Npm</a></th>
+        <th colspan="1" style="text-align: center;" class="confluenceTh"><a href="http://volojs.org/">Volo</a></th>
+        <th colspan="1" class="confluenceTh"><a href="http://ender.jit.su/">Ender</a></th>
+        <th colspan="1" class="confluenceTh"><a href="http://jamjs.org/">Jam</a></th>
+        <th colspan="1" class="confluenceTh"><a href="https://github.com/component/component">Component</a></th>
+        <th class="confluenceTh"><a href="http://twitter.github.com/bower/">Bower</a></th>
+        <th colspan="1" class="confluenceTh"><a href="http://jspm.io/">jspm</a></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th style="text-align: right;" class="confluenceTh">License</th>
+        <td colspan="1" class="confluenceTd"><p class="with-tabs"><a
+                href="https://github.com/npm/npm/blob/master/LICENSE">Artistic License 2.0</a></p></td>
+        <td colspan="1" style="text-align: center;" class="confluenceTd"><span>MIT/New BSD</span></td>
+        <td colspan="1" class="confluenceTd"><span>MIT</span></td>
+        <td colspan="1" class="confluenceTd"><span>MIT</span></td>
+        <td colspan="1" class="confluenceTd"><span> MIT</span></td>
+        <td class="confluenceTd">MIT</td>
+        <td colspan="1" class="confluenceTd">MIT</td>
+    </tr>
+    <tr>
+        <th style="text-align: right;" class="confluenceTh">Appeared</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd">2010-<span>Jul </span></td>
+        <td colspan="1" style="text-align: center;" class="confluenceTd"><span>2010-<span>Oct </span></span></td>
+        <td colspan="1" class="confluenceTd"><span>2011-<span>Apr</span></span></td>
+        <td colspan="1" class="confluenceTd"><span>2012-May</span></td>
+        <td colspan="1" class="confluenceTd"><span> Aug 2012</span></td>
+        <td class="confluenceTd">2012-<span>Sep</span></td>
+        <td colspan="1" class="confluenceTd">2013-Sep</td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Version</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd"><span style="color: rgb(0,0,0);"> 1.3.25</span>
+        </td>
+        <td colspan="1" class="confluenceTd"><p class="p1">0.3.3</p></td>
+        <td colspan="1" class="confluenceTd"><p class="p1">2.0.5</p></td>
+        <td colspan="1" class="confluenceTd"><p class="p1">0.2.17</p></td>
+        <td colspan="1" class="confluenceTd"><p class="p1">0.19.9</p></td>
+        <td colspan="1" class="confluenceTd"><p class="p1">1.3.8</p></td>
+        <td colspan="1" class="confluenceTd">0.6.12</td>
+    </tr>
+    <tr>
+        <th style="text-align: right;" class="confluenceTh">Package Registry</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd"><a href="http://npmjs.org">npm</a></td>
+        <td colspan="1" style="margin-left: 60.0px;" class="confluenceTd"><a
+                href="https://github.com/">github</a><span> </span></td>
+        <td colspan="1" class="confluenceTd"><a href="https://npmjs.org/">npm</a></td>
+        <td colspan="1" class="confluenceTd"><a href="http://jamjs.org/packages/#/">server</a></td>
+        <td colspan="1" class="confluenceTd"><a
+                href="https://github.com/component/component/wiki/Components">wiki</a><span> </span></td>
+        <td class="confluenceTd"><a href="http://bower.io/search/">server</a></td>
+        <td colspan="1" class="confluenceTd"><a
+                href="https://github.com/jspm/registry/blob/master/registry.json">json</a></td>
+    </tr>
+    <tr>
+        <th style="text-align: right;" class="confluenceTh">Module Pattern</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd"><span>CommonJS</span></td>
+        <td colspan="1" class="confluenceTd"><span> AMD/CommonJS</span></td>
+        <td colspan="1" class="confluenceTd"><span>CommonJS</span></td>
+        <td colspan="1" class="confluenceTd"><span>AMD</span></td>
+        <td colspan="1" class="confluenceTd"><span>CommonJS</span></td>
+        <td class="confluenceTd">Any</td>
+        <td colspan="1" class="confluenceTd">Any</td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Build Tool</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd">No</td>
+        <td colspan="1" class="confluenceTd">Yes</td>
+        <td colspan="1" class="confluenceTd">Yes</td>
+        <td colspan="1" class="confluenceTd"></td>
+        <td colspan="1" class="confluenceTd">Yes</td>
+        <td colspan="1" class="confluenceTd">No</td>
+        <td colspan="1" class="confluenceTd">Yes</td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Packages on 2013-Jan*</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd"><span
+                style="color: rgb(68,68,68);">20000</span></td>
+        <td class="highlight-grey confluenceTd" colspan="1" data-highlight-colour="grey"></td>
+        <td colspan="1" class="confluenceTd">212</td>
+        <td colspan="1" class="confluenceTd"><span>279</span></td>
+        <td colspan="1" class="confluenceTd"><span style="color: rgb(68,68,68);">431</span></td>
+        <td colspan="1" class="confluenceTd"><span style="color: rgb(68,68,68);">698</span></td>
+        <td class="highlight-grey confluenceTd" colspan="1" data-highlight-colour="grey"></td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Packages on 2014-Aug</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd">87411</td>
+        <td class="highlight-grey confluenceTd" colspan="1" data-highlight-colour="grey"></td>
+        <td colspan="1" class="confluenceTd">1204</td>
+        <td colspan="1" class="confluenceTd">749</td>
+        <td colspan="1" class="confluenceTd">1930</td>
+        <td colspan="1" class="confluenceTd">17356</td>
+        <td colspan="1" class="confluenceTd">70</td>
+    </tr>
+    <tr>
+        <th colspan="1" class="confluenceTh">Github Usage <span>on 2014-Aug</span></th>
+        <td colspan="1" class="confluenceTd"><p style="text-align: center;"><a
+                href="https://github.com/search?utf8=%E2%9C%93&amp;q=name++in%3Afile+path%3A%2Fpackage.json+language%3Ajson&amp;type=Code&amp;ref=searchresults">255730</a>
+        </p></td>
+        <td colspan="1" class="confluenceTd"><a
+                href="https://github.com/search?l=json&amp;o=desc&amp;q=volo++in%3Afile+path%3A%2Fpackage.json+language%3Ajson&amp;ref=searchresults&amp;s=&amp;type=Code&amp;utf8=%E2%9C%93">603</a><span> </span>
+        </td>
+        <td colspan="1" class="confluenceTd"><a
+                href="https://github.com/search?utf8=%E2%9C%93&amp;q=ender++in%3Afile+path%3A%2Fpackage.json+language%3Ajson&amp;type=Code&amp;ref=searchresults">264</a>
+        </td>
+        <td colspan="1" class="confluenceTd"><a
+                href="https://github.com/search?utf8=%E2%9C%93&amp;q=ender++in%3Afile+path%3A%2Fpackage.json+language%3Ajson&amp;type=Code&amp;ref=searchresults">591</a>
+        </td>
+        <td colspan="1" class="confluenceTd"><a
+                href="https://github.com/search?p=98&amp;q=name++in%3Afile+path%3A%2Fcomponent.json+language%3Ajson&amp;ref=searchresults&amp;type=Code&amp;utf8=%E2%9C%93">11149</a>
+        </td>
+        <td colspan="1" class="confluenceTd"><p><a
+                href="https://github.com/search?utf8=%E2%9C%93&amp;q=name++in%3Afile+path%3A%2Fbower.json+language%3Ajson&amp;type=Code&amp;ref=searchresults">48677</a>
+        </p></td>
+        <td colspan="1" class="confluenceTd"><a
+                href="https://github.com/search?utf8=%E2%9C%93&amp;q=jspm++in%3Afile+path%3A%2Fpackage.json+language%3Ajson&amp;type=Code&amp;ref=searchresults">175</a>
+        </td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh">Grows</th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd">4.3</td>
+        <td class="highlight-grey confluenceTd" colspan="1" data-highlight-colour="grey"></td>
+        <td colspan="1" class="confluenceTd">5.7</td>
+        <td colspan="1" class="confluenceTd">2.7</td>
+        <td colspan="1" class="confluenceTd">4.5</td>
+        <td colspan="1" class="confluenceTd">25</td>
+        <td class="highlight-grey confluenceTd" colspan="1" data-highlight-colour="grey"></td>
+    </tr>
+    <tr>
+        <th colspan="1" style="text-align: right;" class="confluenceTh"><span>Pkg/Month</span></th>
+        <td colspan="1" style="text-align: center;" class="confluenceTd"><span
+                style="color: rgb(34,34,34);"> 4495</span></td>
+        <td class="highlight-grey confluenceTd" colspan="1" data-highlight-colour="grey"></td>
+        <td colspan="1" class="confluenceTd"><span>52</span></td>
+        <td colspan="1" class="confluenceTd"><span>25</span></td>
+        <td colspan="1" class="confluenceTd">79</td>
+        <td colspan="1" class="confluenceTd"><span>877</span></td>
+        <td colspan="1" class="confluenceTd">7</td>
+    </tr>
+    </tbody>
+</table><p><strong>* </strong>Packages count for 2013-01-01 taken from <a class="confluence-link"
+                                                                          href="/wiki/display/JSLEAR/The+State+of+Javascript+Package+Management"
+                                                                          data-linked-resource-id="6717534"
+                                                                          data-linked-resource-type="page"
+                                                                          data-linked-resource-default-alias="The State of Javascript Package Management"
+                                                                          data-base-url="https://openvision.atlassian.net/wiki">The
+    State of Javascript Package Management</a></p><h1>Conclusion </h1><p>volo and jam losing battle because looks like
+    AMD wouldn't be a first to go module format,<br/> not all application need to on demand loading of modules<br/>
+    <br/> ender is more build tool than package manager<br/> <br/> From metrics we see that winners are npm and bower,
+    they has<br/> big repos and strong community support. Looks like bowe just filled a gap with asserts management<br/>
+    for browser platform which wasn't included in npm by design.<br/> <br/> Component is promising tool but community
+    need some time to learn on how to create and<br/> reusable small components for frontend<br/> <br/> jspm gives a
+    good playground to work with es6 standard</p><h1><span>In a wider scope</span></h1><p>Let's compare our winners with
+    other languages. I found <a href="http://www.modulecounts.com/">next statistic</a> in the net.</p><p></p><p><span
+        style="color: rgb(255,102,0);">How to work with CSS, Images, Fonts ?</span></p><p style="text-align: left;">
+    <span style="color: rgb(255,102,0);">Why other tools appear ?</span></p><p style="text-align: left;"><span
+        style="color: rgb(255,102,0);">Test on how browserify works with non-flat tree</span></p><p></p><p></p>
