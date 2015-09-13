@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Meet with Grunt.js</title>
+
+		<meta name="description" content="Overview of current state of package manager for javascript">
+		<meta name="author" content="Igor Nesterenko">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.min.css">
+		<link rel="stylesheet" href="css/theme/default.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+		<script>
+			if( window.location.search.match( /print-pdf/gi ) ) {
+				var link = document.createElement( 'link' );
+				link.rel = 'stylesheet';
+				link.type = 'text/css';
+				link.href = 'css/print/pdf.css';
+				document.getElementsByTagName( 'head' )[0].appendChild( link );
+			}
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+
+        <style type="text/css">
+            .left-side {
+                text-align: left;
+
+            }
+        </style>
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+                <section><h3 id="why-grunt-">Why Grunt ?</h3>
+<ul>
+<li>ultimate task runner</li>
+<li>~5k plugins</li>
+</ul>
+</section><section><h3 id="any-alternatives-">Any alternatives ?</h3>
+<ul>
+<li><a href="https://docs.npmjs.com/cli/run-script"><em>npm run</em></a></li>
+<li><a href="http://gulpjs.com/">gulp</a></li>
+</ul>
+</section><section><h3 id="how-to-install-">How to install ?</h3>
+<ul>
+<li>Ships with 2 parts: grunt itself &amp; grunt-cli</li>
+<li>Installing CLI:<pre><code class="lang-bash">      npm install -g grunt-cli</code></pre>
+</li>
+</ul>
+<blockquote>
+<p>Installing package is as easy as specifying proper version in package.json and running npm i or just npm i grunt</p>
+</blockquote>
+</section><section><h3 id="project-structure">Project structure</h3>
+<pre><code class="lang-bash">
+|-src/
+|-Gruntfile.js
+|-package.json</code></pre>
+</section><section><h3 id="gruntfile-js">Gruntfile.js</h3>
+<pre><code class="lang-javascript">
+module.exports = function (grunt) {
+  grunt.initConfig({
+    pkg: grunt.file.readJSON(&#39;package.json&#39;),
+    task: {
+      options: {
+        // general options go here
+      },
+      targetName1: {
+        // targetName1 specific
+      },
+      targetName2: { ... }
+    }
+  })
+  grunt.loadNpmTasks(&#39;grunt-task&#39;);
+  //other grunt tasks here
+  grunt.registerTask(&#39;default&#39;, [&#39;task&#39;])
+}</code></pre>
+</section><section><h3 id="bored-with-loadnpmtasks-">Bored with <em>loadNpmTasks</em> ?</h3>
+<pre><code class="lang-javascript">grunt.loadNpmTasks(&#39;grunt-shell&#39;);
+grunt.loadNpmTasks(&#39;grunt-sass&#39;);
+grunt.loadNpmTasks(&#39;grunt-recess&#39;);
+grunt.loadNpmTasks(&#39;grunt-sizediff&#39;);
+grunt.loadNpmTasks(&#39;grunt-svgmin&#39;);
+grunt.loadNpmTasks(&#39;grunt-styl&#39;);
+grunt.loadNpmTasks(&#39;grunt-php&#39;);
+grunt.loadNpmTasks(&#39;grunt-eslint&#39;);</code></pre>
+<p>Use <a href="https://www.npmjs.com/package/load-grunt-tasks"><em>load-grunt-tasks</em></a></p>
+<pre><code class="lang-javascript">require(&#39;load-grunt-tasks&#39;)(grunt);</code></pre>
+</section><section><h3 id="deprecated-grunt-collections">Deprecated Grunt Collections</h3>
+<blockquote>
+<p>Not officially deprecated but no popular/useful grunt collections were found</p>
+</blockquote>
+<h4 id="create-separate-module-with-package-json">Create separate module with package.json</h4>
+<pre><code class="lang-javascript">
+ &quot;keywords&quot;: [
+    &quot;gruntcollection&quot;
+  ]
+ &quot;dependencies&quot;: {
+    //a lot of grunt plugins here
+ },</code></pre>
+<blockquote>
+<p>So it became searchable <a href="https://www.npmjs.com/browse/keyword/gruntcollection">through NPM register</a></p>
+</blockquote>
+<h4 id="in-your-s-project-gruntfile-js">In your&#39;s project Gruntfile.js</h4>
+<pre><code class="lang-javascript">
+grunt.loadNpmTasks(&#39;grunt-my-collection&#39;);</code></pre>
+</section><section><h3 id="running-tasks">Running Tasks</h3>
+<blockquote>
+<p>Tasks are grunt`s bread and butter.</p>
+</blockquote>
+<pre><code class="lang-bash">&gt;grunt
+&gt;grunt default
+&gt;grunt jshint:test
+&gt;grunt foo:testing:123</code></pre>
+</section><section><h3 id="task-types">Task types</h3>
+<ul>
+<li>Alias Tasks</li>
+<li>&#39;Basic&#39; Tasks</li>
+<li>Multi Tasks</li>
+</ul>
+</section><section><h3 id="alias-tasks">Alias Tasks</h3>
+<blockquote>
+<p>When task is a combination of one or more other tasks</p>
+</blockquote>
+<pre><code class="lang-javascript">grunt.registerTask(&#39;default&#39;, [&#39;jshint&#39;, &#39;qunit&#39;, &#39;concat&#39;, &#39;uglify&#39;]);
+
+//grunt default</code></pre>
+</section><section><h3 id="basic-task">Basic Task</h3>
+<blockquote>
+<p>When a basic task is run, Grunt doesn&#39;t look at the configuration or environment — it just runs the specified task function</p>
+</blockquote>
+<p>...</p>
+</section><section><h3 id="multi-task">Multi Task</h3>
+<blockquote>
+<p>When a multi task is run, Grunt looks for a property of the same name in the Grunt configuration</p>
+</blockquote>
+<pre><code class="lang-javascript">grunt.initConfig({
+  log: {
+    foo: [1, 2, 3],
+    bar: &#39;hello world&#39;,
+    baz: false
+  }
+});
+
+grunt.registerMultiTask(&#39;log&#39;, &#39;Log stuff.&#39;, function() {
+  grunt.log.writeln(this.target + &#39;: &#39; + this.data);
+});
+
+//grunt log:foo  
+//grunt log</code></pre>
+</section><section><h3 id="configuring-tasks">Configuring Tasks</h3>
+<ul>
+<li><a href="https://github.com/isaacs/node-glob#glob-primer">Globbing patterns</a>: <em> ? *</em> {} ! i.e:<pre><code class="lang-javascript">  !foo/*{.js,.coffee}</code></pre>
+If you set expand option to true, you can use:</li>
+<li>&#39;cwd&#39; - current working directory &#39;src, dest, ext&#39;,</li>
+<li>&#39;flatten&#39; - remove all path parts from generated dest paths</li>
+<li>&#39;rename&#39; - func to be called for each matched src file, dest &amp; src as arguments.</li>
+</ul>
+</section><section><h3 id="tips-and-tricks-for-tasks-creation">Tips and tricks for tasks creation</h3>
+<pre><code class="lang-javascript">
+grunt.registerMultiTask(&#39;bar&#39;, &#39;Log stuff.&#39;, function() {
+
+    var done = this.async();         //to handle async stuff
+    var taskName = this.name;        //current task name
+    var targetName = this.target;    //current target name
+
+    var version = grunt.config(        
+                    [&#39;pkg&#39;],
+                    [&#39;version&#39;]
+    );                                //read global grunt config
+    grunt.task.requires(&#39;foo&#39;);        //fail if &#39;foo&#39; was failed
+
+});</code></pre>
+</section><section><h3 id="lean-from-code">Lean from code</h3>
+<ul>
+<li><a href="">grunt-contrib-concat</a></li>
+<li><a href="">grunt-contrib-jshint</a></li>
+</ul>
+</section>
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.min.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+                slideNumber: true,
+
+				theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+				transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+				// Parallax scrolling
+				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+				// parallaxBackgroundSize: '2100px 900px',
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
