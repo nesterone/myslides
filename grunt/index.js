@@ -1,13 +1,12 @@
-var mdsec = require('marked-sections'),
+var markdown = require('marked-sections'),
 	fs = require('fs'),
 	_ = require('underscore');
 
-mdsec.setOptions({
+markdown.setOptions({
     levels: 3
 });
  
-
-var sections = fs.readFileSync('sections.md');
+var sections = fs.readFileSync('README.md');
 
 if (sections){
 	sections = sections.toString();
@@ -15,7 +14,7 @@ if (sections){
 	sections = '';
 }
 
-sections = mdsec.parse(sections);
+sections = markdown.parse(sections);
 
 console.log(sections);
 

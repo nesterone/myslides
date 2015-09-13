@@ -49,9 +49,19 @@
 
 			<!-- Any section element inside of this container is displayed as a slide -->
 			<div class="slides">
-                <section><h3 id="why-grunt-">Why Grunt ?</h3>
+                <section><h3 id="meet-with-grunt-js">Meet with Grunt.js</h3>
+<p>Just a task runner</p>
+</section><section><h3 id="about-me">About me</h3>
 <ul>
-<li>ultimate task runner</li>
+<li>Lead Software Enginer in Globallogic</li>
+<li>like everything what&#39;s starts from Java</li>
+<li>REST evangelist</li>
+<li>working with JasperServer frontend/backend</li>
+<li>leading development of Visualize.js</li>
+</ul>
+</section><section><h3 id="why-grunt-">Why Grunt ?</h3>
+<ul>
+<li>ultimate task runner (does one thing well)</li>
 <li>~5k plugins</li>
 </ul>
 </section><section><h3 id="any-alternatives-">Any alternatives ?</h3>
@@ -65,12 +75,10 @@
 <li>Installing CLI:<pre><code class="lang-bash">      npm install -g grunt-cli</code></pre>
 </li>
 </ul>
-<blockquote>
-<p>Installing package is as easy as specifying proper version in package.json and running npm i or just npm i grunt</p>
-</blockquote>
 </section><section><h3 id="project-structure">Project structure</h3>
 <pre><code class="lang-bash">
-|-src/
+|-foo/
+|-bar/
 |-Gruntfile.js
 |-package.json</code></pre>
 </section><section><h3 id="gruntfile-js">Gruntfile.js</h3>
@@ -103,10 +111,8 @@ grunt.loadNpmTasks(&#39;grunt-php&#39;);
 grunt.loadNpmTasks(&#39;grunt-eslint&#39;);</code></pre>
 <p>Use <a href="https://www.npmjs.com/package/load-grunt-tasks"><em>load-grunt-tasks</em></a></p>
 <pre><code class="lang-javascript">require(&#39;load-grunt-tasks&#39;)(grunt);</code></pre>
-</section><section><h3 id="deprecated-grunt-collections">Deprecated Grunt Collections</h3>
-<blockquote>
-<p>Not officially deprecated but no popular/useful grunt collections were found</p>
-</blockquote>
+</section><section><h3 id="grunt-collections">Grunt Collections</h3>
+<p>Not officially but deprecated ...</p>
 <h4 id="create-separate-module-with-package-json">Create separate module with package.json</h4>
 <pre><code class="lang-javascript">
  &quot;keywords&quot;: [
@@ -115,16 +121,11 @@ grunt.loadNpmTasks(&#39;grunt-eslint&#39;);</code></pre>
  &quot;dependencies&quot;: {
     //a lot of grunt plugins here
  },</code></pre>
-<blockquote>
-<p>So it became searchable <a href="https://www.npmjs.com/browse/keyword/gruntcollection">through NPM register</a></p>
-</blockquote>
+<p>So it became avaliable at <a href="https://www.npmjs.com/browse/keyword/gruntcollection">NPM register</a></p>
 <h4 id="in-your-s-project-gruntfile-js">In your&#39;s project Gruntfile.js</h4>
-<pre><code class="lang-javascript">
-grunt.loadNpmTasks(&#39;grunt-my-collection&#39;);</code></pre>
+<pre><code class="lang-javascript">grunt.loadNpmTasks(&#39;grunt-my-collection&#39;);</code></pre>
 </section><section><h3 id="running-tasks">Running Tasks</h3>
-<blockquote>
 <p>Tasks are grunt`s bread and butter.</p>
-</blockquote>
 <pre><code class="lang-bash">&gt;grunt
 &gt;grunt default
 &gt;grunt jshint:test
@@ -136,21 +137,15 @@ grunt.loadNpmTasks(&#39;grunt-my-collection&#39;);</code></pre>
 <li>Multi Tasks</li>
 </ul>
 </section><section><h3 id="alias-tasks">Alias Tasks</h3>
-<blockquote>
 <p>When task is a combination of one or more other tasks</p>
-</blockquote>
 <pre><code class="lang-javascript">grunt.registerTask(&#39;default&#39;, [&#39;jshint&#39;, &#39;qunit&#39;, &#39;concat&#39;, &#39;uglify&#39;]);
 
 //grunt default</code></pre>
 </section><section><h3 id="basic-task">Basic Task</h3>
-<blockquote>
 <p>When a basic task is run, Grunt doesn&#39;t look at the configuration or environment — it just runs the specified task function</p>
-</blockquote>
 <p>...</p>
 </section><section><h3 id="multi-task">Multi Task</h3>
-<blockquote>
 <p>When a multi task is run, Grunt looks for a property of the same name in the Grunt configuration</p>
-</blockquote>
 <pre><code class="lang-javascript">grunt.initConfig({
   log: {
     foo: [1, 2, 3],
@@ -193,6 +188,14 @@ grunt.registerMultiTask(&#39;bar&#39;, &#39;Log stuff.&#39;, function() {
 <li><a href="">grunt-contrib-concat</a></li>
 <li><a href="">grunt-contrib-jshint</a></li>
 </ul>
+</section><section><h3 id="resources">Resources</h3>
+<ol>
+<li><a href="http://gruntjs.com/">Grunt</a></li>
+<li><a href="http://kottans.org/js-slides/grunt">Grunt 101 (Kottans)</a> </li>
+<li><a href="https://github.com/gruntjs/grunt/issues/379">Grunt Collections</a></li>
+<li><a href="http://www.thomasboyt.com/2013/09/01/maintainable-grunt.html">More maintainable Gruntfiles</a></li>
+<li><a href="http://www.html5rocks.com/en/tutorials/tooling/supercharging-your-gruntfile/">Supercharging your Gruntfile</a></li>
+</ol>
 </section>
 			</div>
 
