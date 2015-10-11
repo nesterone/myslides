@@ -1,5 +1,6 @@
 ###Meet with Grunt.js
-Just a task runner
+#####Just a task runner
+created by [Igor Nesterenko](https://twitter.com/nesterone)
 
 ###About me
 
@@ -128,7 +129,7 @@ When task is a combination of one or more other tasks
 ```javascript
 grunt.registerTask('default', ['jshint', 'qunit', 'concat', 'uglify']);
 
-//grunt default
+>grunt default
 
 ```
 
@@ -136,7 +137,18 @@ grunt.registerTask('default', ['jshint', 'qunit', 'concat', 'uglify']);
 
 When a basic task is run, Grunt doesn't look at the configuration or environment — it just runs the specified task function
 
-...
+```javascript
+
+grunt.task.registerTask('foo', 'Basic Task',
+    function(arg1, arg2) {
+      if (arguments.length === 0) {
+        grunt.log.writeln(this.name + ", no args");
+      } else {
+        grunt.log.writeln(this.name + ", " + arg1 + " " + arg2);
+      }
+});
+
+```
 
 
 ###Multi Task
@@ -161,7 +173,7 @@ grunt.registerMultiTask('log', 'Log stuff.', function() {
 ```
 
 
-###Globbing Patterns
+###Simple Pattern Matching
 
 ![Alt text](https://github.com/isaacs/node-glob/raw/master/oh-my-glob.gif)
 
@@ -171,8 +183,10 @@ grunt.registerMultiTask('log', 'Log stuff.', function() {
 * '{}' allows for a comma-separated list of "or" expressions
 * '!' at the beginning of a pattern will negate the match
 
-* [node-glob](https://github.com/isaacs/node-glob)
+###Unix Globbing in Node
+
 * [minimatch](https://github.com/isaacs/minimatch)
+* [node-glob](https://github.com/isaacs/node-glob)
 
 
 ###Configuring Tasks
@@ -187,18 +201,13 @@ grunt.registerMultiTask('log', 'Log stuff.', function() {
     {src: ['foo/this.js', 'foo/that.js', 'foo/the-other.js'], dest: ...}
     // Or you can generalize with a glob pattern:
     {src: 'foo/th*.js', dest: ...}
-    
     // This single node-glob pattern:
     {src: 'foo/{a,b}*.js', dest: ...}
     // Could also be written like this:
     {src: ['foo/a*.js', 'foo/b*.js'], dest: ...}
-    
-    ...
-    
     // Templates may be used in filepaths or glob patterns:
     {src: ['src/<%= basename %>.js'], dest: 'build/<%= basename %>.min.js'}
-    // But they may also reference file lists defined elsewhere in the config:
-    {src: ['foo/*.js', '<%= jshint.all.src %>'], dest: ...}
+    
     
 ```
 ###Configuting Tasks (few notes)
@@ -208,6 +217,7 @@ If you set expand option to true, you can use:
 * 'expand' - Enable dynamic expansion
 
 ```javascript
+ uglify: {
     dynamic_mappings : {
           // Grunt will search for "**/*.js" under "lib/" when the "uglify" task
           // runs and build the appropriate src-dest file mappings then, so you
@@ -223,6 +233,7 @@ If you set expand option to true, you can use:
             },
           ],
     }
+ }
 ```
 
 
@@ -256,3 +267,9 @@ grunt.registerMultiTask('bar', 'Log stuff.', function() {
  1. [Grunt Collections](https://github.com/gruntjs/grunt/issues/379)
  1. [More maintainable Gruntfiles](http://www.thomasboyt.com/2013/09/01/maintainable-grunt.html)
  1. [Supercharging your Gruntfile](http://www.html5rocks.com/en/tutorials/tooling/supercharging-your-gruntfile/)
+ 
+###Q&A
+
+###Simple Example
+
+* Read Sources of [this](https://github.com/nesterone/myslides/tree/master/grunt) presentation
