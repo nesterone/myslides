@@ -3,11 +3,11 @@ Just a task runner
 
 ###About me
 
-* Lead Software Enginer in Globallogic
+* Lead Software Engineer in Globallogic
 * like everything what's starts from Java
-* REST evangelist
-* working with JasperServer frontend/backend
-* leading development of Visualize.js
+* REST evangelist ;-)
+* working with JasperServer frontend ... and backend
+* leading development of Visualize.js (javascript API)
 
 
 ###Why Grunt ?
@@ -22,9 +22,9 @@ Just a task runner
 ###How to install ?
 * Ships with 2 parts: grunt itself & grunt-cli
 * Installing CLI:
-	```bash
-		npm install -g grunt-cli
-	```
+    ```bash
+        npm install -g grunt-cli
+    ```
 
 ###Project structure
 
@@ -83,22 +83,22 @@ require('load-grunt-tasks')(grunt);
 
 ###Grunt Collections
 
-Not officially but deprecated ...
+Not broadly used 
 
-####Create separate module with package.json
 ```javascript
 
  "keywords": [
     "gruntcollection"
   ]
  "dependencies": {
-	//a lot of grunt plugins here
- },
+    //a lot of grunt plugins here
+ }
 
 ```
-So it became avaliable at [NPM register](https://www.npmjs.com/browse/keyword/gruntcollection)
+[NPM register](https://www.npmjs.com/browse/keyword/gruntcollection)
 
 ####In your's project Gruntfile.js
+
 ```javascript
 grunt.loadNpmTasks('grunt-my-collection');
 ```
@@ -113,6 +113,7 @@ Tasks are grunt`s bread and butter.
 >grunt jshint:test
 >grunt foo:testing:123  
 ```
+
 ### Task types
 
 * Alias Tasks
@@ -160,42 +161,91 @@ grunt.registerMultiTask('log', 'Log stuff.', function() {
 ```
 
 
+###Globbing Patterns
+
+![Alt text](https://github.com/isaacs/node-glob/raw/master/oh-my-glob.gif)
+
+* '*' matches any number of characters, but not /
+* '?' matches a single character, but not /
+* '**' matches any number of characters, including /, as long as it's the only thing in a path part
+* '{}' allows for a comma-separated list of "or" expressions
+* '!' at the beginning of a pattern will negate the match
+
+* [node-glob](https://github.com/isaacs/node-glob)
+* [minimatch](https://github.com/isaacs/minimatch)
+
+
 ###Configuring Tasks
 
-* [Globbing patterns](https://github.com/isaacs/node-glob#glob-primer): * ? ** {} ! i.e:
+[Configuring tasks](http://gruntjs.com/configuring-tasks#globbing-patterns)
+
 ```javascript
-	!foo/*{.js,.coffee}
+
+    // You can specify single files:
+    {src: 'foo/this.js', dest: ...}
+    // Or arrays of files:
+    {src: ['foo/this.js', 'foo/that.js', 'foo/the-other.js'], dest: ...}
+    // Or you can generalize with a glob pattern:
+    {src: 'foo/th*.js', dest: ...}
+    
+    // This single node-glob pattern:
+    {src: 'foo/{a,b}*.js', dest: ...}
+    // Could also be written like this:
+    {src: ['foo/a*.js', 'foo/b*.js'], dest: ...}
+    
+    ...
+    
+    // Templates may be used in filepaths or glob patterns:
+    {src: ['src/<%= basename %>.js'], dest: 'build/<%= basename %>.min.js'}
+    // But they may also reference file lists defined elsewhere in the config:
+    {src: ['foo/*.js', '<%= jshint.all.src %>'], dest: ...}
+    
 ```
+###Configuting Tasks (few notes)
+ 
 If you set expand option to true, you can use:
 * 'cwd' - current working directory 'src, dest, ext',
-* 'flatten' - remove all path parts from generated dest paths
-* 'rename' - func to be called for each matched src file, dest & src as arguments.
+* 'expand' - Enable dynamic expansion
+
+```javascript
+    dynamic_mappings : {
+          // Grunt will search for "**/*.js" under "lib/" when the "uglify" task
+          // runs and build the appropriate src-dest file mappings then, so you
+          // don't need to update the Gruntfile when files are added or removed.
+          files: [
+            {
+              expand: true,     // Enable dynamic expansion.
+              cwd: 'lib/',      // Src matches are relative to this path.
+              src: ['**/*.js'], // Actual pattern(s) to match.
+              dest: 'build/',   // Destination path prefix.
+              ext: '.min.js',   // Dest filepaths will have this extension.
+              extDot: 'first'   // Extensions in filenames begin after the first dot
+            },
+          ],
+    }
+```
 
 
 ###Tips and tricks for tasks creation
 
 ```javascript
+grunt.registerMultiTask('bar', 'Log stuff.', function() { 
+    var done = this.async();         //to handle async stuff
+    var taskName = this.name;        //current task name
+    var targetName = this.target;    //current target name
 
-grunt.registerMultiTask('bar', 'Log stuff.', function() {
-  
-	var done = this.async(); 		//to handle async stuff
-	var taskName = this.name;		//current task name
-	var targetName = this.target;	//current target name
-
-	var version = grunt.config(		
-					['pkg'],
-					['version']
-	);								//read global grunt config
-	grunt.task.requires('foo');		//fail if 'foo' was failed
-
+    var version = grunt.config(        
+                    ['pkg'],
+                    ['version']
+    );                                //read global grunt config
+    grunt.task.requires('foo');       //fail if 'foo' was failed
 });
-
 ```
 
 ###Lean from code
 
-* [grunt-contrib-concat]()
-* [grunt-contrib-jshint]()
+* [grunt-contrib-concat](Concat files)
+* [grunt-contrib-jshint](JS famous linter)
 
 
 

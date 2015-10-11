@@ -53,11 +53,11 @@
 <p>Just a task runner</p>
 </section><section><h3 id="about-me">About me</h3>
 <ul>
-<li>Lead Software Enginer in Globallogic</li>
+<li>Lead Software Engineer in Globallogic</li>
 <li>like everything what&#39;s starts from Java</li>
-<li>REST evangelist</li>
-<li>working with JasperServer frontend/backend</li>
-<li>leading development of Visualize.js</li>
+<li>REST evangelist ;-)</li>
+<li>working with JasperServer frontend ... and backend</li>
+<li>leading development of Visualize.js (javascript API)</li>
 </ul>
 </section><section><h3 id="why-grunt-">Why Grunt ?</h3>
 <ul>
@@ -112,16 +112,15 @@ grunt.loadNpmTasks(&#39;grunt-eslint&#39;);</code></pre>
 <p>Use <a href="https://www.npmjs.com/package/load-grunt-tasks"><em>load-grunt-tasks</em></a></p>
 <pre><code class="lang-javascript">require(&#39;load-grunt-tasks&#39;)(grunt);</code></pre>
 </section><section><h3 id="grunt-collections">Grunt Collections</h3>
-<p>Not officially but deprecated ...</p>
-<h4 id="create-separate-module-with-package-json">Create separate module with package.json</h4>
+<p>Not broadly used </p>
 <pre><code class="lang-javascript">
  &quot;keywords&quot;: [
     &quot;gruntcollection&quot;
   ]
  &quot;dependencies&quot;: {
     //a lot of grunt plugins here
- },</code></pre>
-<p>So it became avaliable at <a href="https://www.npmjs.com/browse/keyword/gruntcollection">NPM register</a></p>
+ }</code></pre>
+<p><a href="https://www.npmjs.com/browse/keyword/gruntcollection">NPM register</a></p>
 <h4 id="in-your-s-project-gruntfile-js">In your&#39;s project Gruntfile.js</h4>
 <pre><code class="lang-javascript">grunt.loadNpmTasks(&#39;grunt-my-collection&#39;);</code></pre>
 </section><section><h3 id="running-tasks">Running Tasks</h3>
@@ -160,18 +159,63 @@ grunt.registerMultiTask(&#39;log&#39;, &#39;Log stuff.&#39;, function() {
 
 //grunt log:foo  
 //grunt log</code></pre>
-</section><section><h3 id="configuring-tasks">Configuring Tasks</h3>
+</section><section><h3 id="globbing-patterns">Globbing Patterns</h3>
+<p><img src="https://github.com/isaacs/node-glob/raw/master/oh-my-glob.gif" alt="Alt text"></p>
 <ul>
-<li><a href="https://github.com/isaacs/node-glob#glob-primer">Globbing patterns</a>: <em> ? *</em> {} ! i.e:<pre><code class="lang-javascript">  !foo/*{.js,.coffee}</code></pre>
-If you set expand option to true, you can use:</li>
-<li>&#39;cwd&#39; - current working directory &#39;src, dest, ext&#39;,</li>
-<li>&#39;flatten&#39; - remove all path parts from generated dest paths</li>
-<li>&#39;rename&#39; - func to be called for each matched src file, dest &amp; src as arguments.</li>
+<li>&#39;*&#39; matches any number of characters, but not /</li>
+<li>&#39;?&#39; matches a single character, but not /</li>
+<li>&#39;**&#39; matches any number of characters, including /, as long as it&#39;s the only thing in a path part</li>
+<li>&#39;{}&#39; allows for a comma-separated list of &quot;or&quot; expressions</li>
+<li><p>&#39;!&#39; at the beginning of a pattern will negate the match</p>
+</li>
+<li><p><a href="https://github.com/isaacs/node-glob">node-glob</a></p>
+</li>
+<li><a href="https://github.com/isaacs/minimatch">minimatch</a></li>
 </ul>
-</section><section><h3 id="tips-and-tricks-for-tasks-creation">Tips and tricks for tasks creation</h3>
+</section><section><h3 id="configuring-tasks">Configuring Tasks</h3>
+<p><a href="http://gruntjs.com/configuring-tasks#globbing-patterns">Configuring tasks</a></p>
 <pre><code class="lang-javascript">
-grunt.registerMultiTask(&#39;bar&#39;, &#39;Log stuff.&#39;, function() {
+    // You can specify single files:
+    {src: &#39;foo/this.js&#39;, dest: ...}
+    // Or arrays of files:
+    {src: [&#39;foo/this.js&#39;, &#39;foo/that.js&#39;, &#39;foo/the-other.js&#39;], dest: ...}
+    // Or you can generalize with a glob pattern:
+    {src: &#39;foo/th*.js&#39;, dest: ...}
 
+    // This single node-glob pattern:
+    {src: &#39;foo/{a,b}*.js&#39;, dest: ...}
+    // Could also be written like this:
+    {src: [&#39;foo/a*.js&#39;, &#39;foo/b*.js&#39;], dest: ...}
+
+    ...
+
+    // Templates may be used in filepaths or glob patterns:
+    {src: [&#39;src/&lt;%= basename %&gt;.js&#39;], dest: &#39;build/&lt;%= basename %&gt;.min.js&#39;}
+    // But they may also reference file lists defined elsewhere in the config:
+    {src: [&#39;foo/*.js&#39;, &#39;&lt;%= jshint.all.src %&gt;&#39;], dest: ...}</code></pre>
+</section><section><h3 id="configuting-tasks-few-notes-">Configuting Tasks (few notes)</h3>
+<p>If you set expand option to true, you can use:</p>
+<ul>
+<li>&#39;cwd&#39; - current working directory &#39;src, dest, ext&#39;,</li>
+<li>&#39;expand&#39; - Enable dynamic expansion</li>
+</ul>
+<pre><code class="lang-javascript">    dynamic_mappings : {
+          // Grunt will search for &quot;**/*.js&quot; under &quot;lib/&quot; when the &quot;uglify&quot; task
+          // runs and build the appropriate src-dest file mappings then, so you
+          // don&#39;t need to update the Gruntfile when files are added or removed.
+          files: [
+            {
+              expand: true,     // Enable dynamic expansion.
+              cwd: &#39;lib/&#39;,      // Src matches are relative to this path.
+              src: [&#39;**/*.js&#39;], // Actual pattern(s) to match.
+              dest: &#39;build/&#39;,   // Destination path prefix.
+              ext: &#39;.min.js&#39;,   // Dest filepaths will have this extension.
+              extDot: &#39;first&#39;   // Extensions in filenames begin after the first dot
+            },
+          ],
+    }</code></pre>
+</section><section><h3 id="tips-and-tricks-for-tasks-creation">Tips and tricks for tasks creation</h3>
+<pre><code class="lang-javascript">grunt.registerMultiTask(&#39;bar&#39;, &#39;Log stuff.&#39;, function() { 
     var done = this.async();         //to handle async stuff
     var taskName = this.name;        //current task name
     var targetName = this.target;    //current target name
@@ -180,13 +224,12 @@ grunt.registerMultiTask(&#39;bar&#39;, &#39;Log stuff.&#39;, function() {
                     [&#39;pkg&#39;],
                     [&#39;version&#39;]
     );                                //read global grunt config
-    grunt.task.requires(&#39;foo&#39;);        //fail if &#39;foo&#39; was failed
-
+    grunt.task.requires(&#39;foo&#39;);       //fail if &#39;foo&#39; was failed
 });</code></pre>
 </section><section><h3 id="lean-from-code">Lean from code</h3>
 <ul>
-<li><a href="">grunt-contrib-concat</a></li>
-<li><a href="">grunt-contrib-jshint</a></li>
+<li><a href="Concat files">grunt-contrib-concat</a></li>
+<li><a href="JS famous linter">grunt-contrib-jshint</a></li>
 </ul>
 </section><section><h3 id="resources">Resources</h3>
 <ol>
