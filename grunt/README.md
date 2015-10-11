@@ -13,6 +13,7 @@ Just a task runner
 ###Why Grunt ?
 * ultimate task runner (does one thing well)
 * ~5k plugins
+* gives feeling of all npm/node environment
 
 ###Any alternatives ?
 * [*npm run*](https://docs.npmjs.com/cli/run-script)
@@ -79,7 +80,6 @@ Use [*load-grunt-tasks*](https://www.npmjs.com/package/load-grunt-tasks)
 ```javascript 
 require('load-grunt-tasks')(grunt, { scope: 'devDependencies' }); 
 ```
-AAAAA
 
 ###Grunt Collections
 
