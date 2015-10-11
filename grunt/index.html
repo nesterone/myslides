@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Meet with Grunt.js</title>
+
+		<meta name="description" content="Overview of current state of package manager for javascript">
+		<meta name="author" content="Igor Nesterenko">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.min.css">
+		<link rel="stylesheet" href="css/theme/default.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+		<script>
+			if( window.location.search.match( /print-pdf/gi ) ) {
+				var link = document.createElement( 'link' );
+				link.rel = 'stylesheet';
+				link.type = 'text/css';
+				link.href = 'css/print/pdf.css';
+				document.getElementsByTagName( 'head' )[0].appendChild( link );
+			}
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+
+        <style type="text/css">
+            .left-side {
+                text-align: left;
+
+            }
+        </style>
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+                <section><h3 id="meet-with-grunt-js">Meet with Grunt.js</h3>
+<h5 id="just-a-task-runner">Just a task runner</h5>
+<p>created by <a href="https://twitter.com/nesterone">Igor Nesterenko</a></p>
+</section><section><h3 id="about-me">About me</h3>
+<ul>
+<li>Lead Software Engineer in Globallogic</li>
+<li>like everything what&#39;s starts from Java</li>
+<li>REST evangelist ;-)</li>
+<li>working with JasperServer frontend ... and backend</li>
+<li>leading development of Visualize.js (javascript API)</li>
+</ul>
+</section><section><h3 id="why-grunt-">Why Grunt ?</h3>
+<ul>
+<li>ultimate task runner (does one thing well)</li>
+<li>~5k plugins</li>
+<li>gives feeling of all npm/node environment</li>
+</ul>
+</section><section><h3 id="any-alternatives-">Any alternatives ?</h3>
+<ul>
+<li><a href="https://docs.npmjs.com/cli/run-script"><em>npm run</em></a></li>
+<li><a href="http://gulpjs.com/">gulp</a></li>
+</ul>
+</section><section><h3 id="how-to-install-">How to install ?</h3>
+<ul>
+<li>Ships with 2 parts: grunt itself &amp; grunt-cli</li>
+<li>Installing CLI:<pre><code class="lang-bash">      npm install -g grunt-cli</code></pre>
+</li>
+</ul>
+</section><section><h3 id="project-structure">Project structure</h3>
+<pre><code class="lang-bash">
+|-foo/
+|-bar/
+|-Gruntfile.js
+|-package.json</code></pre>
+</section><section><h3 id="gruntfile-js">Gruntfile.js</h3>
+<pre><code class="lang-javascript">
+module.exports = function (grunt) {
+  grunt.initConfig({
+    pkg: grunt.file.readJSON(&#39;package.json&#39;),
+    task: {
+      options: {
+        // general options go here
+      },
+      targetName1: {
+        // targetName1 specific
+      },
+      targetName2: { ... }
+    }
+  })
+  grunt.loadNpmTasks(&#39;grunt-task&#39;);
+  //other grunt tasks here
+  grunt.registerTask(&#39;default&#39;, [&#39;task&#39;])
+}</code></pre>
+</section><section><h3 id="bored-with-loadnpmtasks-">Bored with <em>loadNpmTasks</em> ?</h3>
+<pre><code class="lang-javascript">grunt.loadNpmTasks(&#39;grunt-shell&#39;);
+grunt.loadNpmTasks(&#39;grunt-sass&#39;);
+grunt.loadNpmTasks(&#39;grunt-recess&#39;);
+grunt.loadNpmTasks(&#39;grunt-sizediff&#39;);
+grunt.loadNpmTasks(&#39;grunt-svgmin&#39;);
+grunt.loadNpmTasks(&#39;grunt-styl&#39;);
+grunt.loadNpmTasks(&#39;grunt-php&#39;);
+grunt.loadNpmTasks(&#39;grunt-eslint&#39;);</code></pre>
+<p>Use <a href="https://www.npmjs.com/package/load-grunt-tasks"><em>load-grunt-tasks</em></a></p>
+<pre><code class="lang-javascript">require(&#39;load-grunt-tasks&#39;)(grunt, { scope: &#39;devDependencies&#39; });</code></pre>
+</section><section><h3 id="grunt-collections">Grunt Collections</h3>
+<p>Not broadly used </p>
+<pre><code class="lang-javascript">
+ &quot;keywords&quot;: [
+    &quot;gruntcollection&quot;
+  ]
+ &quot;dependencies&quot;: {
+    //a lot of grunt plugins here
+ }</code></pre>
+<p><a href="https://www.npmjs.com/browse/keyword/gruntcollection">NPM register</a></p>
+<h4 id="in-your-s-project-gruntfile-js">In your&#39;s project Gruntfile.js</h4>
+<pre><code class="lang-javascript">grunt.loadNpmTasks(&#39;grunt-my-collection&#39;);</code></pre>
+</section><section><h3 id="running-tasks">Running Tasks</h3>
+<p>Tasks are grunt`s bread and butter.</p>
+<pre><code class="lang-bash">&gt;grunt
+&gt;grunt default
+&gt;grunt jshint:test
+&gt;grunt foo:testing:123</code></pre>
+</section><section><h3 id="task-types">Task types</h3>
+<ul>
+<li>Alias Tasks</li>
+<li>&#39;Basic&#39; Tasks</li>
+<li>Multi Tasks</li>
+</ul>
+</section><section><h3 id="alias-tasks">Alias Tasks</h3>
+<p>When task is a combination of one or more other tasks</p>
+<pre><code class="lang-javascript">grunt.registerTask(&#39;default&#39;, [&#39;jshint&#39;, &#39;qunit&#39;, &#39;concat&#39;, &#39;uglify&#39;]);
+
+&gt;grunt default</code></pre>
+</section><section><h3 id="basic-task">Basic Task</h3>
+<p>When a basic task is run, Grunt doesn&#39;t look at the configuration or environment — it just runs the specified task function</p>
+<pre><code class="lang-javascript">
+grunt.task.registerTask(&#39;foo&#39;, &#39;Basic Task&#39;,
+    function(arg1, arg2) {
+      if (arguments.length === 0) {
+        grunt.log.writeln(this.name + &quot;, no args&quot;);
+      } else {
+        grunt.log.writeln(this.name + &quot;, &quot; + arg1 + &quot; &quot; + arg2);
+      }
+});</code></pre>
+</section><section><h3 id="multi-task">Multi Task</h3>
+<p>When a multi task is run, Grunt looks for a property of the same name in the Grunt configuration</p>
+<pre><code class="lang-javascript">grunt.initConfig({
+  log: {
+    foo: [1, 2, 3],
+    bar: &#39;hello world&#39;,
+    baz: false
+  }
+});
+
+grunt.registerMultiTask(&#39;log&#39;, &#39;Log stuff.&#39;, function() {
+  grunt.log.writeln(this.target + &#39;: &#39; + this.data);
+});
+
+//grunt log:foo  
+//grunt log</code></pre>
+</section><section><h3 id="simple-pattern-matching">Simple Pattern Matching</h3>
+<p><img src="https://github.com/isaacs/node-glob/raw/master/oh-my-glob.gif" alt="Alt text"></p>
+<ul>
+<li>&#39;*&#39; matches any number of characters, but not /</li>
+<li>&#39;?&#39; matches a single character, but not /</li>
+<li>&#39;**&#39; matches any number of characters, including /, as long as it&#39;s the only thing in a path part</li>
+<li>&#39;{}&#39; allows for a comma-separated list of &quot;or&quot; expressions</li>
+<li>&#39;!&#39; at the beginning of a pattern will negate the match</li>
+</ul>
+</section><section><h3 id="unix-globbing-in-node">Unix Globbing in Node</h3>
+<ul>
+<li><a href="https://github.com/isaacs/minimatch">minimatch</a></li>
+<li><a href="https://github.com/isaacs/node-glob">node-glob</a></li>
+</ul>
+</section><section><h3 id="configuring-tasks">Configuring Tasks</h3>
+<p><a href="http://gruntjs.com/configuring-tasks#globbing-patterns">Configuring tasks</a></p>
+<pre><code class="lang-javascript">
+    // You can specify single files:
+    {src: &#39;foo/this.js&#39;, dest: ...}
+    // Or arrays of files:
+    {src: [&#39;foo/this.js&#39;, &#39;foo/that.js&#39;, &#39;foo/the-other.js&#39;], dest: ...}
+    // Or you can generalize with a glob pattern:
+    {src: &#39;foo/th*.js&#39;, dest: ...}
+    // This single node-glob pattern:
+    {src: &#39;foo/{a,b}*.js&#39;, dest: ...}
+    // Could also be written like this:
+    {src: [&#39;foo/a*.js&#39;, &#39;foo/b*.js&#39;], dest: ...}
+    // Templates may be used in filepaths or glob patterns:
+    {src: [&#39;src/&lt;%= basename %&gt;.js&#39;], dest: &#39;build/&lt;%= basename %&gt;.min.js&#39;}</code></pre>
+</section><section><h3 id="configuting-tasks-few-notes-">Configuting Tasks (few notes)</h3>
+<p>If you set expand option to true, you can use:</p>
+<ul>
+<li>&#39;cwd&#39; - current working directory &#39;src, dest, ext&#39;,</li>
+<li>&#39;expand&#39; - Enable dynamic expansion</li>
+</ul>
+<pre><code class="lang-javascript"> uglify: {
+    dynamic_mappings : {
+          // Grunt will search for &quot;**/*.js&quot; under &quot;lib/&quot; when the &quot;uglify&quot; task
+          // runs and build the appropriate src-dest file mappings then, so you
+          // don&#39;t need to update the Gruntfile when files are added or removed.
+          files: [
+            {
+              expand: true,     // Enable dynamic expansion.
+              cwd: &#39;lib/&#39;,      // Src matches are relative to this path.
+              src: [&#39;**/*.js&#39;], // Actual pattern(s) to match.
+              dest: &#39;build/&#39;,   // Destination path prefix.
+              ext: &#39;.min.js&#39;,   // Dest filepaths will have this extension.
+              extDot: &#39;first&#39;   // Extensions in filenames begin after the first dot
+            },
+          ],
+    }
+ }</code></pre>
+</section><section><h3 id="tips-and-tricks-for-tasks-creation">Tips and tricks for tasks creation</h3>
+<pre><code class="lang-javascript">grunt.registerMultiTask(&#39;bar&#39;, &#39;Log stuff.&#39;, function() { 
+    var done = this.async();         //to handle async stuff
+    var taskName = this.name;        //current task name
+    var targetName = this.target;    //current target name
+
+    var version = grunt.config(        
+                    [&#39;pkg&#39;],
+                    [&#39;version&#39;]
+    );                                //read global grunt config
+    grunt.task.requires(&#39;foo&#39;);       //fail if &#39;foo&#39; was failed
+});</code></pre>
+</section><section><h3 id="lean-from-code">Lean from code</h3>
+<ul>
+<li><a href="Concat files">grunt-contrib-concat</a></li>
+<li><a href="JS famous linter">grunt-contrib-jshint</a></li>
+</ul>
+</section><section><h3 id="resources">Resources</h3>
+<ol>
+<li><a href="http://gruntjs.com/">Grunt</a></li>
+<li><a href="http://kottans.org/js-slides/grunt">Grunt 101 (Kottans)</a> </li>
+<li><a href="https://github.com/gruntjs/grunt/issues/379">Grunt Collections</a></li>
+<li><a href="http://www.thomasboyt.com/2013/09/01/maintainable-grunt.html">More maintainable Gruntfiles</a></li>
+<li><a href="http://www.html5rocks.com/en/tutorials/tooling/supercharging-your-gruntfile/">Supercharging your Gruntfile</a></li>
+</ol>
+</section><section><h3 id="q-a">Q&amp;A</h3>
+</section><section><h3 id="simple-example">Simple Example</h3>
+<ul>
+<li>Read Sources of <a href="https://github.com/nesterone/myslides/tree/master/grunt">this</a> presentation</li>
+</ul>
+</section>
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.min.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+                slideNumber: true,
+
+				theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+				transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+				// Parallax scrolling
+				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+				// parallaxBackgroundSize: '2100px 900px',
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
