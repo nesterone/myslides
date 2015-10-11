@@ -14,7 +14,9 @@
   "license": "ISC",
   "devDependencies": {
     "grunt": "^0.4.5",
+    "load-grunt-tasks": "^3.3.0",
     "marked-sections": "^0.1.5",
+    "time-grunt": "^1.2.1",
     "underscore": "^1.8.3"
   }
 }

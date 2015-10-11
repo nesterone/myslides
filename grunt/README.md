@@ -77,9 +77,9 @@ grunt.loadNpmTasks('grunt-eslint');
 Use [*load-grunt-tasks*](https://www.npmjs.com/package/load-grunt-tasks)
 
 ```javascript 
-require('load-grunt-tasks')(grunt); 
+require('load-grunt-tasks')(grunt, { scope: 'devDependencies' }); 
 ```
-
+AAAAA
 
 ###Grunt Collections
 
