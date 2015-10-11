@@ -1,0 +1,796 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Обзор иструментов управления пакетами в JavaScript - акценты на фронтенде</title>
+
+		<meta name="description" content="Обзор иструментов управления пакетами в JavaScript - акценты на фронтенде">
+		<meta name="author" content="Игорь Нестеренко">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.min.css">
+		<link rel="stylesheet" href="css/theme/default.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+		<script>
+			if( window.location.search.match( /print-pdf/gi ) ) {
+				var link = document.createElement( 'link' );
+				link.rel = 'stylesheet';
+				link.type = 'text/css';
+				link.href = 'css/print/pdf.css';
+				document.getElementsByTagName( 'head' )[0].appendChild( link );
+			}
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+
+        <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+        <script src="http://code.highcharts.com/highcharts.js"></script>
+
+
+        <style type="text/css">
+            .left-side {
+                text-align: left;
+
+            }
+        </style>
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+
+			<div class="slides">
+                <section data-markdown="markdown/ru/cover.md"></section>
+                <section data-markdown="markdown/ru/about.md"></section>
+                <section data-markdown="markdown/ru/terms.md"></section>
+				<section data-markdown="markdown/ru/intro.md"></section>
+                <section data-markdown="markdown/ru/requirements.md"></section>
+                <section data-markdown="markdown/ru/tools.md"></section>
+                <section data-markdown="markdown/ru/install.md"></section>
+
+                <section data-markdown="markdown/ru/npm.md"></section>
+                <section data-markdown="markdown/ru/npm_pkg_descriptor.md"></section>
+                <section data-markdown="markdown/ru/npm_folder.md"></section>
+                <section data-markdown="markdown/ru/npm_metrix.md"></section>
+                <section data-markdown="markdown/ru/npm_pluses.md"></section>
+                <section data-markdown="markdown/ru/npm_minuses.md"></section>
+                <section data-markdown="markdown/ru/npm_recommendations.md"></section>
+
+                <section data-markdown="markdown/ru/volo.md"></section>
+                <section data-markdown="markdown/ru/volo_pkg_descriptor.md"></section>
+                <section data-markdown="markdown/ru/volo_folder.md"></section>
+                <section data-markdown="markdown/ru/volo_metrix.md"></section>
+                <section data-markdown="markdown/ru/volo_pluses.md"></section>
+                <section data-markdown="markdown/ru/volo_minuses.md"></section>
+                <section data-markdown="markdown/ru/volo_recommendations.md"></section>
+
+                <!-- Ender -->
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## ender
+
+                        Поиск
+                        ```bash
+                        ender search domready
+                        ```
+
+                        Установка
+                        ```bash
+                        volo add domready
+                        ```
+
+                        Использование
+                        ```javascript
+                        $.domReady(function(){
+                             alert('DOM ready');
+                        });
+                        ```
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ### ender
+                        package.json
+                        ```json
+                        {
+                             "name": "hello-ender",
+                             "version": "0.0.0",
+                             "description": "Test ender project",
+                             "license": "MIT",
+                             "dependencies": {
+                                "domready": "~1.0.6"
+                             },
+                            "keywords": [
+                                "ender"
+                            ],
+                            "main": "./src/main.js",
+                            "ender": "./src/exports/ender.js"
+                        }
+                        ```
+
+                        Публикация
+                        ```
+                        npm publish hello-ender
+                        ```
+
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ##### hello-ender/
+
+                        ````
+                        .
+                        |-- ender.js
+                        |-- ender.js.map
+                        |-- ender.min.js
+                        |-- ender.min.js.map
+                        |-- index.html
+                        |-- node_modules
+                        |   |-- domready
+                        |   |-- ender-commonjs
+                        |   |-- ender-core
+                        |   `-- underscore
+                        |-- package.json
+                        `-- src
+                            |-- ender.js
+                            `-- main.js
+                        ````
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Метрики
+                        [![Metrix](img/ender.png)](http://goo.gl/EeuFtv)
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Плюсы
+                        + унификация процесса сборки
+                        + простая структура проекта
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Минусы
+                        - малое комьюнити
+                        - установку и публикацию нужно делать через npm
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Рекомендации
+                        * экперименты
+                        * не для сложных проектов (сравнительно маленький реестр)
+                    </script>
+                </section>
+
+                <!-- Jam -->
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## jam
+
+                        Поиск
+                        ```bash
+                        jam search backbone
+                        ```
+
+                        Установка
+                        ```bash
+                        jam install backbone
+                        ```
+
+                        Использование
+                        ```javascript
+                        require(['backbone'], function (Backbone) {
+                            console.log(Backbone);
+                        });
+                        ```
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ### jam
+
+                        package.json
+                        ```json
+                        {
+                             "name": "hello-jam",
+                             "version": "0.0.1",
+                              "description": "An example of Jam project",
+                              "jam": {
+                                      "dependencies": {
+                                         "backbone": "1.0.0"
+                                       }
+                              }
+                        }
+                        ```
+
+                        Публикуем
+                        ```
+                        jam publish hello-jam
+                        ```
+
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ##### hello-jam/
+
+                        ````
+                        .
+                        |-- index.html
+                        |-- jam
+                        |   |-- backbone
+                        |   |-- jquery
+                        |   |-- require.config.js
+                        |   |-- require.js
+                        |   `-- underscore
+                        |-- myapp
+                        |   `-- app.js
+                        `-- package.json
+                        ````
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Метрики
+                        [![Metrix](img/jam.png)](https://openvision.atlassian.net/wiki/display/JSLEAR/JavaScript+Package+Managers+overview#JavaScriptPackageManagersoverview-Jam)
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Плюсы
+                        + полный цикл
+                        + прост в использовании
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Минусы
+                        - маленькое комьюнити
+                        - несвоевременное обновление популярных библиотек
+                        - необходимо знать как работать с RequireJs...
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Рекомендации
+                        * отличное средство для изучения best-practice при работе с RequireJs ;-)
+                    </script>
+                </section>
+
+                <!-- Component -->
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## component
+
+                        Поиск
+                        ```bash
+                        component search backbone
+                        ```
+
+                        Установка
+                        ```bash
+                        component install jashkenas/backbone
+                        ```
+
+                        Использование
+                        ```javascript
+                        var backbone = require('backbone');
+                        console.log(backbone.VERSION);
+                        ```
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ### component
+
+                        component.json
+                        ```json
+                        {
+                             "name": "hello-component",
+                             "dependencies": {
+                                "jashkenas/backbone": "*"
+                             },
+                            "main": "index.js",
+                            "scripts": [
+                              "index.js"
+                            ],
+                            "templates": [
+                                  "template.html"
+                             ],
+                            "styles": [
+                                "mycomponent.css"
+                             ]
+                        }
+                        ```
+
+                        Публикуем
+                        ```
+                        Создаем проект на GitHub и добавляем на Coponent Wiki
+                        ```
+
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ##### hello-component/
+
+                        ````
+                        .
+                        |-- build
+                        |   |-- build.css
+                        |   `-- build.js
+                        |-- component.json
+                        |-- components
+                        |   |-- component-classes
+                        |   ...
+                        |   |-- guille-ms.js
+                        |   |-- jashkenas-backbone
+                        |   |-- jashkenas-underscore
+                        |   |-- matthewp-keys
+                        |   |-- matthewp-text
+                        |   |-- visionmedia-debug
+                        |   |-- yields-isarray
+                        |   `-- yields-traverse
+                        `-- index.html
+                        ````
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Метрики
+                        [![Metrix](img/component.png)](https://openvision.atlassian.net/wiki/display/JSLEAR/JavaScript+Package+Managers+overview#JavaScriptPackageManagersoverview-Metrix.4)
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Плюсы
+                        + унификация процесса сборки
+                        + unix philosophy
+                        + возможность перейти на общий стандарт (es6)
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Минусы
+                        - сравнительно небольшой реестр/комьюнити
+                        - сложности в кастомизации процесса сборки
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Рекомендации
+                        * для новых проектов
+                    </script>
+                </section>
+
+                <!-- Bower -->
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## bower
+
+                        Поиск
+                        ```bash
+                        bower search backbone
+                        ```
+
+                        Установка
+                        ```bash
+                        bower install backbone
+                        ```
+
+                        Использование
+                        ````
+                        Как пожелаешь
+                        ````
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ### bower
+
+                        bower.json
+                        ```json
+                        {
+                            "name": "hello-bower",
+                            "version": "0.0.1",
+                            "main": "main.js",
+                            "dependencies": {
+                                "backbone": "~1.1.2"
+                            }
+                        }
+                        ```
+
+                        Регистрируем
+                        ```
+                        bower register mypackage
+                        ```
+
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ##### hello-bower/
+
+                        ````
+                        .
+                        |-- bower.json
+                        `-- bower_components
+                            |-- backbone
+                            `-- underscore
+                        ````
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Метрики
+                        [![Metrix](img/bower.png)](https://openvision.atlassian.net/wiki/display/JSLEAR/JavaScript+Package+Managers+overview#JavaScriptPackageManagersoverview-Metrix.5)
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Плюсы
+                        + большое, развивающиеся комьюнити
+                        + очень прост в использовании
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Минусы
+                        - ваш проект постепенно превращается в гнездо
+                            - прутья
+                            - трава
+                            - перья
+                        - нет унификации процесса сборки
+                            - новые проперти появляются, но разработчики не спешат их использовать
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Рекомендации
+                        * используйте для своего проекта
+                            * но не забудьте вооружиться grunt, gulp etc. <!-- .element: class="fragment" data-fragment-index="0" -->
+                    </script>
+                </section>
+
+                <!-- jspm -->
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## jspm
+
+                        Поиск
+                        ```
+                        Просмотрите jspm реестр или используйте GitHub
+                        ```
+
+                        Установка
+                        ```bash
+                        jspm install github:jashkenas/backbone
+                        ```
+
+                        Использование
+                        ```javascript
+                        var Backbone = require('github:jashkenas/backbone');
+                        console.log(Backbone.VERSION);
+                        ```
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ### jspm
+
+                        package.json
+                        ```json
+                        {
+                            "jspm": {
+                                 "registry": "jspm",
+                                 "dependencies": {
+                                      "github:jashkenas/backbone": "^1.1.2"
+                                 }
+                            }
+                        }
+                        ```
+
+                        Регистрируем
+                        ```
+                        Coздаем пулл реквест на jspm register
+                        ```
+
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ##### hello-jspm/
+                        ````
+                        |-- app.js
+                        |-- build.js
+                        |-- config.js
+                        |-- jspm-test.html
+                        |-- jspm_packages
+                        |   |-- es6-module-loader@0.7.1.js
+                        |   |-- github
+                        |   |-- npm
+                        |   |-- system-csp@0.6.js
+                        |   |-- system@0.6.js
+                        |   |-- traceur-runtime@0.0.49.js
+                        |   `-- traceur@0.0.49.js
+                        `-- package.json
+                        ````
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Метрики
+                        [![Metrix](img/jspm.png)](https://openvision.atlassian.net/wiki/display/JSLEAR/JavaScript+Package+Managers+overview#JavaScriptPackageManagersoverview-Metrix.6)
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Плюсы
+                        + возможность перейти на общий стандарт (es6)
+                        + унифицирование процесса сборки
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Минусы
+                        - очень 'молодой' проект
+                        - небольшая группа энтузиастов
+                    </script>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Рекомендации
+                        * для изучения es6
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ##Сравнение
+                        [![Metrix](img/comparation.png)](https://openvision.atlassian.net/wiki/display/JSLEAR/JavaScript+Package+Managers+overview#JavaScriptPackageManagersoverview-ComparisonTable)
+                    </script>
+                </section>
+
+                <section>
+                    <div id="container1" style="margin:auto; width: 1000px; height: 600px;"></div>
+                </section>
+
+                <section>
+                    <div id="container2" style="margin:auto; width: 1000px; height: 600px;"></div>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ##Проигравшие
+
+                        volo и jam похоже приграли битву, возможно потому что AMD не стал и не станет основным форматом,
+                        далеко не для всех приложений необходима загрузка по требованию <!-- .element: class="fragment" data-fragment-index="0" -->
+
+                        ender больше средство сборки чем менеджер пакетов (grunt, gulp гораздо лучше) <!-- .element: class="fragment" data-fragment-index="1" -->
+
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ##Победители
+
+                        из метрик мы видим, что победители - это bower и npm. У обоих сильная поддержка комьюнити. Похоже что
+                        bower просто заполнил недостающую нишу с менеджментом ассетов и ориентацией на разработку под клиент,что
+                        совершенно естественно, не было включено в дизайн npm <!-- .element: class="fragment" data-fragment-index="0" -->
+
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ##Проектируем на будущее
+
+                        component - это многообещающий инструмент, но комьюнити необходимо время чтобы научиться
+                        работать в таком стиле для фронтенда <!-- .element: class="fragment" data-fragment-index="0" -->
+
+                        jspm - это отличная игровая площадка для работы с es6 стандартом <!-- .element: class="fragment" data-fragment-index="1" -->
+
+                    </script>
+                </section>
+
+
+                <section data-markdown>
+                    <script type="text/template">
+                    ## В масштабе
+                    Давайте сравним наших победителей с решениями для других языков.
+                    Я нашел следующую [статистику](http://www.modulecounts.com)
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ###Вопросы ?
+                    </script>
+                </section>
+
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.min.js"></script>
+		<script>
+            $(function () {
+
+                $('#container1').highcharts({
+                    chart: {
+                        type: 'bar'
+                    },
+                    title: {
+                        text: 'Package Managers Status'
+                    },
+                    xAxis: {
+                        categories: ['npm','volo', 'ender', 'jam', 'component', 'bower', 'jspm'],
+                        title: {
+                            text: null
+                        }
+                    },
+                    yAxis: {
+                        min: 0,
+                        title: {
+                            text: 'packages/descriptors (count)',
+                            align: 'high'
+                        },
+                        labels: {
+                            overflow: 'justify'
+                        }
+                    },
+                    plotOptions: {
+                        bar: {
+                            dataLabels: {
+                                enabled: true
+                            }
+                        }
+                    },
+                    legend: {
+                        layout: 'vertical',
+                        align: 'right',
+                        verticalAlign: 'top',
+                        x: -40,
+                        y: 100,
+                        floating: true,
+                        borderWidth: 1,
+                        backgroundColor: ((Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'),
+                        shadow: true
+                    },
+                    credits: {
+                        enabled: false
+                    },
+                    series: [{
+                        name: '2013-Jan',
+                        data: [20000,0, 212, 279, 431, 698, 0]
+                    }, {
+                        name: '2014-Aug',
+                        data: [87411, 0, 1204, 749, 1930, 17356, 70]
+                    }, {
+                        name: 'github 2014-Aug',
+                        data: [255730, 603, 264, 591, 11149, 48677, 175]
+                    }]
+                });
+
+
+                $('#container2').highcharts({
+                    chart: {
+                        type: 'bar'
+                    },
+                    title: {
+                        text: 'Package Managers Status'
+                    },
+                    xAxis: {
+                        categories: ['volo', 'ender', 'jam', 'component', 'bower', 'jspm'],
+                        title: {
+                            text: null
+                        }
+                    },
+                    yAxis: {
+                        min: 0,
+                        title: {
+                            text: 'packages/descriptors (count)',
+                            align: 'high'
+                        },
+                        labels: {
+                            overflow: 'justify'
+                        }
+                    },
+                    plotOptions: {
+                        bar: {
+                            dataLabels: {
+                                enabled: true
+                            }
+                        }
+                    },
+                    legend: {
+                        layout: 'vertical',
+                        align: 'right',
+                        verticalAlign: 'top',
+                        x: -40,
+                        y: 100,
+                        floating: true,
+                        borderWidth: 1,
+                        backgroundColor: ((Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'),
+                        shadow: true
+                    },
+                    credits: {
+                        enabled: false
+                    },
+                    series: [{
+                        name: '2013-Jan',
+                        data: [0, 212, 279, 431, 698, 0]
+                    }, {
+                        name: '2014-Aug',
+                        data: [0, 1204, 749, 1930, 17356, 70]
+                    }, {
+                        name: 'github 2014-Aug',
+                        data: [603, 264, 591, 11149, 48677, 175]
+                    }]
+                });
+            });
+		</script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+                slideNumber: true,
+
+				theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+				transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+				// Parallax scrolling
+				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+				// parallaxBackgroundSize: '2100px 900px',
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
