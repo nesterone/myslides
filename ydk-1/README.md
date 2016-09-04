@@ -259,10 +259,20 @@ foo( 2 );
  
 
 ##Lexical Scope
+
+* Lex-time
+    * Look-ups
+* Cheating Lexical
+    * eval
+    * with
+    * Performance
+
+##Lexical Scope
+
 There are two predominant models for how scope works:
 
 * lexical scope
-* dynamic scope
+* dynamic scope (Bash, some Perl realizations, etc)
 
 ###Lex-time
 
@@ -384,8 +394,180 @@ console.log( a ); // 2 -- Oops, leaked global!
 
 Cheating lexing usually turns into loosing engine`s optimization based on static code analyze during lex-time
 
-###Summary 
+###Cheating Lexing Summary 
 
 * `eval` and `with` affected by Stict Mode (deprecated)
 * don't use 'eval' and 'with'
 
+##Function vs. Block Scope
+
+* Scope from function
+* Hiding In Plain Scope
+* Functions as Scopes
+* Block As Scope 
+
+##Function vs. Block Scope
+
+1. What exactly makes a new bubble? 
+1. Is it only the function?
+1. Can other structures in JavaScript create bubbles of scope?
+
+###Scope from function
+
+```js
+function foo(a) {
+	var b = 2;
+
+	// some code
+
+	function bar() {
+		// ...
+	}
+
+	// more code
+
+	var c = 3;
+}
+
+bar(); // fail
+console.log(a, b, c) // all 3 fail
+
+```
+
+###Hiding in Plain Scope 
+
+* "hide" variables and functions inside function
+* Is it useful technique?
+* "Principle of Least Privilege"
+
+###Hiding in Plain Scope 
+
+```js
+function doSomething(a) {
+	b = a + doSomethingElse( a * 2 );
+
+	console.log( b * 3 );
+}
+
+function doSomethingElse(a) {
+	return a - 1;
+}
+
+var b;
+
+doSomething( 2 ); // 15
+```
+
+###Hiding in Plain Scope 
+
+```js
+function doSomething(a) {
+	function doSomethingElse(a) {
+		return a - 1;
+	}
+
+	var b;
+
+	b = a + doSomethingElse( a * 2 );
+
+	console.log( b * 3 );
+}
+
+doSomething( 2 ); // 15
+```
+
+
+#### Collision Avoidance
+
+```js
+function foo() {
+	function bar(a) {
+		i = 3; // changing the `i` in the enclosing scope's for-loop
+		console.log( a + i );
+	}
+
+	for (var i=0; i<10; i++) {
+		bar( i * 2 ); // oops, infinite loop ahead!
+	}
+}
+
+foo();
+```
+
+### Global "Namespaces"
+
+```js
+var MyReallyCoolLibrary = {
+	awesome: "stuff",
+	doSomething: function() {
+		// ...
+	},
+	doAnotherThing: function() {
+		// ...
+	}
+};
+```
+
+### Module Management
+
+"Module" approach and using various dependencies managers help in avoiding `collisions`
+
+
+### Functions As Scopes
+
+```js
+var a = 2;
+
+function foo() { // <-- insert this
+
+	var a = 3;
+	console.log( a ); // 3
+
+} // <-- and this
+foo(); // <-- and this
+
+console.log( a ); // 2
+```
+
+* How to not pollute enclosing scope with function`s name ?
+
+### Functions As Scopes
+
+```js
+var a = 2;
+
+(function foo(){ // <-- insert this
+
+	var a = 3;
+	console.log( a ); // 3
+
+})(); // <-- and this
+
+console.log( a ); // 2
+```
+
+Change from `function declaration` to `function expression`
+
+### Anonymous vs. Named
+
+```js
+setTimeout( function(){
+	console.log("I waited 1 second!");
+}, 1000 );
+```
+
+* quick and easy to type
+
+### Anonymous Functions - Few drawbacks 
+
+1. no function name in a call stack
+1. no function name for recursion (arguments.callee is deprecated)
+1. no self-documenting names
+
+### Anonymous Functions - Best practice
+
+```js
+setTimeout( function timeoutHandler(){ // <-- Look, I have a name!
+	console.log( "I waited 1 second!" );
+}, 1000 );
+```

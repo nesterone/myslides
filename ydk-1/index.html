@@ -247,10 +247,23 @@ foo( 2 );</code></pre>
 <li><em>TypeError</em> - Scope resolution success, execution failure</li>
 </ul>
 </section><section><h2 id="lexical-scope">Lexical Scope</h2>
+<ul>
+<li>Lex-time<ul>
+<li>Look-ups</li>
+</ul>
+</li>
+<li>Cheating Lexical<ul>
+<li>eval</li>
+<li>with</li>
+<li>Performance</li>
+</ul>
+</li>
+</ul>
+</section><section><h2 id="lexical-scope">Lexical Scope</h2>
 <p>There are two predominant models for how scope works:</p>
 <ul>
 <li>lexical scope</li>
-<li>dynamic scope</li>
+<li>dynamic scope (Bash, some Perl realizations, etc)</li>
 </ul>
 </section><section><h3 id="lex-time">Lex-time</h3>
 <p>Lexical scope is based on where variables and blocks of scope are authored, set in stone by the time the lexer process your code</p>
@@ -350,11 +363,144 @@ console.log( o2.a ); // undefined
 console.log( a ); // 2 -- Oops, leaked global!</code></pre>
 </section><section><h3 id="performance">Performance</h3>
 <p>Cheating lexing usually turns into loosing engine`s optimization based on static code analyze during lex-time</p>
-</section><section><h3 id="summary">Summary</h3>
+</section><section><h3 id="cheating-lexing-summary">Cheating Lexing Summary</h3>
 <ul>
 <li><code>eval</code> and <code>with</code> affected by Stict Mode (deprecated)</li>
 <li>don&#39;t use &#39;eval&#39; and &#39;with&#39;</li>
 </ul>
+</section><section><h2 id="function-vs-block-scope">Function vs. Block Scope</h2>
+<ul>
+<li>Scope from function</li>
+<li>Hiding In Plain Scope</li>
+<li>Functions as Scopes</li>
+<li>Block As Scope </li>
+</ul>
+</section><section><h2 id="function-vs-block-scope">Function vs. Block Scope</h2>
+<ol>
+<li>What exactly makes a new bubble? </li>
+<li>Is it only the function?</li>
+<li>Can other structures in JavaScript create bubbles of scope?</li>
+</ol>
+</section><section><h3 id="scope-from-function">Scope from function</h3>
+<pre><code class="lang-js">function foo(a) {
+    var b = 2;
+
+    // some code
+
+    function bar() {
+        // ...
+    }
+
+    // more code
+
+    var c = 3;
+}
+
+bar(); // fail
+console.log(a, b, c) // all 3 fail</code></pre>
+</section><section><h3 id="hiding-in-plain-scope">Hiding in Plain Scope</h3>
+<ul>
+<li>&quot;hide&quot; variables and functions inside function</li>
+<li>Is it useful technique?</li>
+<li>&quot;Principle of Least Privilege&quot;</li>
+</ul>
+</section><section><h3 id="hiding-in-plain-scope">Hiding in Plain Scope</h3>
+<pre><code class="lang-js">function doSomething(a) {
+    b = a + doSomethingElse( a * 2 );
+
+    console.log( b * 3 );
+}
+
+function doSomethingElse(a) {
+    return a - 1;
+}
+
+var b;
+
+doSomething( 2 ); // 15</code></pre>
+</section><section><h3 id="hiding-in-plain-scope">Hiding in Plain Scope</h3>
+<pre><code class="lang-js">function doSomething(a) {
+    function doSomethingElse(a) {
+        return a - 1;
+    }
+
+    var b;
+
+    b = a + doSomethingElse( a * 2 );
+
+    console.log( b * 3 );
+}
+
+doSomething( 2 ); // 15</code></pre>
+<h4 id="collision-avoidance">Collision Avoidance</h4>
+<pre><code class="lang-js">function foo() {
+    function bar(a) {
+        i = 3; // changing the `i` in the enclosing scope&#39;s for-loop
+        console.log( a + i );
+    }
+
+    for (var i=0; i&lt;10; i++) {
+        bar( i * 2 ); // oops, infinite loop ahead!
+    }
+}
+
+foo();</code></pre>
+</section><section><h3 id="global-namespaces-">Global &quot;Namespaces&quot;</h3>
+<pre><code class="lang-js">var MyReallyCoolLibrary = {
+    awesome: &quot;stuff&quot;,
+    doSomething: function() {
+        // ...
+    },
+    doAnotherThing: function() {
+        // ...
+    }
+};</code></pre>
+</section><section><h3 id="module-management">Module Management</h3>
+<p>&quot;Module&quot; approach and using various dependencies managers help in avoiding <code>collisions</code></p>
+</section><section><h3 id="functions-as-scopes">Functions As Scopes</h3>
+<pre><code class="lang-js">var a = 2;
+
+function foo() { // &lt;-- insert this
+
+    var a = 3;
+    console.log( a ); // 3
+
+} // &lt;-- and this
+foo(); // &lt;-- and this
+
+console.log( a ); // 2</code></pre>
+<ul>
+<li>How to not pollute enclosing scope with function`s name ?</li>
+</ul>
+</section><section><h3 id="functions-as-scopes">Functions As Scopes</h3>
+<pre><code class="lang-js">var a = 2;
+
+(function foo(){ // &lt;-- insert this
+
+    var a = 3;
+    console.log( a ); // 3
+
+})(); // &lt;-- and this
+
+console.log( a ); // 2</code></pre>
+<p>Change from <code>function declaration</code> to <code>function expression</code></p>
+</section><section><h3 id="anonymous-vs-named">Anonymous vs. Named</h3>
+<pre><code class="lang-js">setTimeout( function(){
+    console.log(&quot;I waited 1 second!&quot;);
+}, 1000 );</code></pre>
+<ul>
+<li>quick and easy to type</li>
+</ul>
+</section><section><h3 id="anonymous-functions-few-drawbacks">Anonymous Functions - Few drawbacks</h3>
+<ol>
+<li>no function name in a call stack</li>
+<li>no function name for recursion (arguments.callee is deprecated)</li>
+<li>no self-documenting names</li>
+</ol>
+</section><section><h3 id="anonymous-functions-best-practice">Anonymous Functions - Best practice</h3>
+<pre><code class="lang-js">setTimeout( function timeoutHandler(){ // &lt;-- Look, I have a name!
+    console.log( &quot;I waited 1 second!&quot; );
+}, 1000 );</code></pre>
 </section>
 			</div>
 
