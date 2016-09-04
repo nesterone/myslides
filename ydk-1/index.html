@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>You Don't Know JS - scope & closure</title>
+
+		<meta name="description" content="scope & closure">
+		<meta name="author" content="Igor Nesterenko">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.min.css">
+		<link rel="stylesheet" href="css/theme/default.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+		<script>
+			if( window.location.search.match( /print-pdf/gi ) ) {
+				var link = document.createElement( 'link' );
+				link.rel = 'stylesheet';
+				link.type = 'text/css';
+				link.href = 'css/print/pdf.css';
+				document.getElementsByTagName( 'head' )[0].appendChild( link );
+			}
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+
+        <style type="text/css">
+            .left-side {
+                text-align: left;
+
+            }
+        </style>
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+                <section><h3 id="you-don-t-know-js">You Don&#39;t Know JS</h3>
+<h5 id="scope-closure">scope &amp; closure</h5>
+<p>inspired by <a href="https://github.com/getify/You-Dont-Know-JS/tree/master/scope%20%26%20closures">getify</a></p>
+</section><section><h3 id="presented-by">Presented by</h3>
+<ul>
+<li><a href="https://twitter.com/nesterone">Igor Nesterenko</a></li>
+</ul>
+</section><section><h3 id="high-level-overview">High-level Overview</h3>
+<ul>
+<li>What is Scope?</li>
+<li>Lexical Scope</li>
+<li>Function vs. Block Scope</li>
+<li>Hoisting</li>
+<li>Scope Closures</li>
+</ul>
+</section><section><h3 id="what-is-scope-">What is Scope?</h3>
+<p>Set of rules for storing variables in some location, and for finding those variables at a later time</p>
+</section><section><h3 id="compiled-language">Compiled Language</h3>
+<p>JavaScript is not compiled well in advance, however it&#39;s compiled right before execution</p>
+</section><section><h3 id="compiler-theory">Compiler Theory</h3>
+<ul>
+<li>Tokenizing/Lexing</li>
+<li>Parsing (AST)</li>
+<li>Code-Generation</li>
+</ul>
+</section><section><h3 id="the-cast">The Cast</h3>
+<ol>
+<li><p><em>Engine</em>: start-to-finish compilation and execution program.</p>
+</li>
+<li><p><em>Compiler</em>: handles all the dirty work of parsing and code-generation</p>
+</li>
+<li><p><em>Scope</em>: collects and maintains declaration of all variables</p>
+</li>
+</ol>
+</section><section><h3 id="compile-speaks">Compile Speaks</h3>
+<ul>
+<li><em>LHS</em> -  who&#39;s the target of the assignment</li>
+<li><em>RHS</em> - who&#39;s the source of the assignment</li>
+</ul>
+</section><section><h3 id="right-hand-side-rhs-">Right-hand Side (RHS)</h3>
+<pre><code class="lang-js">console.log( a );</code></pre>
+<ul>
+<li><em>RHS</em> - who&#39;s the source of the assignment</li>
+</ul>
+</section><section><h3 id="left-hand-side-lhs-">Left-hand Side (LHS)</h3>
+<pre><code class="lang-js">a = 2;</code></pre>
+<ul>
+<li><em>LHS</em> -  who&#39;s the target of the assignment</li>
+</ul>
+</section><section><h3 id="lhs-and-rhs">LHS and RHS</h3>
+<pre><code class="lang-js">function foo(a) {
+    console.log( a ); // 2
+}
+
+foo( 2 );</code></pre>
+</section><section><h3 id="engine-scope-conversation">Engine/Scope Conversation</h3>
+<pre><code class="lang-js">function foo(a) {
+    console.log( a ); // 2
+}
+
+foo( 2 );  // &lt;- What`s &#39;foo&#39; ?</code></pre>
+<blockquote>
+<p><strong><em>Engine</em></strong>: Hey <em>Scope</em>, I have an RHS reference for <code>foo</code>. Ever heard of it?</p>
+<p><strong><em>Scope</em></strong>: Why yes, I have. <em>Compiler</em> declared it just a second ago. He&#39;s a function. Here you go.</p>
+</blockquote>
+</section><section><h3 id="engine-scope-conversation">Engine/Scope Conversation</h3>
+<pre><code class="lang-js">function foo(a) {
+    console.log( a ); // 2
+}
+
+foo( 2 ); // &lt;- &#39;foo&#39; is function, start execution ...</code></pre>
+<blockquote>
+<p><strong><em>Engine</em></strong>: Great, thanks! OK, I&#39;m executing <code>foo</code>.</p>
+</blockquote>
+</section><section><h3 id="engine-scope-conversation">Engine/Scope Conversation</h3>
+<pre><code class="lang-js">function foo(a) {   // &lt;- I have LHS reference to &#39;a&#39; What&#39;s &#39;a&#39; ?  
+    console.log( a ); // 2
+}
+
+foo( 2 );</code></pre>
+<blockquote>
+<p><strong><em>Engine</em></strong>: Hey, <em>Scope</em>, I&#39;ve got an LHS reference for <code>a</code>, ever heard of it?</p>
+<p><strong><em>Scope</em></strong>: Why yes, I have. <em>Compiler</em> declared it as a formal parameter to <code>foo</code> just recently. Here you go.</p>
+</blockquote>
+</section><section><h3 id="engine-scope-conversation">Engine/Scope Conversation</h3>
+<pre><code class="lang-js">function foo(a) {   // &lt;- &#39;a&#39; is a formal parameter let&#39;s assign 2 to &#39;a&#39;
+    console.log( a ); // 2
+}
+
+foo( 2 );</code></pre>
+<blockquote>
+<p><strong><em>Engine</em></strong>: Helpful as always, <em>Scope</em>. Thanks again. Now, time to assign <code>2</code> to <code>a</code>.</p>
+</blockquote>
+</section><section><h3 id="engine-scope-conversation">Engine/Scope Conversation</h3>
+<pre><code class="lang-js">function foo(a) {   
+    console.log( a ); // I have RHS for &#39;console&#39;. What&#39;s &#39;console&#39; ?
+}
+
+foo( 2 );</code></pre>
+<blockquote>
+<p><strong><em>Engine</em></strong>: Hey, <em>Scope</em>, sorry to bother you again. I need an RHS look-up for <code>console</code>. Ever heard of it?</p>
+</blockquote>
+</section><section><h3 id="engine-scope-conversation">Engine/Scope Conversation</h3>
+<pre><code class="lang-js">function foo(a) {   
+    console.log( a ); // &#39;console&#39; is a build in object, it has &#39;log&#39; function 
+}
+
+foo( 2 );</code></pre>
+<blockquote>
+<p><strong><em>Scope</em></strong>: No problem, <em>Engine</em>, this is what I do all day. Yes, I&#39;ve got <code>console</code>. He&#39;s built-in. Here ya go.</p>
+<p><strong><em>Engine</em></strong>: Perfect. Looking up <code>log(..)</code>. OK, great, it&#39;s a function.</p>
+</blockquote>
+</section><section><h3 id="engine-scope-conversation">Engine/Scope Conversation</h3>
+<pre><code class="lang-js">function foo(a) {   
+    console.log( a ); // I have RHS to &#39;a&#39;. Just to duble-check, What&#39;s &#39;a&#39; ?
+}
+
+foo( 2 );</code></pre>
+<blockquote>
+<p><strong><em>Engine</em></strong>: Yo, <em>Scope</em>. Can you help me out with an RHS reference to <code>a</code>. I think I remember it, but just want to double-check.</p>
+<p><strong><em>Scope</em></strong>: You&#39;re right, <em>Engine</em>. Same guy, hasn&#39;t changed. Here ya go.</p>
+</blockquote>
+</section><section><h3 id="engine-scope-conversation">Engine/Scope Conversation</h3>
+<pre><code class="lang-js">function foo(a) {   
+    console.log( a ); // passing &#39;a&#39;, which value is &#39;2&#39;
+}
+
+foo( 2 );</code></pre>
+<blockquote>
+<p><strong><em>Engine</em></strong>: Cool. Passing the value of <code>a</code>, which is <code>2</code>, into <code>log(..)</code>.</p>
+</blockquote>
+</section><section><h3 id="quiz">Quiz</h3>
+<pre><code class="lang-js">function foo(a) {
+    var b = a;
+    return a + b;
+}
+
+var c = foo( 2 );</code></pre>
+<ul>
+<li>LHS - ?</li>
+<li>RHS - ?</li>
+</ul>
+</section><section><h3 id="quiz">Quiz</h3>
+<pre><code class="lang-js">function foo(a) {   //LHS
+    var b           //LHS
+        = a;        //RHS
+    return a        //RHS
+            + b;    //RHS
+}
+
+var c               //LHS
+    = foo(2);       //RHS</code></pre>
+<ul>
+<li>LHS - 3</li>
+<li>RHS - 4</li>
+</ul>
+</section><section><h3 id="nested-scope">Nested Scope</h3>
+<pre><code class="lang-js">function foo(a) {
+    console.log( a + b ); // Hey scope of &#39;foo&#39;. I have RHS to &#39;b&#39;.  What&#39;s &#39;b&#39; ?
+}
+
+var b = 2;
+
+foo( 2 ); // 4</code></pre>
+<blockquote>
+<p><strong><em>Engine</em></strong>: &quot;Hey, <em>Scope</em> of <code>foo</code>, ever heard of <code>b</code>? Got an RHS reference for it.&quot;</p>
+<p><strong><em>Scope</em></strong>: &quot;Nope, never heard of it. Go fish.&quot;</p>
+</blockquote>
+</section><section><h3 id="nested-scope">Nested Scope</h3>
+<pre><code class="lang-js">function foo(a) {
+    console.log( a + b ); // Hey global scope. I have RHS to &#39;b&#39;. . What&#39;s &#39;b&#39; ? 
+}
+
+var b = 2;
+
+foo( 2 ); // 4</code></pre>
+<blockquote>
+<p><strong><em>Engine</em></strong>: &quot;Hey, <em>Scope</em> outside of <code>foo</code>, oh you&#39;re the global <em>Scope</em>, ok cool. Ever heard of <code>b</code>? Got an RHS reference for it.&quot;</p>
+<p><strong><em>Scope</em></strong>: &quot;Yep, sure have. Here ya go.&quot;</p>
+</blockquote>
+</section><section><h3 id="building-metaphors">Building Metaphors</h3>
+<p><img src="img/fig1.png" width="250"></p>
+</section><section><h3 id="errors">Errors</h3>
+<pre><code class="lang-js">function foo(a) {
+    console.log( a + b );
+    b = a;
+}
+
+foo( 2 );</code></pre>
+<ul>
+<li><em>ReferenceError</em> - Scope resolution failure<ul>
+<li>Strict Mode</li>
+<li>normal/relaxed/lazy mode</li>
+</ul>
+</li>
+<li><em>TypeError</em> - Scope resolution success, execution failure</li>
+</ul>
+</section><section><h2 id="lexical-scope">Lexical Scope</h2>
+<p>There are two predominant models for how scope works:</p>
+<ul>
+<li>lexical scope</li>
+<li>dynamic scope</li>
+</ul>
+</section><section><h3 id="lex-time">Lex-time</h3>
+<p>Lexical scope is based on where variables and blocks of scope are authored, set in stone by the time the lexer process your code</p>
+<pre><code class="lang-js">function foo(a) {
+
+    var b = a * 2;
+
+    function bar(c) {
+        console.log( a, b, c );
+    }
+
+    bar(b * 3);
+}
+
+foo( 2 ); // 2 4 12</code></pre>
+</section><section><h3 id="bubbles">Bubbles</h3>
+<p><img src="img/fig2.png" width="500"></p>
+<ol>
+<li><p><code>foo</code></p>
+</li>
+<li><p><code>a</code>,<code>bar</code>,<code>b</code></p>
+</li>
+<li><p><code>c</code></p>
+</li>
+</ol>
+</section><section><h3 id="look-ups">Look-ups</h3>
+<p><img src="img/fig2.png" width="500"></p>
+<ul>
+<li><p>scope look-up stops once it finds the first match</p>
+</li>
+<li><p>multiple level of nested scope, &quot;shadowing&quot;, access to globals </p>
+</li>
+<li><p>first class identifiers </p>
+</li>
+</ul>
+</section><section><h3 id="cheating-lexical">Cheating Lexical</h3>
+<ul>
+<li><code>eval</code></li>
+<li><code>with</code></li>
+<li>Performance</li>
+</ul>
+</section><section><h3 id="eval">eval</h3>
+<pre><code class="lang-js">function foo(str, a) {
+    eval( str ); // cheating!
+    console.log( a, b );
+}
+
+var b = 2;
+
+foo( &quot;var b = 3;&quot;, 1 ); // 1, 3</code></pre>
+</section><section><h3 id="eval-in-strict-mode">eval in Strict Mode</h3>
+<pre><code class="lang-js">function foo(str) {
+   &quot;use strict&quot;;
+   eval( str );
+   console.log( a ); // ReferenceError: a is not defined
+}
+
+foo( &quot;var a = 2&quot; );</code></pre>
+<ul>
+<li><code>setTimeout</code>, <code>setInterval</code></li>
+<li><code>new Function(...)</code></li>
+</ul>
+</section><section><h3 id="with">with</h3>
+<pre><code class="lang-js">var obj = {
+    a: 1,
+    b: 2,
+    c: 3
+};
+
+// more &quot;tedious&quot; to repeat &quot;obj&quot;
+obj.a = 2;
+obj.b = 3;
+obj.c = 4;
+
+// &quot;easier&quot; short-hand
+with (obj) {
+    a = 3;
+    b = 4;
+    c = 5;
+}</code></pre>
+</section><section><h3 id="with-peculiar-side-effect">with - peculiar side-effect</h3>
+<pre><code class="lang-js">function foo(obj) {
+    with (obj) {
+        a = 2;
+    }
+}
+var o1 = {
+    a: 3
+};
+var o2 = {
+    b: 3
+};
+foo( o1 );
+console.log( o1.a ); // 2
+foo( o2 );
+console.log( o2.a ); // undefined
+console.log( a ); // 2 -- Oops, leaked global!</code></pre>
+</section><section><h3 id="performance">Performance</h3>
+<p>Cheating lexing usually turns into loosing engine`s optimization based on static code analyze during lex-time</p>
+</section><section><h3 id="summary">Summary</h3>
+<ul>
+<li><code>eval</code> and <code>with</code> affected by Stict Mode (deprecated)</li>
+<li>don&#39;t use &#39;eval&#39; and &#39;with&#39;</li>
+</ul>
+</section>
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.min.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+                slideNumber: true,
+
+				theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+				transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+				// Parallax scrolling
+				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+				// parallaxBackgroundSize: '2100px 900px',
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
