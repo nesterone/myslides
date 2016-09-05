@@ -477,7 +477,7 @@ doSomething( 2 ); // 15
 ```
 
 
-#### Collision Avoidance
+### Collision Avoidance
 
 ```js
 function foo() {
@@ -546,7 +546,7 @@ var a = 2;
 console.log( a ); // 2
 ```
 
-Change from `function declaration` to `function expression`
+* `function expression`
 
 ### Anonymous vs. Named
 
@@ -571,3 +571,273 @@ setTimeout( function timeoutHandler(){ // <-- Look, I have a name!
 	console.log( "I waited 1 second!" );
 }, 1000 );
 ```
+
+### Invoking Function Expressions Immediately
+
+
+```js
+var a = 2;
+
+(function IIFE(){
+
+	var a = 3;
+	console.log( a ); // 3
+
+})();
+
+console.log( a ); // 2
+```
+
+### IIFE with arguments
+
+```js
+var a = 2;
+
+(function IIFE( global ){
+
+	var a = 3;
+	console.log( a ); // 3
+	console.log( global.a ); // 2
+
+})( window );
+
+console.log( a ); // 2
+```
+
+### IIFE with `undefined`
+
+```js
+undefined = true; // setting a land-mine for other code! avoid!
+
+(function IIFE( undefined ){
+
+	var a;
+	if (a === undefined) {
+		console.log( "Undefined is safe here!" ); 
+	}
+
+})();
+```
+
+### IIFE inverts order of things
+
+
+```js
+var a = 2;
+
+(function IIFE( def ){
+	def( window );
+})(function def( global ){
+
+	var a = 3;
+	console.log( a ); // 3
+	console.log( global.a ); // 2
+
+});
+```
+
+* like in UMD - Universal Module Definition
+
+### Block As Scope 
+
+Block scope is a tool to extend the earlier "Principle of Least Exposure"
+
+```js
+var foo = true;
+
+if (foo) {
+	var bar = foo * 2;
+	bar = something( bar );
+	console.log( bar );
+}
+```
+
+
+### Block As Scope
+
+```js
+for (var i=0; i<10; i++) {
+	console.log( i );
+}
+```
+
+* `i` variable accessible out side of the loop   
+
+### Block As Scope 
+
+* with
+* try/catch
+* let
+* const
+
+### with
+
+Creates (a form of) block scope from the object
+
+### try/catch
+
+```js
+try {
+	undefined(); // illegal operation to force an exception!
+}
+catch (err) {
+	console.log( err ); // works!
+}
+
+console.log( err ); // ReferenceError: `err` not found
+```
+
+> some code linters complains 
+
+### let
+
+```js
+var foo = true;
+
+if (foo) {
+	let bar = foo * 2;
+	bar = something( bar );
+	console.log( bar );
+}
+
+console.log( bar ); // ReferenceError
+```
+
+### let 
+
+```js
+{
+   console.log( bar ); // ReferenceError!
+   let bar = 2;
+}
+```
+
+### Garbage Collection
+
+```js
+function process(data) {
+	// do something interesting
+}
+
+var someReallyBigData = { .. };
+
+process( someReallyBigData );
+
+var btn = document.getElementById( "my_button" );
+
+btn.addEventListener( "click", function click(evt){
+	console.log("button clicked");
+}, /*capturingPhase=*/false );
+```
+
+* depends from engine implementation
+
+### Garbage Collection
+
+```js
+function process(data) {
+	// do something interesting
+}
+
+// anything declared inside this block can go away after!
+{
+	let someReallyBigData = { .. };
+
+	process( someReallyBigData );
+}
+
+var btn = document.getElementById( "my_button" );
+
+btn.addEventListener( "click", function click(evt){
+	console.log("button clicked");
+}, /*capturingPhase=*/false );
+```
+
+### `let` Loops
+
+```js
+for (let i=0; i<10; i++) {
+	console.log( i );
+}
+
+console.log( i ); // ReferenceError
+```
+
+### `let` Loops re-binding
+
+
+```js
+{
+	let j;
+	for (j=0; j<10; j++) {
+		let i = j; // re-bound for each iteration!
+		console.log( i );
+	}
+}
+```
+
+> benefits more visible when combining with closure 
+
+### `let` refactoring
+
+```js
+var foo = true, baz = 10;
+
+if (foo) {
+	var bar = 3;
+
+	if (baz > bar) {
+		console.log( baz );
+	}
+
+	// ...
+}
+```
+
+### `let` refactoring
+
+```js
+var foo = true, baz = 10;
+
+if (foo) {
+	var bar = 3;
+
+	// ...
+}
+
+if (baz > bar) {
+	console.log( baz );
+}
+```
+
+### `let` refactoring
+
+```js
+var foo = true, baz = 10;
+
+if (foo) {
+	let bar = 3;
+
+	if (baz > bar) { // <-- don't forget `bar` when moving!
+		console.log( baz );
+	}
+}
+```
+
+### `const`
+
+```js
+var foo = true;
+
+if (foo) {
+	var a = 2;
+	const b = 3; // block-scoped to the containing `if`
+
+	a = 3; // just fine!
+	b = 4; // error!
+}
+
+console.log( a ); // 3
+console.log( b ); // ReferenceError!
+```
+

@@ -432,7 +432,7 @@ doSomething( 2 ); // 15</code></pre>
 }
 
 doSomething( 2 ); // 15</code></pre>
-<h4 id="collision-avoidance">Collision Avoidance</h4>
+</section><section><h3 id="collision-avoidance">Collision Avoidance</h3>
 <pre><code class="lang-js">function foo() {
     function bar(a) {
         i = 3; // changing the `i` in the enclosing scope&#39;s for-loop
@@ -483,7 +483,9 @@ console.log( a ); // 2</code></pre>
 })(); // &lt;-- and this
 
 console.log( a ); // 2</code></pre>
-<p>Change from <code>function declaration</code> to <code>function expression</code></p>
+<ul>
+<li><code>function expression</code></li>
+</ul>
 </section><section><h3 id="anonymous-vs-named">Anonymous vs. Named</h3>
 <pre><code class="lang-js">setTimeout( function(){
     console.log(&quot;I waited 1 second!&quot;);
@@ -501,6 +503,205 @@ console.log( a ); // 2</code></pre>
 <pre><code class="lang-js">setTimeout( function timeoutHandler(){ // &lt;-- Look, I have a name!
     console.log( &quot;I waited 1 second!&quot; );
 }, 1000 );</code></pre>
+</section><section><h3 id="invoking-function-expressions-immediately">Invoking Function Expressions Immediately</h3>
+<pre><code class="lang-js">var a = 2;
+
+(function IIFE(){
+
+    var a = 3;
+    console.log( a ); // 3
+
+})();
+
+console.log( a ); // 2</code></pre>
+</section><section><h3 id="iife-with-arguments">IIFE with arguments</h3>
+<pre><code class="lang-js">var a = 2;
+
+(function IIFE( global ){
+
+    var a = 3;
+    console.log( a ); // 3
+    console.log( global.a ); // 2
+
+})( window );
+
+console.log( a ); // 2</code></pre>
+</section><section><h3 id="iife-with-undefined-">IIFE with <code>undefined</code></h3>
+<pre><code class="lang-js">undefined = true; // setting a land-mine for other code! avoid!
+
+(function IIFE( undefined ){
+
+    var a;
+    if (a === undefined) {
+        console.log( &quot;Undefined is safe here!&quot; ); 
+    }
+
+})();</code></pre>
+</section><section><h3 id="iife-inverts-order-of-things">IIFE inverts order of things</h3>
+<pre><code class="lang-js">var a = 2;
+
+(function IIFE( def ){
+    def( window );
+})(function def( global ){
+
+    var a = 3;
+    console.log( a ); // 3
+    console.log( global.a ); // 2
+
+});</code></pre>
+<ul>
+<li>like in UMD - Universal Module Definition</li>
+</ul>
+</section><section><h3 id="block-as-scope">Block As Scope</h3>
+<p>Block scope is a tool to extend the earlier &quot;Principle of Least Exposure&quot;</p>
+<pre><code class="lang-js">var foo = true;
+
+if (foo) {
+    var bar = foo * 2;
+    bar = something( bar );
+    console.log( bar );
+}</code></pre>
+</section><section><h3 id="block-as-scope">Block As Scope</h3>
+<pre><code class="lang-js">for (var i=0; i&lt;10; i++) {
+    console.log( i );
+}</code></pre>
+<ul>
+<li><code>i</code> variable accessible out side of the loop   </li>
+</ul>
+</section><section><h3 id="block-as-scope">Block As Scope</h3>
+<ul>
+<li>with</li>
+<li>try/catch</li>
+<li>let</li>
+<li>const</li>
+</ul>
+</section><section><h3 id="with">with</h3>
+<p>Creates (a form of) block scope from the object</p>
+</section><section><h3 id="try-catch">try/catch</h3>
+<pre><code class="lang-js">try {
+    undefined(); // illegal operation to force an exception!
+}
+catch (err) {
+    console.log( err ); // works!
+}
+
+console.log( err ); // ReferenceError: `err` not found</code></pre>
+<blockquote>
+<p>some code linters complains </p>
+</blockquote>
+</section><section><h3 id="let">let</h3>
+<pre><code class="lang-js">var foo = true;
+
+if (foo) {
+    let bar = foo * 2;
+    bar = something( bar );
+    console.log( bar );
+}
+
+console.log( bar ); // ReferenceError</code></pre>
+</section><section><h3 id="let">let</h3>
+<pre><code class="lang-js">{
+   console.log( bar ); // ReferenceError!
+   let bar = 2;
+}</code></pre>
+</section><section><h3 id="garbage-collection">Garbage Collection</h3>
+<pre><code class="lang-js">function process(data) {
+    // do something interesting
+}
+
+var someReallyBigData = { .. };
+
+process( someReallyBigData );
+
+var btn = document.getElementById( &quot;my_button&quot; );
+
+btn.addEventListener( &quot;click&quot;, function click(evt){
+    console.log(&quot;button clicked&quot;);
+}, /*capturingPhase=*/false );</code></pre>
+<ul>
+<li>depends from engine implementation</li>
+</ul>
+</section><section><h3 id="garbage-collection">Garbage Collection</h3>
+<pre><code class="lang-js">function process(data) {
+    // do something interesting
+}
+
+// anything declared inside this block can go away after!
+{
+    let someReallyBigData = { .. };
+
+    process( someReallyBigData );
+}
+
+var btn = document.getElementById( &quot;my_button&quot; );
+
+btn.addEventListener( &quot;click&quot;, function click(evt){
+    console.log(&quot;button clicked&quot;);
+}, /*capturingPhase=*/false );</code></pre>
+</section><section><h3 id="-let-loops"><code>let</code> Loops</h3>
+<pre><code class="lang-js">for (let i=0; i&lt;10; i++) {
+    console.log( i );
+}
+
+console.log( i ); // ReferenceError</code></pre>
+</section><section><h3 id="-let-loops-re-binding"><code>let</code> Loops re-binding</h3>
+<pre><code class="lang-js">{
+    let j;
+    for (j=0; j&lt;10; j++) {
+        let i = j; // re-bound for each iteration!
+        console.log( i );
+    }
+}</code></pre>
+<blockquote>
+<p>benefits more visible when combining with closure </p>
+</blockquote>
+</section><section><h3 id="-let-refactoring"><code>let</code> refactoring</h3>
+<pre><code class="lang-js">var foo = true, baz = 10;
+
+if (foo) {
+    var bar = 3;
+
+    if (baz &gt; bar) {
+        console.log( baz );
+    }
+
+    // ...
+}</code></pre>
+</section><section><h3 id="-let-refactoring"><code>let</code> refactoring</h3>
+<pre><code class="lang-js">var foo = true, baz = 10;
+
+if (foo) {
+    var bar = 3;
+
+    // ...
+}
+
+if (baz &gt; bar) {
+    console.log( baz );
+}</code></pre>
+</section><section><h3 id="-let-refactoring"><code>let</code> refactoring</h3>
+<pre><code class="lang-js">var foo = true, baz = 10;
+
+if (foo) {
+    let bar = 3;
+
+    if (baz &gt; bar) { // &lt;-- don&#39;t forget `bar` when moving!
+        console.log( baz );
+    }
+}</code></pre>
+</section><section><h3 id="-const-"><code>const</code></h3>
+<pre><code class="lang-js">var foo = true;
+
+if (foo) {
+    var a = 2;
+    const b = 3; // block-scoped to the containing `if`
+
+    a = 3; // just fine!
+    b = 4; // error!
+}
+
+console.log( a ); // 3
+console.log( b ); // ReferenceError!</code></pre>
 </section>
 			</div>
 
