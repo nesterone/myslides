@@ -841,3 +841,529 @@ console.log( a ); // 3
 console.log( b ); // ReferenceError!
 ```
 
+## Hoisting 
+
+* Chicken or Egg ?
+* The Compile Strikes Again
+* Function First
+
+### Chicken or Egg
+
+```js
+a = 2;
+
+var a;         
+
+console.log( a );
+```
+
+### Chicken or Egg
+
+```js        
+console.log( a );
+
+var a = 2;
+```
+
+### The Compiler Strikes Again
+
+```js
+var a;
+
+a = 2;
+
+console.log( a );
+```
+
+### Only Declaration(egg) First Not Assignment
+
+```js
+var a;
+
+console.log( a );
+
+a = 2;
+```
+
+### Ok. What about functions ?
+
+```js
+foo();
+
+function foo() {
+	console.log( a ); // undefined
+
+	var a = 2;
+}
+```
+
+### From Compiler Point of View
+
+```js
+function foo() {  // function declaration
+	var a;
+
+	console.log( a ); // undefined
+
+	a = 2;
+}
+
+foo();
+```
+### Function Expression 
+
+```js
+foo(); // not ReferenceError, but TypeError!
+
+var foo = function bar() {
+	// ...
+};
+```
+### Function Expression with Name
+
+
+```js
+foo(); // TypeError
+bar(); // ReferenceError
+
+var foo = function bar() {
+	// ...
+};
+```
+
+### From Compiler Point of View
+
+```js
+var foo;
+
+foo(); // TypeError
+bar(); // ReferenceError
+
+foo = function() {
+	var bar = ...self...
+	// ...
+}
+```
+
+## Functions First
+
+
+```js
+foo(); // 1
+
+var foo;
+
+function foo() {
+	console.log( 1 );
+}
+
+foo = function() {
+	console.log( 2 );
+};
+```
+
+## Functions First (by Engine)
+
+```js
+function foo() {
+	console.log( 1 );
+}
+
+foo(); // 1
+
+foo = function() {
+	console.log( 2 );
+};
+```
+
+## Functions First (multiple declarations)
+
+```js
+foo(); // 3
+
+function foo() {
+	console.log( 1 );
+}
+
+var foo = function() {
+	console.log( 2 );
+};
+
+function foo() {
+	console.log( 3 );
+}
+```
+
+## Functions First (multiple declarations)
+
+```js
+foo(); // "b"
+
+var a = true;
+if (a) {
+   function foo() { console.log( "a" ); }
+}
+else {
+   function foo() { console.log( "b" ); }
+}
+```
+
+## Scope Closure
+
+Closure is all around you in JavaScript, you just have to recognize and embrace it.
+
+### Nitty Gritty
+
+```js
+function foo() {
+	var a = 2;
+
+	function bar() {
+		console.log( a ); // 2
+	}
+
+	bar();
+}
+
+foo();
+```
+
+* Is this "closure"?
+
+### Make it visible
+
+```js
+function foo() {
+	var a = 2;
+
+	function bar() {
+		console.log( a );
+	}
+
+	return bar;
+}
+
+var baz = foo();
+
+baz(); // 2 -- Whoa, closure was just observed, man.
+```
+
+### In any various ways
+
+```js
+function foo() {
+	var a = 2;
+
+	function baz() {
+		console.log( a ); // 2
+	}
+
+	bar( baz );
+}
+
+function bar(fn) {
+	fn(); // look ma, I saw closure!
+}
+```
+
+### In any various ways
+
+```js
+var fn;
+function foo() {
+	var a = 2;
+	function baz() {
+		console.log( a );
+	}
+	fn = baz; // assign `baz` to global variable
+}
+function bar() {
+	fn(); // look ma, I saw closure!
+}
+foo();
+bar(); // 2
+```
+
+### Now I Can See
+
+```js
+function wait(message) {
+
+	setTimeout( function timer(){
+		console.log( message );
+	}, 1000 );
+
+}
+
+wait( "Hello, closure!" );
+```
+
+### Now I Can See
+
+```js
+function setupBot(name,selector) {
+	$( selector ).click( function activator(){
+		console.log( "Activating: " + name );
+	} );
+}
+
+setupBot( "Closure Bot 1", "#bot_1" );
+setupBot( "Closure Bot 2", "#bot_2" );
+```
+
+### Observation of closure
+
+```js
+var a = 2;
+
+(function IIFE(){
+	console.log( a );
+})();
+```
+
+## Loops + Closure
+
+```js
+for (var i=1; i<=5; i++) {
+	setTimeout( function timer(){
+		console.log( i );
+	}, i*1000 );
+}
+```
+
+### Eureka! It works!
+
+```js
+for (var i=1; i<=5; i++) {
+	(function(j){
+		setTimeout( function timer(){
+			console.log( j );
+		}, j*1000 );
+	})( i ); // <- Attention
+}
+```
+
+### Block Scoping Revisited
+
+```js
+for (var i=1; i<=5; i++) {
+	let j = i; // yay, block-scope for closure!
+	setTimeout( function timer(){
+		console.log( j );
+	}, j*1000 );
+}
+```
+
+## Modules
+
+```js
+function foo() {
+	var something = "cool";
+	var another = [1, 2, 3];
+
+	function doSomething() {
+		console.log( something );
+	}
+
+	function doAnother() {
+		console.log( another.join( " ! " ) );
+	}
+}
+```
+
+### Revealing Module
+
+```js
+function CoolModule() {
+	var something = "cool";
+	var another = [1, 2, 3];
+	function doSomething() {
+		console.log( something );
+	}
+	function doAnother() {
+		console.log( another.join( " ! " ) );
+	}
+	return {
+		doSomething: doSomething,
+		doAnother: doAnother
+	};
+}
+var foo = CoolModule();
+foo.doSomething(); // cool
+foo.doAnother(); // 1 ! 2 ! 3
+```
+
+### Module Pattern
+
+```js
+var foo = (function CoolModule() {
+	var something = "cool";
+	var another = [1, 2, 3];
+	function doSomething() {
+		console.log( something );
+	}
+	function doAnother() {
+		console.log( another.join( " ! " ) );
+	}
+	return {
+		doSomething: doSomething,
+		doAnother: doAnother
+	};
+})();
+foo.doSomething(); // cool
+foo.doAnother(); // 1 ! 2 ! 3
+```
+
+### Passing Parameters
+
+```js
+function CoolModule(id) {
+	function identify() {
+		console.log( id );
+	}
+
+	return {
+		identify: identify
+	};
+}
+
+var foo1 = CoolModule( "foo 1" );
+var foo2 = CoolModule( "foo 2" );
+
+foo1.identify(); // "foo 1"
+foo2.identify(); // "foo 2"
+```
+
+### Public API
+
+```js
+var foo = (function CoolModule(id) {
+	function change() {
+		// modifying the public API
+		publicAPI.identify = identify2;
+	}
+	function identify1() {
+		console.log( id );
+	}
+	function identify2() {
+		console.log( id.toUpperCase() );
+	}
+	var publicAPI = {
+		change: change,
+		identify: identify1
+	};
+	return publicAPI;
+})( "foo module" );
+foo.identify(); // foo module
+foo.change();
+foo.identify(); // FOO MODULE
+```
+
+### Modern Modules
+
+```js
+var MyModules = (function Manager() {
+	var modules = {};
+	function define(name, deps, impl) {
+		for (var i=0; i<deps.length; i++) {
+			deps[i] = modules[deps[i]];
+		}
+		modules[name] = impl.apply( impl, deps );
+	}
+	function get(name) {
+		return modules[name];
+	}
+	return {
+		define: define,
+		get: get
+	};
+})();
+```
+
+### Define Module 'bar'
+
+```js
+MyModules.define( "bar", [], function(){
+	function hello(who) {
+		return "Let me introduce: " + who;
+	}
+
+	return {
+		hello: hello
+	};
+} );
+```
+
+### Define Module 'foo'
+
+```js
+MyModules.define( "foo", ["bar"], function(bar){
+	var hungry = "hippo";
+
+	function awesome() {
+		console.log( bar.hello( hungry ).toUpperCase() );
+	}
+
+	return {
+		awesome: awesome
+	};
+} );
+```
+
+### Use Modules
+
+```js
+
+var bar = MyModules.get( "bar" );
+var foo = MyModules.get( "foo" );
+
+console.log(
+	bar.hello( "hippo" )
+); // Let me introduce: hippo
+
+foo.awesome(); // LET ME INTRODUCE: HIPPO
+```
+
+## Future Modules
+
+ES6 adds first-class syntax support for the concept of modules.
+
+### bar.js
+
+```js
+function hello(who) {
+	return "Let me introduce: " + who;
+}
+
+export hello;
+```
+
+### foo.js
+
+```js
+// import only `hello()` from the "bar" module
+import hello from "bar";
+
+var hungry = "hippo";
+
+function awesome() {
+	console.log(
+		hello( hungry ).toUpperCase()
+	);
+}
+
+export awesome;
+```
+
+### Use Modules
+
+```js
+// import the entire "foo" and "bar" modules
+module foo from "foo";
+module bar from "bar";
+
+console.log(
+	bar.hello( "rhino" )
+); // Let me introduce: rhino
+
+foo.awesome(); // LET ME INTRODUCE: HIPPO

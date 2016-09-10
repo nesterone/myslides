@@ -702,6 +702,390 @@ if (foo) {
 
 console.log( a ); // 3
 console.log( b ); // ReferenceError!</code></pre>
+</section><section><h2 id="hoisting">Hoisting</h2>
+<ul>
+<li>Chicken or Egg ?</li>
+<li>The Compile Strikes Again</li>
+<li>Function First</li>
+</ul>
+</section><section><h3 id="chicken-or-egg">Chicken or Egg</h3>
+<pre><code class="lang-js">a = 2;
+
+var a;         
+
+console.log( a );</code></pre>
+</section><section><h3 id="chicken-or-egg">Chicken or Egg</h3>
+<pre><code class="lang-js">console.log( a );
+
+var a = 2;</code></pre>
+</section><section><h3 id="the-compiler-strikes-again">The Compiler Strikes Again</h3>
+<pre><code class="lang-js">var a;
+
+a = 2;
+
+console.log( a );</code></pre>
+</section><section><h3 id="only-declaration-egg-first-not-assignment">Only Declaration(egg) First Not Assignment</h3>
+<pre><code class="lang-js">var a;
+
+console.log( a );
+
+a = 2;</code></pre>
+</section><section><h3 id="ok-what-about-functions-">Ok. What about functions ?</h3>
+<pre><code class="lang-js">foo();
+
+function foo() {
+    console.log( a ); // undefined
+
+    var a = 2;
+}</code></pre>
+</section><section><h3 id="from-compiler-point-of-view">From Compiler Point of View</h3>
+<pre><code class="lang-js">function foo() {  // function declaration
+    var a;
+
+    console.log( a ); // undefined
+
+    a = 2;
+}
+
+foo();</code></pre>
+</section><section><h3 id="function-expression">Function Expression</h3>
+<pre><code class="lang-js">foo(); // not ReferenceError, but TypeError!
+
+var foo = function bar() {
+    // ...
+};</code></pre>
+</section><section><h3 id="function-expression-with-name">Function Expression with Name</h3>
+<pre><code class="lang-js">foo(); // TypeError
+bar(); // ReferenceError
+
+var foo = function bar() {
+    // ...
+};</code></pre>
+</section><section><h3 id="from-compiler-point-of-view">From Compiler Point of View</h3>
+<pre><code class="lang-js">var foo;
+
+foo(); // TypeError
+bar(); // ReferenceError
+
+foo = function() {
+    var bar = ...self...
+    // ...
+}</code></pre>
+</section><section><h2 id="functions-first">Functions First</h2>
+<pre><code class="lang-js">foo(); // 1
+
+var foo;
+
+function foo() {
+    console.log( 1 );
+}
+
+foo = function() {
+    console.log( 2 );
+};</code></pre>
+</section><section><h2 id="functions-first-by-engine-">Functions First (by Engine)</h2>
+<pre><code class="lang-js">function foo() {
+    console.log( 1 );
+}
+
+foo(); // 1
+
+foo = function() {
+    console.log( 2 );
+};</code></pre>
+</section><section><h2 id="functions-first-multiple-declarations-">Functions First (multiple declarations)</h2>
+<pre><code class="lang-js">foo(); // 3
+
+function foo() {
+    console.log( 1 );
+}
+
+var foo = function() {
+    console.log( 2 );
+};
+
+function foo() {
+    console.log( 3 );
+}</code></pre>
+</section><section><h2 id="functions-first-multiple-declarations-">Functions First (multiple declarations)</h2>
+<pre><code class="lang-js">foo(); // &quot;b&quot;
+
+var a = true;
+if (a) {
+   function foo() { console.log( &quot;a&quot; ); }
+}
+else {
+   function foo() { console.log( &quot;b&quot; ); }
+}</code></pre>
+</section><section><h2 id="scope-closure">Scope Closure</h2>
+<p>Closure is all around you in JavaScript, you just have to recognize and embrace it.</p>
+</section><section><h3 id="nitty-gritty">Nitty Gritty</h3>
+<pre><code class="lang-js">function foo() {
+    var a = 2;
+
+    function bar() {
+        console.log( a ); // 2
+    }
+
+    bar();
+}
+
+foo();</code></pre>
+<ul>
+<li>Is this &quot;closure&quot;?</li>
+</ul>
+</section><section><h3 id="make-it-visible">Make it visible</h3>
+<pre><code class="lang-js">function foo() {
+    var a = 2;
+
+    function bar() {
+        console.log( a );
+    }
+
+    return bar;
+}
+
+var baz = foo();
+
+baz(); // 2 -- Whoa, closure was just observed, man.</code></pre>
+</section><section><h3 id="in-any-various-ways">In any various ways</h3>
+<pre><code class="lang-js">function foo() {
+    var a = 2;
+
+    function baz() {
+        console.log( a ); // 2
+    }
+
+    bar( baz );
+}
+
+function bar(fn) {
+    fn(); // look ma, I saw closure!
+}</code></pre>
+</section><section><h3 id="in-any-various-ways">In any various ways</h3>
+<pre><code class="lang-js">var fn;
+function foo() {
+    var a = 2;
+    function baz() {
+        console.log( a );
+    }
+    fn = baz; // assign `baz` to global variable
+}
+function bar() {
+    fn(); // look ma, I saw closure!
+}
+foo();
+bar(); // 2</code></pre>
+</section><section><h3 id="now-i-can-see">Now I Can See</h3>
+<pre><code class="lang-js">function wait(message) {
+
+    setTimeout( function timer(){
+        console.log( message );
+    }, 1000 );
+
+}
+
+wait( &quot;Hello, closure!&quot; );</code></pre>
+</section><section><h3 id="now-i-can-see">Now I Can See</h3>
+<pre><code class="lang-js">function setupBot(name,selector) {
+    $( selector ).click( function activator(){
+        console.log( &quot;Activating: &quot; + name );
+    } );
+}
+
+setupBot( &quot;Closure Bot 1&quot;, &quot;#bot_1&quot; );
+setupBot( &quot;Closure Bot 2&quot;, &quot;#bot_2&quot; );</code></pre>
+</section><section><h3 id="observation-of-closure">Observation of closure</h3>
+<pre><code class="lang-js">var a = 2;
+
+(function IIFE(){
+    console.log( a );
+})();</code></pre>
+</section><section><h2 id="loops-closure">Loops + Closure</h2>
+<pre><code class="lang-js">for (var i=1; i&lt;=5; i++) {
+    setTimeout( function timer(){
+        console.log( i );
+    }, i*1000 );
+}</code></pre>
+</section><section><h3 id="eureka-it-works-">Eureka! It works!</h3>
+<pre><code class="lang-js">for (var i=1; i&lt;=5; i++) {
+    (function(j){
+        setTimeout( function timer(){
+            console.log( j );
+        }, j*1000 );
+    })( i ); // &lt;- Attention
+}</code></pre>
+</section><section><h3 id="block-scoping-revisited">Block Scoping Revisited</h3>
+<pre><code class="lang-js">for (var i=1; i&lt;=5; i++) {
+    let j = i; // yay, block-scope for closure!
+    setTimeout( function timer(){
+        console.log( j );
+    }, j*1000 );
+}</code></pre>
+</section><section><h2 id="modules">Modules</h2>
+<pre><code class="lang-js">function foo() {
+    var something = &quot;cool&quot;;
+    var another = [1, 2, 3];
+
+    function doSomething() {
+        console.log( something );
+    }
+
+    function doAnother() {
+        console.log( another.join( &quot; ! &quot; ) );
+    }
+}</code></pre>
+</section><section><h3 id="revealing-module">Revealing Module</h3>
+<pre><code class="lang-js">function CoolModule() {
+    var something = &quot;cool&quot;;
+    var another = [1, 2, 3];
+    function doSomething() {
+        console.log( something );
+    }
+    function doAnother() {
+        console.log( another.join( &quot; ! &quot; ) );
+    }
+    return {
+        doSomething: doSomething,
+        doAnother: doAnother
+    };
+}
+var foo = CoolModule();
+foo.doSomething(); // cool
+foo.doAnother(); // 1 ! 2 ! 3</code></pre>
+</section><section><h3 id="module-pattern">Module Pattern</h3>
+<pre><code class="lang-js">var foo = (function CoolModule() {
+    var something = &quot;cool&quot;;
+    var another = [1, 2, 3];
+    function doSomething() {
+        console.log( something );
+    }
+    function doAnother() {
+        console.log( another.join( &quot; ! &quot; ) );
+    }
+    return {
+        doSomething: doSomething,
+        doAnother: doAnother
+    };
+})();
+foo.doSomething(); // cool
+foo.doAnother(); // 1 ! 2 ! 3</code></pre>
+</section><section><h3 id="passing-parameters">Passing Parameters</h3>
+<pre><code class="lang-js">function CoolModule(id) {
+    function identify() {
+        console.log( id );
+    }
+
+    return {
+        identify: identify
+    };
+}
+
+var foo1 = CoolModule( &quot;foo 1&quot; );
+var foo2 = CoolModule( &quot;foo 2&quot; );
+
+foo1.identify(); // &quot;foo 1&quot;
+foo2.identify(); // &quot;foo 2&quot;</code></pre>
+</section><section><h3 id="public-api">Public API</h3>
+<pre><code class="lang-js">var foo = (function CoolModule(id) {
+    function change() {
+        // modifying the public API
+        publicAPI.identify = identify2;
+    }
+    function identify1() {
+        console.log( id );
+    }
+    function identify2() {
+        console.log( id.toUpperCase() );
+    }
+    var publicAPI = {
+        change: change,
+        identify: identify1
+    };
+    return publicAPI;
+})( &quot;foo module&quot; );
+foo.identify(); // foo module
+foo.change();
+foo.identify(); // FOO MODULE</code></pre>
+</section><section><h3 id="modern-modules">Modern Modules</h3>
+<pre><code class="lang-js">var MyModules = (function Manager() {
+    var modules = {};
+    function define(name, deps, impl) {
+        for (var i=0; i&lt;deps.length; i++) {
+            deps[i] = modules[deps[i]];
+        }
+        modules[name] = impl.apply( impl, deps );
+    }
+    function get(name) {
+        return modules[name];
+    }
+    return {
+        define: define,
+        get: get
+    };
+})();</code></pre>
+</section><section><h3 id="define-module-bar-">Define Module &#39;bar&#39;</h3>
+<pre><code class="lang-js">MyModules.define( &quot;bar&quot;, [], function(){
+    function hello(who) {
+        return &quot;Let me introduce: &quot; + who;
+    }
+
+    return {
+        hello: hello
+    };
+} );</code></pre>
+</section><section><h3 id="define-module-foo-">Define Module &#39;foo&#39;</h3>
+<pre><code class="lang-js">MyModules.define( &quot;foo&quot;, [&quot;bar&quot;], function(bar){
+    var hungry = &quot;hippo&quot;;
+
+    function awesome() {
+        console.log( bar.hello( hungry ).toUpperCase() );
+    }
+
+    return {
+        awesome: awesome
+    };
+} );</code></pre>
+</section><section><h3 id="use-modules">Use Modules</h3>
+<pre><code class="lang-js">
+var bar = MyModules.get( &quot;bar&quot; );
+var foo = MyModules.get( &quot;foo&quot; );
+
+console.log(
+    bar.hello( &quot;hippo&quot; )
+); // Let me introduce: hippo
+
+foo.awesome(); // LET ME INTRODUCE: HIPPO</code></pre>
+</section><section><h2 id="future-modules">Future Modules</h2>
+<p>ES6 adds first-class syntax support for the concept of modules.</p>
+</section><section><h3 id="bar-js">bar.js</h3>
+<pre><code class="lang-js">function hello(who) {
+    return &quot;Let me introduce: &quot; + who;
+}
+
+export hello;</code></pre>
+</section><section><h3 id="foo-js">foo.js</h3>
+<pre><code class="lang-js">// import only `hello()` from the &quot;bar&quot; module
+import hello from &quot;bar&quot;;
+
+var hungry = &quot;hippo&quot;;
+
+function awesome() {
+    console.log(
+        hello( hungry ).toUpperCase()
+    );
+}
+
+export awesome;</code></pre>
+</section><section><h3 id="use-modules">Use Modules</h3>
+<p>```js
+// import the entire &quot;foo&quot; and &quot;bar&quot; modules
+module foo from &quot;foo&quot;;
+module bar from &quot;bar&quot;;</p>
+<p>console.log(
+    bar.hello( &quot;rhino&quot; )
+); // Let me introduce: rhino</p>
+<p>foo.awesome(); // LET ME INTRODUCE: HIPPO</p>
 </section>
 			</div>
 
