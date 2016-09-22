@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>You Don't Know JS - scope & closure</title>
+
+		<meta name="description" content="scope & closure">
+		<meta name="author" content="Igor Nesterenko">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.min.css">
+		<link rel="stylesheet" href="css/theme/default.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+		<script>
+			if( window.location.search.match( /print-pdf/gi ) ) {
+				var link = document.createElement( 'link' );
+				link.rel = 'stylesheet';
+				link.type = 'text/css';
+				link.href = 'css/print/pdf.css';
+				document.getElementsByTagName( 'head' )[0].appendChild( link );
+			}
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+
+        <style type="text/css">
+            .left-side {
+                text-align: left;
+
+            }
+        </style>
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+                <section><h3 id="you-don-t-know-js">You Don&#39;t Know JS</h3>
+<h5 id="this-object-prototypes">this &amp; object prototypes</h5>
+<p>inspired by <a href="https://github.com/getify/You-Dont-Know-JS/tree/master/this%20%26%20object%20prototypes">getify</a></p>
+</section><section><h3 id="presented-by">Presented by</h3>
+<ul>
+<li><a href="https://twitter.com/nesterone">Igor Nesterenko</a></li>
+</ul>
+</section><section><h3 id="high-level-overview">High-level Overview</h3>
+<ul>
+<li><em>this</em> Or That?</li>
+<li><em>this</em> All Makes Sense Now</li>
+<li>Objects</li>
+<li>Mixing (Up) &quot;Class&quot; Objects</li>
+<li>Prototypes</li>
+<li>Behavior Delegation</li>
+<li>ES6 <em>class</em></li>
+</ul>
+</section><section><h3 id="-this-or-that-"><em>this</em> Or That?</h3>
+<p>//TBD</p>
+</section><section><h3 id="-this-all-makes-sense-now"><em>this</em> All Makes Sense Now</h3>
+<p>//TBD</p>
+</section><section><h3 id="objects">Objects</h3>
+<ul>
+<li>Syntax</li>
+<li>Type</li>
+<li>Contents</li>
+<li>Iteration</li>
+</ul>
+</section><section><h3 id="syntax">Syntax</h3>
+<p>Literal Form</p>
+<pre><code class="lang-js">var myObj = {
+    key: value
+    // ...
+};</code></pre>
+<p>Constructor Form</p>
+<pre><code class="lang-js">var myObj = new Object();
+myObj.key = value;</code></pre>
+</section><section><h3 id="type">Type</h3>
+<ul>
+<li><code>string</code></li>
+<li><code>number</code></li>
+<li><code>boolean</code></li>
+<li><code>null</code></li>
+<li><code>undefined</code></li>
+<li><code>object</code></li>
+</ul>
+</section><section><h3 id="not-all-types-are-objects">Not All types are objects</h3>
+<ul>
+<li>string, number, boolean, null, undefined are <strong>not</strong> objects</li>
+</ul>
+<pre><code class="lang-js"> typeof null === &quot;object&quot;; //true, yep it&#39;s a language bug</code></pre>
+</section><section><h3 id="complex-primitives">Complex Primitives</h3>
+<ul>
+<li>Functions are &#39;callable objects&#39;</li>
+<li>Arrays have special implementation to store date in more structured way </li>
+</ul>
+</section><section><h3 id="build-in-objects">Build-in Objects</h3>
+<ul>
+<li><code>String</code></li>
+<li><code>Number</code></li>
+<li><code>Boolean</code></li>
+<li><code>Object</code></li>
+<li><code>Function</code></li>
+<li><code>Array</code></li>
+<li><code>Date</code></li>
+<li><code>RegExp</code></li>
+<li><code>Error</code></li>
+</ul>
+<blockquote>
+<p>They are just build-in functions</p>
+</blockquote>
+</section><section><h3 id="primitive-literal-and-object">Primitive Literal and Object</h3>
+<pre><code class="lang-js">var strPrimitive = &quot;I am a string&quot;;
+typeof strPrimitive;                            // &quot;string&quot;
+strPrimitive instanceof String;                    // false
+
+var strObject = new String( &quot;I am a string&quot; );
+typeof strObject;                                 // &quot;object&quot;
+strObject instanceof String;                    // true
+
+// inspect the object sub-type
+Object.prototype.toString.call( strObject );    // [object String]</code></pre>
+</section><section><h3 id="type-auto-coercion">Type Auto Coercion</h3>
+<pre><code class="lang-js">var strPrimitive = &quot;I am a string&quot;;
+
+console.log( strPrimitive.length );            // 13
+
+console.log( strPrimitive.charAt( 3 ) );    // &quot;m&quot;
+
+console.log( 42.359.toFixed(2) );           // 42.36
+
+console.log( true.toString() );             // &quot;true&quot;</code></pre>
+</section><section><h3 id="simple-primitives-prefer-literal-form">Simple Primitives - Prefer literal form</h3>
+<pre><code class="lang-js">var str = &quot;I&#39;m a string&quot;;
+var strObj = new String(&quot;I&#39;m a string&quot;);
+
+var number = 43;
+var numberObj = new Number(43);
+
+var boolean = true;
+var boolean = new Boolean(true);</code></pre>
+<blockquote>
+<p>no object wrappers for <code>null</code> and <code>undefined</code></p>
+</blockquote>
+</section><section><h3 id="complex-primitives-prefer-literal-form">Complex Primitives - Prefer literal form</h3>
+<pre><code class="lang-js">var obj = { key: &quot;value&quot;};
+var obj = new Object();
+obj[&quot;key1&quot;] = &quot;value&quot;;
+
+var array = [1,2,3];
+var array = new Array(1, 2, 3);
+
+var fn = function(){};
+var fn = new Function();
+
+var regexp = /abc/;
+var regexp = new RegExp(&quot;abc&quot;);
+
+var error = new Error(&quot;some message&quot;); // no literal form
+var data = new Date(&quot;2016-03-03&quot;);     // no literal form</code></pre>
+<blockquote>
+<p>use constructor form only for <em>extra options</em></p>
+</blockquote>
+</section><section><h3 id="contents">Contents</h3>
+<p>//TBD</p>
+</section>
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.min.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+                slideNumber: true,
+
+				theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+				transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+				// Parallax scrolling
+				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+				// parallaxBackgroundSize: '2100px 900px',
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
