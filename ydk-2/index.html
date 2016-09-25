@@ -173,7 +173,277 @@ var data = new Date(&quot;2016-03-03&quot;);     // no literal form</code></pre>
 <p>use constructor form only for <em>extra options</em></p>
 </blockquote>
 </section><section><h3 id="contents">Contents</h3>
-<p>//TBD</p>
+<pre><code class="lang-js">var myObject = {
+    a: 2
+};
+
+myObject.a;        // 2
+
+myObject[&quot;a&quot;];    // 2</code></pre>
+</section><section><h3 id="programmatic-creation-of-values">Programmatic creation of values</h3>
+<pre><code class="lang-js">var wantA = true;
+var myObject = {
+    a: 2
+};
+
+var idx;
+
+if (wantA) {
+    idx = &quot;a&quot;;
+}
+
+// later
+
+console.log( myObject[idx] ); // 2</code></pre>
+</section><section><h3 id="array-s-contents">Array&#39;s contents</h3>
+<pre><code class="lang-js">var myObject = { };
+
+myObject[true] = &quot;foo&quot;;
+myObject[3] = &quot;bar&quot;;
+myObject[myObject] = &quot;baz&quot;;
+
+myObject[&quot;true&quot;];                // &quot;foo&quot;
+myObject[&quot;3&quot;];                    // &quot;bar&quot;
+myObject[&quot;[object Object]&quot;];    // &quot;baz&quot;</code></pre>
+<blockquote>
+<p>designed for usage with number-indexed data</p>
+</blockquote>
+</section><section><h3 id="computed-property-names">Computed Property Names</h3>
+<pre><code class="lang-js">var prefix = &quot;foo&quot;;
+
+var myObject = {
+    [prefix + &quot;bar&quot;]: &quot;hello&quot;,  // only from ES6
+    [prefix + &quot;baz&quot;]: &quot;world&quot;
+};
+
+myObject[&quot;foobar&quot;]; // hello
+myObject[&quot;foobaz&quot;]; // world</code></pre>
+<ul>
+<li>ES6 adds computed properties names</li>
+</ul>
+</section><section><h3 id="property-vs-method">Property vs. Method</h3>
+<p>If object&#39;s property is a function then it&#39;s a &quot;property access&quot; or &quot;method access&quot; ?</p>
+</section><section><h3 id="nothing-but-the-same-function">Nothing but The Same Function</h3>
+<pre><code class="lang-js">function foo() {
+    console.log( &quot;foo&quot; );
+}
+
+var someFoo = foo;    // variable reference to `foo`
+
+var myObject = {
+    someFoo: foo
+};
+
+foo;                // function foo(){..}
+
+someFoo;            // function foo(){..}
+
+myObject.someFoo;    // function foo(){..}</code></pre>
+<ul>
+<li>implicit binding in last case</li>
+</ul>
+</section><section><h3 id="nothing-but-the-same-function">Nothing but The Same Function</h3>
+<pre><code class="lang-js">var myObject = {
+    foo: function foo() {
+        console.log( &quot;foo&quot; );
+    }
+};
+
+var someFoo = myObject.foo;
+
+someFoo;        // function foo(){..}
+
+myObject.foo;    // function foo(){..}</code></pre>
+<ul>
+<li>ES6&#39;s <em>super</em> gives further more weight to the idea of &quot;methods&quot;</li>
+</ul>
+</section><section><h3 id="arrays">Arrays</h3>
+<pre><code class="lang-js">var myArray = [ &quot;foo&quot;, 42, &quot;bar&quot; ];
+
+myArray.length;        // 3
+
+myArray[0];            // &quot;foo&quot;
+
+myArray[2];            // &quot;bar&quot;</code></pre>
+<ul>
+<li>structured organization of how values are stored</li>
+<li>assume numeric indexing</li>
+<li><code>[]</code> preferred access to values</li>
+</ul>
+</section><section><h3 id="arrays-are-objects">Arrays are objects</h3>
+<pre><code class="lang-js">var myArray = [ &quot;foo&quot;, 42, &quot;bar&quot; ];
+
+myArray.baz = &quot;baz&quot;;
+
+myArray.length;    // 3
+
+myArray.baz;    // &quot;baz&quot;</code></pre>
+<ul>
+<li>allow <code>.</code> access, but not to number-indexed values</li>
+<li><code>.</code> doesn&#39;t change the <code>length</code> property of array</li>
+</ul>
+</section><section><h3 id="arrays-are-objects">Arrays are objects</h3>
+<pre><code class="lang-js">var myArray = [ &quot;foo&quot;, 42, &quot;bar&quot; ];
+
+myArray[&quot;3&quot;] = &quot;baz&quot;;  //converts to string
+
+myArray.length;    // 4
+
+myArray[3];        // &quot;baz&quot;</code></pre>
+</section><section><h3 id="duplicating-objects">Duplicating Objects</h3>
+<pre><code class="lang-js">function anotherFunction() { /*..*/ }
+
+var anotherObject = {
+    c: true
+};
+
+var anotherArray = [];
+
+var myObject = {
+    a: 2,
+    b: anotherObject,    // reference, not a copy!
+    c: anotherArray,    // another reference!
+    d: anotherFunction
+};
+
+anotherArray.push( anotherObject, myObject );</code></pre>
+</section><section><h3 id="duplicating-objects">Duplicating Objects</h3>
+<ul>
+<li>What exactly should be the representation of a <em>copy</em> of <code>myObject</code>?</li>
+<li>What &quot;duplicating&quot; a function would mean?</li>
+<li>What to do with circular references ?</li>
+</ul>
+</section><section><h3 id="json-safe-approach">JSON-safe approach</h3>
+<pre><code class="lang-js">var newObj = JSON.parse( JSON.stringify( someObj ) );</code></pre>
+</section><section><h3 id="shallow-copy">Shallow Copy</h3>
+<p>ES6 introduces <code>Object.assign(..)</code></p>
+<pre><code class="lang-js">var newObj = Object.assign( {}, myObject );
+
+newObj.a;                        // 2
+newObj.b === anotherObject;        // true
+newObj.c === anotherArray;        // true
+newObj.d === anotherFunction;    // true</code></pre>
+</section><section><h3 id="deep-copy">Deep Copy</h3>
+<p>Take a look at different libraries, for example</p>
+<ul>
+<li><a href="https://lodash.com/docs/4.16.1#cloneDeep">lodash</a></li>
+<li><a href="http://api.jquery.com/jQuery.extend/">jQuery</a></li>
+</ul>
+</section><section><h3 id="property-descriptors">Property Descriptors</h3>
+<p>ES5 introduces API to get properties characteristics </p>
+<pre><code class="lang-js">var myObject = {
+    a: 2
+};
+
+Object.getOwnPropertyDescriptor( myObject, &quot;a&quot; );
+// {
+//    value: 2,
+//    writable: true,
+//    enumerable: true,
+//    configurable: true
+// }</code></pre>
+</section><section><h3 id="property-descriptors">Property Descriptors</h3>
+<p>Provide property descriptions in a manual way</p>
+<pre><code class="lang-js">var myObject = {};
+
+Object.defineProperty( myObject, &quot;a&quot;, {
+    value: 2,
+    writable: true,
+    configurable: true,
+    enumerable: true
+} );
+
+myObject.a; // 2</code></pre>
+</section><section><h3 id="writable">Writable</h3>
+<pre><code class="lang-js">var myObject = {};
+
+Object.defineProperty( myObject, &quot;a&quot;, {
+    value: 2,
+    writable: false, // not writable!
+    configurable: true,
+    enumerable: true
+} );
+
+myObject.a = 3;
+
+myObject.a; // 2</code></pre>
+<ul>
+<li>silently failed in none-strict mode</li>
+</ul>
+</section><section><h3 id="writable">Writable</h3>
+<pre><code class="lang-js">&quot;use strict&quot;;
+
+var myObject = {};
+
+Object.defineProperty( myObject, &quot;a&quot;, {
+    value: 2,
+    writable: false, // not writable!
+    configurable: true,
+    enumerable: true
+} );
+
+myObject.a = 3; // TypeError</code></pre>
+<ul>
+<li>throws TypeError</li>
+</ul>
+</section><section><h3 id="configurable">Configurable</h3>
+<pre><code class="lang-js">var myObject = {
+    a: 2
+};
+
+myObject.a = 3;
+myObject.a;                    // 3
+
+Object.defineProperty( myObject, &quot;a&quot;, {
+    value: 4,
+    writable: true,
+    configurable: false,    // not configurable!
+    enumerable: true
+} );
+
+myObject.a;                    // 4
+myObject.a = 5;
+myObject.a;                    // 5
+
+Object.defineProperty( myObject, &quot;a&quot;, {
+    value: 6,
+    writable: true,
+    configurable: true,
+    enumerable: true
+} ); // TypeError</code></pre>
+</section><section><h3 id="configurable">Configurable</h3>
+<ul>
+<li>throws <code>TypeError</code> regardless to strict mode</li>
+<li>configurable to <code>false</code> can&#39;t be undone<ul>
+<li>except <code>writable</code> when changing from <code>true</code> to <code>false</code></li>
+</ul>
+</li>
+<li><code>configurable: false</code> prevents is the ability to use <code>delete</code></li>
+</ul>
+</section><section><h3 id="configurable">Configurable</h3>
+<pre><code class="lang-js">var myObject = {
+    a: 2
+};
+
+myObject.a;                // 2
+delete myObject.a;
+myObject.a;                // undefined
+
+Object.defineProperty( myObject, &quot;a&quot;, {
+    value: 2,
+    writable: true,
+    configurable: false,
+    enumerable: true
+} );
+
+myObject.a;                // 2
+delete myObject.a;
+myObject.a;                // 2</code></pre>
+<ul>
+<li>delete is a just object&#39;s property removal operation</li>
+</ul>
+</section><section><h3 id="enumerable">Enumerable</h3>
+<p>Controls if a property will show up in certain object-property enumerations, such as the <code>for..in</code> loop</p>
 </section>
 			</div>
 
