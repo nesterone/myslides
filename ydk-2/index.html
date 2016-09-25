@@ -444,6 +444,312 @@ myObject.a;                // 2</code></pre>
 </ul>
 </section><section><h3 id="enumerable">Enumerable</h3>
 <p>Controls if a property will show up in certain object-property enumerations, such as the <code>for..in</code> loop</p>
+</section><section><h3 id="immutability">Immutability</h3>
+<ul>
+<li>ES5 adds support</li>
+<li><strong>all</strong> of these approaches create shallow immutability</li>
+</ul>
+<pre><code class="lang-js">myImmutableObject.foo; // [1,2,3]
+myImmutableObject.foo.push( 4 );
+myImmutableObject.foo; // [1,2,3,4]</code></pre>
+</section><section><h3 id="object-constant">Object Constant</h3>
+<p>By combining <code>writable:false</code> and <code>configurable:false</code></p>
+<pre><code class="lang-js">var myObject = {};
+
+Object.defineProperty( myObject, &quot;FAVORITE_NUMBER&quot;, {
+    value: 42,
+    writable: false,
+    configurable: false
+} );</code></pre>
+</section><section><h3 id="prevent-extensions">Prevent Extensions</h3>
+<pre><code class="lang-js">var myObject = {
+    a: 2
+};
+
+Object.preventExtensions( myObject );
+
+myObject.b = 3;
+myObject.b; // undefined</code></pre>
+<p>In <code>non-strict mode</code>, the creation of <code>b</code> fails silently. In <code>strict mode</code>, it throws a <code>TypeError</code>.</p>
+</section><section><h3 id="seal">Seal</h3>
+<p><code>Object.seal(..)</code></p>
+<ul>
+<li>can&#39;t extend, delete properties</li>
+<li>still can change values</li>
+</ul>
+</section><section><h3 id="freeze">Freeze</h3>
+<p><code>Object.freeze(..)</code></p>
+<ul>
+<li>like <code>Object.seal</code>, but it also marks all &quot;data accessor&quot; properties as <code>writable:false</code></li>
+</ul>
+</section><section><h3 id="-get-"><code>[[Get]]</code></h3>
+<ul>
+<li><code>[[Get]]</code> operation kinda like a function call: <code>[[Get]]()</code></li>
+</ul>
+<pre><code class="lang-js">var myObject = {
+    a: 2
+};
+
+myObject.a; // 2</code></pre>
+</section><section><h3 id="-get-"><code>[[Get]]</code></h3>
+<ul>
+<li>it doesn&#39;t <em>just</em> look in <code>myObject</code> for a property of the name <code>a</code></li>
+<li>if it does <em>not</em> find a property then search in <code>[[Prototype]]</code> chain</li>
+<li>if it does <em>not</em> find at all then return <code>undefined</code></li>
+</ul>
+</section><section><h3 id="-get-"><code>[[Get]]</code></h3>
+<pre><code class="lang-js">var myObject = {
+    a: 2
+};
+
+myObject.b; // undefined</code></pre>
+<pre><code class="lang-js">var myObject = {
+    a: undefined
+};
+
+myObject.a; // undefined
+
+myObject.b; // undefined</code></pre>
+<ul>
+<li>can&#39;t distinguish where a property exists and holds explicit value <code>undefined</code></li>
+</ul>
+</section><section><h3 id="-put-"><code>[[Put]]</code></h3>
+<p>If the property is present:</p>
+<ol>
+<li>Call the setter, if any</li>
+<li>Is <code>writable: false</code> ? <strong>If so, silently fail in <code>non-strict mode</code>, or throw <code>TypeError</code> in <code>strict mode</code>.</strong></li>
+<li>Otherwise, set the value to the existing property as normal.</li>
+</ol>
+</section><section><h3 id="getters-setters">Getters &amp; Setters</h3>
+<p>Control how values are set to existing or new properties, or retrieved from existing properties</p>
+<ul>
+<li>ES5 introduced a way to override part of these default operations</li>
+</ul>
+</section><section><h3 id="getters-setters">Getters &amp; Setters</h3>
+<pre><code class="lang-js">var myObject = {
+    // define a getter for `a`
+    get a() {
+        return 2;
+    }
+};
+
+Object.defineProperty(
+    myObject,    // target
+    &quot;b&quot;,        // property name
+    {            // descriptor
+        // define a getter for `b`
+        get: function(){ return this.a * 2 },
+
+        // make sure `b` shows up as an object property
+        enumerable: true
+    }
+);
+
+myObject.a; // 2
+
+myObject.b; // 4</code></pre>
+</section><section><h3 id="getters-setters">Getters &amp; Setters</h3>
+<p>Using object-literal syntax with <code>get a() { .. }</code></p>
+<pre><code class="lang-js">var myObject = {
+    // define a getter for `a`
+    get a() {
+        return 2;
+    }
+};
+
+myObject.a = 3;
+
+myObject.a; // 2</code></pre>
+</section><section><h3 id="getters-setters">Getters &amp; Setters</h3>
+<pre><code class="lang-js">var myObject = {
+    // define a getter for `a`
+    get a() {
+        return this._a_;
+    },
+
+    // define a setter for `a`
+    set a(val) {
+        this._a_ = val * 2;
+    }
+};
+
+myObject.a = 2;
+
+myObject.a; // 4</code></pre>
+<ul>
+<li><code>_a_</code> is a normal property </li>
+</ul>
+</section><section><h3 id="existence">Existence</h3>
+<pre><code class="lang-js">var myObject = {
+    a: 2
+};
+
+(&quot;a&quot; in myObject);                // true
+(&quot;b&quot; in myObject);                // false
+
+myObject.hasOwnProperty( &quot;a&quot; );    // true
+myObject.hasOwnProperty( &quot;b&quot; );    // false</code></pre>
+<ul>
+<li><code>in</code> if not found in the object it goes through <code>[[Prototype]]</code> chain</li>
+<li><code>Object.hasOwnProperty(..)</code> looks only in the object</li>
+<li><code>in</code> isn&#39;t for arrays content</li>
+</ul>
+</section><section><h3 id="enumeration">Enumeration</h3>
+<pre><code class="lang-js">var myObject = { };
+
+Object.defineProperty(
+    myObject,
+    &quot;a&quot;,
+    // make `a` enumerable, as normal
+    { enumerable: true, value: 2 }
+);
+
+Object.defineProperty(
+    myObject,
+    &quot;b&quot;,
+    // make `b` NON-enumerable
+    { enumerable: false, value: 3 }
+);
+
+myObject.b; // 3
+(&quot;b&quot; in myObject); // true
+myObject.hasOwnProperty( &quot;b&quot; ); // true
+
+// .......
+
+for (var k in myObject) {
+    console.log( k, myObject[k] );
+}
+// &quot;a&quot; 2</code></pre>
+<ul>
+<li><code>for..in</code> loops better to not use with arrays</li>
+</ul>
+</section><section><h3 id="enumeration">Enumeration</h3>
+<p>Way that enumerable and non-enumerable properties can be distinguished:</p>
+<pre><code class="lang-js">var myObject = { };
+
+Object.defineProperty(
+    myObject,
+    &quot;a&quot;,
+    // make `a` enumerable, as normal
+    { enumerable: true, value: 2 }
+);
+
+Object.defineProperty(
+    myObject,
+    &quot;b&quot;,
+    // make `b` non-enumerable
+    { enumerable: false, value: 3 }
+);
+
+myObject.propertyIsEnumerable( &quot;a&quot; ); // true
+myObject.propertyIsEnumerable( &quot;b&quot; ); // false
+
+Object.keys( myObject ); // [&quot;a&quot;]
+Object.getOwnPropertyNames( myObject ); // [&quot;a&quot;, &quot;b&quot;]</code></pre>
+<ul>
+<li>not build-in way to get list of all properties, including <code>[[Prototype]]</code> chain</li>
+</ul>
+</section><section><h3 id="iteration">Iteration</h3>
+<p>The <code>for..in</code> loop iterates including its <code>[[Prototype]]</code> chain
+What if you instead want to iterate over the values?</p>
+</section><section><h3 id="iteration">Iteration</h3>
+<p>Just plain old <code>for</code> loop with indexes</p>
+<pre><code class="lang-js">var myArray = [1, 2, 3];
+
+for (var i = 0; i &lt; myArray.length; i++) {
+    console.log( myArray[i] );
+}
+// 1 2 3</code></pre>
+</section><section><h3 id="iteration">Iteration</h3>
+<p>ES5 also added several iteration helpers for arrays:</p>
+<pre><code>* `forEach(..)`
+* `every(..)`
+* `some(..)`</code></pre>
+</section><section><h3 id="iteration">Iteration</h3>
+<p>ES6 adds <code>for..of</code> loop</p>
+<pre><code class="lang-js">var myArray = [ 1, 2, 3 ];
+
+for (var v of myArray) {
+    console.log( v );
+}
+// 1
+// 2
+// 3</code></pre>
+</section><section><h3 id="iteration">Iteration</h3>
+<ul>
+<li><code>for..of</code> loop asks for an iterator object (<code>@@iterator</code> in spec)</li>
+<li><code>@@iterator</code> has <code>next()</code> method</li>
+</ul>
+<pre><code class="lang-js">var myArray = [ 1, 2, 3 ];
+var it = myArray[Symbol.iterator]();
+
+it.next(); // { value:1, done:false }
+it.next(); // { value:2, done:false }
+it.next(); // { value:3, done:false }
+it.next(); // { done:true }</code></pre>
+<blockquote>
+<p>note that we have 4 calls instead of 3</p>
+</blockquote>
+</section><section><h3 id="iteration">Iteration</h3>
+<p>Define iterator</p>
+<pre><code class="lang-js">var myObject = {
+    a: 2,
+    b: 3
+};
+
+Object.defineProperty( myObject, Symbol.iterator, {
+    enumerable: false,
+    writable: false,
+    configurable: true,
+    value: function() {
+        var o = this;
+        var idx = 0;
+        var ks = Object.keys( o );
+        return {
+            next: function() {
+                return {
+                    value: o[ks[idx++]],
+                    done: (idx &gt; ks.length)
+                };
+            }
+        };
+    }
+} );</code></pre>
+</section><section><h3 id="iteration">Iteration</h3>
+<p>Retrieve iterator and iterate</p>
+<pre><code class="lang-js">
+// iterate `myObject` manually
+var it = myObject[Symbol.iterator]();
+it.next(); // { value:2, done:false }
+it.next(); // { value:3, done:false }
+it.next(); // { value:undefined, done:true }
+
+// iterate `myObject` with `for..of`
+for (var v of myObject) {
+    console.log( v );
+}
+// 2
+// 3</code></pre>
+</section><section><h3 id="iteration">Iteration</h3>
+<p>Define iterator with computed property name</p>
+<pre><code class="lang-js">var randoms = {
+    [Symbol.iterator]: function() {
+        return {
+            next: function() {
+                return { value: Math.random() };
+            }
+        };
+    }
+};
+
+var randoms_pool = [];
+for (var n of randoms) {
+    randoms_pool.push( n );
+
+    // don&#39;t proceed unbounded!
+    if (randoms_pool.length === 100) break;
+}</code></pre>
 </section>
 			</div>
 
