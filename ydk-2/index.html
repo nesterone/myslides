@@ -67,9 +67,212 @@
 <li>ES6 <em>class</em></li>
 </ul>
 </section><section><h3 id="-this-or-that-"><em>this</em> Or That?</h3>
-<p>//TBD</p>
+<ul>
+<li>Why <code>this</code> ?</li>
+<li>Confusions<ul>
+<li>Itself</li>
+<li>It&#39;s scope</li>
+</ul>
+</li>
+<li>What&#39;s <code>this</code> ?</li>
+</ul>
+</section><section><h3 id="why-this-">Why <code>this</code> ?</h3>
+<pre><code class="lang-js">function identify() {
+    return this.name.toUpperCase();
+}
+function speak() {
+    var greeting = &quot;Hello, I&#39;m &quot; + identify.call( this );
+    console.log( greeting );
+}
+var me = {
+    name: &quot;Kyle&quot;
+};
+var you = {
+    name: &quot;Reader&quot;
+};
+identify.call( me ); // KYLE
+identify.call( you ); // READER
+speak.call( me ); // Hello, I&#39;m KYLE
+speak.call( you ); // Hello, I&#39;m READER</code></pre>
+</section><section><h3 id="why-this-">Why <code>this</code> ?</h3>
+<pre><code class="lang-js">function identify(context) {
+    return context.name.toUpperCase();
+}
+
+function speak(context) {
+    var greeting = &quot;Hello, I&#39;m &quot; + identify( context );
+    console.log( greeting );
+}
+
+identify( you ); // READER
+speak( me ); // Hello, I&#39;m KYLE</code></pre>
+<ul>
+<li>way of implicitly &quot;passing along&quot; an object reference</li>
+</ul>
+</section><section><h3 id="confusions">Confusions</h3>
+<p>&quot;this&quot; creates confusion when developers try to think about it too literally</p>
+</section><section><h3 id="confusions-itself">Confusions - Itself</h3>
+<p><code>this</code> refers to the function itself (in JS all functions are objects)</p>
+<pre><code class="lang-js">function foo(num) {
+    console.log( &quot;foo: &quot; + num );
+
+    // keep track of how many times `foo` is called
+    this.count++;
+}
+foo.count = 0;
+var i;
+for (i=0; i&lt;10; i++) {
+    if (i &gt; 5) {
+        foo( i );
+    }
+}
+// how many times was `foo` called?
+console.log( foo.count ); // 0 -- WTF?</code></pre>
+</section><section><h3 id="confusions-itself">Confusions - Itself</h3>
+<p>Fixing with variable from outer scope</p>
+<pre><code class="lang-js">function foo(num) {
+    console.log( &quot;foo: &quot; + num );
+    // keep track of how many times `foo` is called
+    data.count++;
+}
+var data = {
+    count: 0
+};
+var i;
+for (i=0; i&lt;10; i++) {
+    if (i &gt; 5) {
+        foo( i );
+    }
+}
+// how many times was `foo` called?
+console.log( data.count ); // 4</code></pre>
+</section><section><h3 id="referencing-function-as-an-object">Referencing Function as an Object</h3>
+<pre><code class="lang-js">function foo() {
+    foo.count = 4; // `foo` refers to itself
+}
+
+setTimeout( function(){
+    // anonymous function (no name), cannot
+    // refer to itself
+}, 10 );</code></pre>
+</section><section><h3 id="confusions-itself">Confusions - Itself</h3>
+<p>Fixing with lexical-scope function&#39;s name</p>
+<pre><code class="lang-js">function foo(num) {
+    console.log( &quot;foo: &quot; + num );
+
+    // keep track of how many times `foo` is called
+    foo.count++;
+}
+foo.count = 0;
+var i;
+for (i=0; i&lt;10; i++) {
+    if (i &gt; 5) {
+        foo( i );
+    }
+}
+// how many times was `foo` called?
+console.log( foo.count ); // 4</code></pre>
+</section><section><h3 id="confusions-itself">Confusions - Itself</h3>
+<p>Fixing with <code>this</code></p>
+<pre><code class="lang-js">function foo(num) {
+    console.log( &quot;foo: &quot; + num );
+    // keep track of how many times `foo` is called
+    // Note: `this` IS actually `foo` now, based on
+    // how `foo` is called (see below)
+    this.count++;
+}
+foo.count = 0;
+var i;
+for (i=0; i&lt;10; i++) {
+    if (i &gt; 5) {
+        // using `call(..)`, we ensure the `this`
+        // points at the function object (`foo`) itself
+        foo.call( foo, i );
+    }
+}
+console.log( foo.count ); // 4</code></pre>
+</section><section><h3 id="confusions-its-scope">Confusions - Its scope</h3>
+<pre><code class="lang-js">function foo() {
+    var a = 2;
+    this.bar();
+}
+
+function bar() {
+    console.log( this.a );
+}
+
+foo(); //undefined</code></pre>
+</section><section><h3 id="what-s-this-">What&#39;s <code>this</code>?</h3>
+<p><code>this</code> is not an author-time binding but a runtime binding</p>
 </section><section><h3 id="-this-all-makes-sense-now"><em>this</em> All Makes Sense Now</h3>
-<p>//TBD</p>
+<ul>
+<li>Call-site</li>
+<li>Nothing But Rules </li>
+<li>Everything in Order</li>
+<li>Binding Exceptions</li>
+<li>Lexical this</li>
+</ul>
+</section><section><h3 id="call-site">Call-site</h3>
+<p>Call-site: the location in code where a function is called</p>
+<pre><code class="lang-js">function baz() {
+    // call-stack is: `baz`
+    // so, our call-site is in the global scope
+    console.log( &quot;baz&quot; );
+    bar(); // &lt;-- call-site for `bar`
+}
+function bar() {
+    // call-stack is: `baz` -&gt; `bar`
+    // so, our call-site is in `baz`
+    console.log( &quot;bar&quot; );
+    foo(); // &lt;-- call-site for `foo`
+}
+function foo() {
+    // call-stack is: `baz` -&gt; `bar` -&gt; `foo`
+    // so, our call-site is in `bar`
+    console.log( &quot;foo&quot; );
+}
+baz(); // &lt;-- call-site for `baz`</code></pre>
+</section><section><h3 id="nothing-but-rules">Nothing But Rules</h3>
+<p>Inspect the call-site and determine which of 4 rules applies</p>
+<ul>
+<li>Default Binding</li>
+<li>Implicit Binding</li>
+<li>Explicit Binding</li>
+<li>New Binding</li>
+</ul>
+</section><section><h3 id="default-binding">Default Binding</h3>
+<pre><code class="lang-js">function foo() {
+    console.log( this.a );
+}
+
+var a = 2;
+
+foo(); // 2</code></pre>
+</section><section><h3 id="default-binding">Default Binding</h3>
+<pre><code class="lang-js">function foo() {
+    &quot;use strict&quot;;
+
+    console.log( this.a );
+}
+
+var a = 2;
+
+foo(); // TypeError: `this` is `undefined`</code></pre>
+</section><section><h3 id="default-binding">Default Binding</h3>
+<pre><code class="lang-js">function foo() {
+    console.log( this.a );
+}
+
+var a = 2;
+
+(function(){
+    &quot;use strict&quot;;
+
+    foo(); // 2
+})();</code></pre>
+<ul>
+<li>try to not mix <code>strict mode</code> and non-<code>strict mode</code></li>
+</ul>
 </section><section><h3 id="objects">Objects</h3>
 <ul>
 <li>Syntax</li>

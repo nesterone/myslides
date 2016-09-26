@@ -18,11 +18,267 @@ inspired by [getify](https://github.com/getify/You-Dont-Know-JS/tree/master/this
 
 ###*this* Or That?
 
-//TBD
+* Why `this` ?
+* Confusions
+    * Itself
+    * It's scope
+* What's `this` ?
+
+### Why `this` ?
+
+```js
+function identify() {
+	return this.name.toUpperCase();
+}
+function speak() {
+	var greeting = "Hello, I'm " + identify.call( this );
+	console.log( greeting );
+}
+var me = {
+	name: "Kyle"
+};
+var you = {
+	name: "Reader"
+};
+identify.call( me ); // KYLE
+identify.call( you ); // READER
+speak.call( me ); // Hello, I'm KYLE
+speak.call( you ); // Hello, I'm READER
+```
+
+### Why `this` ?
+
+```js
+function identify(context) {
+	return context.name.toUpperCase();
+}
+
+function speak(context) {
+	var greeting = "Hello, I'm " + identify( context );
+	console.log( greeting );
+}
+
+identify( you ); // READER
+speak( me ); // Hello, I'm KYLE
+```
+
+* way of implicitly "passing along" an object reference
+ 
+### Confusions
+
+"this" creates confusion when developers try to think about it too literally
+
+### Confusions - Itself
+
+`this` refers to the function itself (in JS all functions are objects)
+
+```js
+function foo(num) {
+	console.log( "foo: " + num );
+
+	// keep track of how many times `foo` is called
+	this.count++;
+}
+foo.count = 0;
+var i;
+for (i=0; i<10; i++) {
+	if (i > 5) {
+		foo( i );
+	}
+}
+// how many times was `foo` called?
+console.log( foo.count ); // 0 -- WTF?
+```
+
+### Confusions - Itself
+
+Fixing with variable from outer scope
+
+```js
+function foo(num) {
+	console.log( "foo: " + num );
+	// keep track of how many times `foo` is called
+	data.count++;
+}
+var data = {
+	count: 0
+};
+var i;
+for (i=0; i<10; i++) {
+	if (i > 5) {
+		foo( i );
+	}
+}
+// how many times was `foo` called?
+console.log( data.count ); // 4
+```
+
+### Referencing Function as an Object
+
+```js
+function foo() {
+	foo.count = 4; // `foo` refers to itself
+}
+
+setTimeout( function(){
+	// anonymous function (no name), cannot
+	// refer to itself
+}, 10 );
+```
+
+### Confusions - Itself
+
+Fixing with lexical-scope function's name
+
+```js
+function foo(num) {
+	console.log( "foo: " + num );
+
+	// keep track of how many times `foo` is called
+	foo.count++;
+}
+foo.count = 0;
+var i;
+for (i=0; i<10; i++) {
+	if (i > 5) {
+		foo( i );
+	}
+}
+// how many times was `foo` called?
+console.log( foo.count ); // 4
+```
+
+### Confusions - Itself
+
+Fixing with `this`
+
+```js
+function foo(num) {
+	console.log( "foo: " + num );
+	// keep track of how many times `foo` is called
+	// Note: `this` IS actually `foo` now, based on
+	// how `foo` is called (see below)
+	this.count++;
+}
+foo.count = 0;
+var i;
+for (i=0; i<10; i++) {
+	if (i > 5) {
+		// using `call(..)`, we ensure the `this`
+		// points at the function object (`foo`) itself
+		foo.call( foo, i );
+	}
+}
+console.log( foo.count ); // 4
+```
+
+### Confusions - Its scope
+
+```js
+function foo() {
+	var a = 2;
+	this.bar();
+}
+
+function bar() {
+	console.log( this.a );
+}
+
+foo(); //undefined
+```
+
+### What's `this`?
+
+`this` is not an author-time binding but a runtime binding
+
 
 ###*this* All Makes Sense Now
 
-//TBD
+* Call-site
+* Nothing But Rules 
+* Everything in Order
+* Binding Exceptions
+* Lexical this
+
+### Call-site
+
+Call-site: the location in code where a function is called
+
+```js
+function baz() {
+    // call-stack is: `baz`
+    // so, our call-site is in the global scope
+    console.log( "baz" );
+    bar(); // <-- call-site for `bar`
+}
+function bar() {
+    // call-stack is: `baz` -> `bar`
+    // so, our call-site is in `baz`
+    console.log( "bar" );
+    foo(); // <-- call-site for `foo`
+}
+function foo() {
+    // call-stack is: `baz` -> `bar` -> `foo`
+    // so, our call-site is in `bar`
+    console.log( "foo" );
+}
+baz(); // <-- call-site for `baz`
+```
+
+
+### Nothing But Rules
+
+Inspect the call-site and determine which of 4 rules applies
+
+* Default Binding
+* Implicit Binding
+* Explicit Binding
+* New Binding
+
+### Default Binding
+
+```js
+function foo() {
+	console.log( this.a );
+}
+
+var a = 2;
+
+foo(); // 2
+```
+
+### Default Binding
+
+```js
+function foo() {
+	"use strict";
+
+	console.log( this.a );
+}
+
+var a = 2;
+
+foo(); // TypeError: `this` is `undefined`
+```
+
+### Default Binding
+
+```js
+function foo() {
+	console.log( this.a );
+}
+
+var a = 2;
+
+(function(){
+	"use strict";
+
+	foo(); // 2
+})();
+```
+
+* try to not mix `strict mode` and non-`strict mode`
+
 
 ###Objects
 
