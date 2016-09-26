@@ -273,6 +273,175 @@ var a = 2;
 <ul>
 <li>try to not mix <code>strict mode</code> and non-<code>strict mode</code></li>
 </ul>
+</section><section><h3 id="implicit-binding">Implicit Binding</h3>
+<pre><code class="lang-js">function foo() {
+    console.log( this.a );
+}
+
+var obj = {
+    a: 2,
+    foo: foo
+};
+
+obj.foo(); // 2</code></pre>
+</section><section><h3 id="implicit-binding">Implicit Binding</h3>
+<pre><code class="lang-js">function foo() {
+    console.log( this.a );
+}
+
+var obj2 = {
+    a: 42,
+    foo: foo
+};
+
+var obj1 = {
+    a: 2,
+    obj2: obj2
+};
+
+obj1.obj2.foo(); // 42</code></pre>
+</section><section><h3 id="implicitly-lost">Implicitly Lost</h3>
+<pre><code class="lang-js">function foo() {
+    console.log( this.a );
+}
+
+var obj = {
+    a: 2,
+    foo: foo
+};
+
+var bar = obj.foo; // function reference/alias!
+
+var a = &quot;oops, global&quot;; // `a` also property on global object
+
+bar(); // &quot;oops, global&quot;</code></pre>
+</section><section><h3 id="implicitly-lost">Implicitly Lost</h3>
+<pre><code class="lang-js">function foo() {
+    console.log( this.a );
+}
+function doFoo(fn) {
+    // `fn` is just another reference to `foo`
+    fn(); // &lt;-- call-site!
+}
+var obj = {
+    a: 2,
+    foo: foo
+};
+var a = &quot;oops, global&quot;; // `a` also property on global object
+doFoo( obj.foo ); // &quot;oops, global&quot;</code></pre>
+</section><section><h3 id="implicitly-lost">Implicitly Lost</h3>
+<pre><code class="lang-js">function foo() {
+    console.log( this.a );
+}
+
+var obj = {
+    a: 2,
+    foo: foo
+};
+
+var a = &quot;oops, global&quot;; // `a` also property on global object
+
+setTimeout( obj.foo, 100 ); // &quot;oops, global&quot;</code></pre>
+</section><section><h3 id="pseudo-implementation-of-settimeout-">Pseudo-Implementation of <code>setTimeout()</code></h3>
+<pre><code class="lang-js">function setTimeout(fn,delay) {
+    // wait (somehow) for `delay` milliseconds
+    fn(); // &lt;-- call-site!
+}</code></pre>
+</section><section><h3 id="intentional-changes-to-this">Intentional Changes to this</h3>
+<ul>
+<li>Event handlers in popular JS libs</li>
+</ul>
+</section><section><h3 id="explicit-binding">Explicit Binding</h3>
+<p>functions have <code>call(..)</code> and <code>apply(..)</code> methods</p>
+<pre><code class="lang-js">function foo() {
+    console.log( this.a );
+}
+
+var obj = {
+    a: 2
+};
+
+foo.call( obj ); // 2
+foo.apply( obj ); // 2</code></pre>
+</section><section><h3 id="hard-binding">Hard Binding</h3>
+<pre><code class="lang-js">function foo() {
+    console.log( this.a );
+}
+
+var obj = {
+    a: 2
+};
+
+var bar = function() {
+    foo.call( obj );
+};
+
+bar(); // 2
+setTimeout( bar, 100 ); // 2
+
+// `bar` hard binds `foo`&#39;s `this` to `obj`
+// so that it cannot be overriden
+bar.call( window ); // 2</code></pre>
+</section><section><h3 id="hard-binding">Hard Binding</h3>
+<p>Fix problem with upper scoped object</p>
+<pre><code class="lang-js">function foo(something) {
+    console.log( this.a, something );
+    return this.a + something;
+}
+
+var obj = {
+    a: 2
+};
+
+var bar = function() {
+    return foo.apply( obj, arguments );
+};
+
+var b = bar( 3 ); // 2 3
+console.log( b ); // 5</code></pre>
+</section><section><h3 id="hard-binding">Hard Binding</h3>
+<p>Fix problem with helper function</p>
+<pre><code class="lang-js">function foo(something) {
+    console.log( this.a, something );
+    return this.a + something;
+}
+
+// simple `bind` helper
+function bind(fn, obj) {
+    return function() {
+        return fn.apply( obj, arguments );
+    };
+}
+
+var obj = {
+    a: 2
+};
+
+var bar = bind( foo, obj );
+
+var b = bar( 3 ); // 2 3
+console.log( b ); // 5</code></pre>
+</section><section><h3 id="hard-binding">Hard Binding</h3>
+<p>Since <em>hard binding</em> is such a common pattern</p>
+<ul>
+<li>ES5: <code>Function.prototype.bind</code></li>
+</ul>
+<pre><code class="lang-js">function foo(something) {
+    console.log( this.a, something );
+    return this.a + something;
+}
+
+var obj = {
+    a: 2
+};
+
+var bar = foo.bind( obj );
+
+var b = bar( 3 ); // 2 3
+console.log( b ); // 5</code></pre>
+<blockquote>
+<p>ES6 provide additional prefix in stack trace - &quot;bound foo&quot;</p>
+</blockquote>
 </section><section><h3 id="objects">Objects</h3>
 <ul>
 <li>Syntax</li>
