@@ -1712,3 +1712,352 @@ for (var n of randoms) {
 	if (randoms_pool.length === 100) break;
 }
 ```
+
+###  Mixing (Up) "Class" Objects
+
+* Class Theory
+* Class Mechanics
+* Class Inheritance
+* Mixins
+
+### Class Theory
+
+* "Class/Inheritance" - modeling real world problem domains in our software
+* Compound data with behaviour
+* Classes imply a way of *classifying* a certain data structure (Car, Vehicle)
+    * Inheritance
+* "Polymorphism" - override parent behaviour in it's child
+    * relative Polymorphism - reference base behaviour from overridden behaviour
+
+### "Class" Design Pattern
+
+It's not about "Iterator", "Observer", etc
+
+* "procedural programming"
+    * lack of higher abstraction -> spaghetti code
+    * classes were the proper way to organize code
+
+* "functional programing"
+    * classes are just one of several common design patterns
+
+> Is it optional abstraction on top of code ?
+
+* Java - no
+* C/C++, PHP - yes
+
+### JavaScript "Classes"
+
+But does that mean JavaScript actually *has* classes?
+
+> Plain and simple: **No.**
+
+* ES6 provide `class` keyword
+* it's all about implementing approximation of classic class functionality
+
+> real mechanics is quite different
+
+### Class Mechanics
+
+* class `Stack`
+* must instantiate `Stack`
+
+### Building 
+
+'Class' is a blue-print
+
+<img src="img/fig1.png">
+
+**This object is a *copy*** of all the characteristics described by the class.
+
+### Constructor
+
+> pseudo-code
+
+```js
+class CoolGuy {
+
+	specialTrick = nothing
+
+	CoolGuy( trick ) {
+		specialTrick = trick
+	}
+
+	showOff() {
+		output( "Here's my trick: ", specialTrick )
+	}
+}
+```
+
+### Constructor
+
+```js
+Joe = new CoolGuy( "jumping rope" )
+
+Joe.showOff() // Here's my trick: jumping rope
+```
+
+* constructor of a class *belongs* to the 
+* the same name as the class
+
+### Class Inheritance
+
+* parent/child metaphor 
+* child class contains an initial copy of the behavior from the parent
+
+> actually in parent/child metaphor we have to talk about two parent's DNA
+
+### Revisit `Vehicle` and `Car`
+
+> constructors omitted for brevity
+
+```js
+class Vehicle {
+	engines = 1
+
+	ignition() {
+		output( "Turning on my engine." )
+	}
+
+	drive() {
+		ignition()
+		output( "Steering and moving forward!" )
+	}
+}
+
+```
+
+### Revisit `Vehicle` and `Car`
+
+```js
+class Car inherits Vehicle {
+	wheels = 4
+
+	drive() {
+		inherited:drive()
+		output( "Rolling on all ", wheels, " wheels!" )
+	}
+}
+
+```
+
+### Revisit `Vehicle` and `Car`
+
+```js
+class SpeedBoat inherits Vehicle {
+	engines = 2
+
+	ignition() {
+		output( "Turning on my ", engines, " engines." )
+	}
+
+	pilot() {
+		inherited:drive()
+		output( "Speeding through the water with ease!" )
+	}
+}
+```
+
+### Polymorphism
+
+* `Car`s `drive()` method calls `inherited:drive()`
+* `SpeedBoat`s `pilot()` use inherited copy of `drive()`
+
+We would call that technic 'relative polymorphism'
+
+* any method can reference another method at higher level
+* method name can have multiple definition at different levels
+
+### Polymorphism
+
+* `inherited:` -> `super`
+* `drive()` and `ignition()` is defined in both `Vehicle` and `Car` 
+
+> In JS ES6 class "solves" issue with `super`
+
+### Class inheritance implies copies
+
+<img src="fig1.png">
+
+### Multiple Inheritance
+
+<img src="fig2.png">
+
+* "Diamond Problem"
+* JS does not provide a native mechanism
+
+### Mixins
+
+JS's object mechanism does not *automatically* perform copy behavior when you "inherit" or "instantiate"
+
+* object's liked together
+* JS devs fake the missing copy behaviour
+
+### Explicit Mixins
+
+```js
+// vastly simplified `mixin(..)` example:
+function mixin( sourceObj, targetObj ) {
+	for (var key in sourceObj) {
+		// only copy if not already present
+		if (!(key in targetObj)) {
+			targetObj[key] = sourceObj[key];
+		}
+	}
+
+	return targetObj;
+}
+```
+
+### Explicit Mixins
+
+```js
+var Vehicle = {
+	engines: 1,
+
+	ignition: function() {
+		console.log( "Turning on my engine." );
+	},
+
+	drive: function() {
+		this.ignition();
+		console.log( "Steering and moving forward!" );
+	}
+};
+
+```
+
+### Explicit Mixins
+
+```js
+var Car = mixin( Vehicle, {
+	wheels: 4,
+
+	drive: function() {
+		Vehicle.drive.call( this );
+		console.log( "Rolling on all " + this.wheels + " wheels!" );
+	}
+} );
+```
+
+* no classes, only objects
+* functions are not duplicated
+
+###"Polymorphism" Revisited
+
+`Vehicle.drive.call( this )` - "explicit pseudo-polymorphism"
+
+* creates manual/explicit linkage
+* hard to maintain
+
+### Mixing Copies
+
+```js
+// alternate mixin, less "safe" to overwrites
+function mixin( sourceObj, targetObj ) {
+	for (var key in sourceObj) {
+		targetObj[key] = sourceObj[key];
+	}
+
+	return targetObj;
+}
+
+var Vehicle = {
+	// ...
+};
+
+// first, create an empty object with
+// Vehicle's stuff copied in
+var Car = mixin( Vehicle, { } );
+
+// now copy the intended contents into Car
+mixin( {
+	wheels: 4,
+
+	drive: function() {
+		// ...
+	}
+}, Car );
+```
+
+### Mixing Copies
+
+* both share that same common objects (such as array)
+* full copy doesn't occurs
+* no direct way to handle collisions
+
+### Parasitic Inheritance
+
+```js
+// "Traditional JS Class" `Vehicle`
+function Vehicle() {
+	this.engines = 1;
+}
+Vehicle.prototype.ignition = function() {
+	console.log( "Turning on my engine." );
+};
+Vehicle.prototype.drive = function() {
+	this.ignition();
+	console.log( "Steering and moving forward!" );
+};
+```
+
+### Parasitic Inheritance
+
+```js
+/ "Parasitic Class" `Car`
+function Car() {
+	// first, `car` is a `Vehicle`
+	var car = new Vehicle();
+
+	// now, let's modify our `car` to specialize it
+	car.wheels = 4;
+
+	// save a privileged reference to `Vehicle::drive()`
+	var vehDrive = car.drive;
+
+	// override `Vehicle::drive()`
+	car.drive = function() {
+		vehDrive.call( this );
+		console.log( "Rolling on all " + this.wheels + " wheels!" );
+	};
+
+	return car;
+}
+```
+
+### Parasitic Inheritance
+
+```js
+var myCar = new Car();
+
+myCar.drive();
+// Turning on my engine.
+// Steering and moving forward!
+// Rolling on all 4 wheels!
+```
+
+### Implicit Mixins
+
+```js
+var Something = {
+	cool: function() {
+		this.greeting = "Hello World";
+		this.count = this.count ? this.count + 1 : 1;
+	}
+};
+
+Something.cool();
+Something.greeting; // "Hello World"
+Something.count; // 1
+
+var Another = {
+	cool: function() {
+		// implicit mixin of `Something` to `Another`
+		Something.cool.call( this );
+	}
+};
+
+Another.cool();
+Another.greeting; // "Hello World"
+Another.count; // 1 (not shared state with `Something`)
+```

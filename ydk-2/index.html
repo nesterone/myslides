@@ -1410,6 +1410,308 @@ for (var n of randoms) {
     // don&#39;t proceed unbounded!
     if (randoms_pool.length === 100) break;
 }</code></pre>
+</section><section><h3 id="mixing-up-class-objects">Mixing (Up) &quot;Class&quot; Objects</h3>
+<ul>
+<li>Class Theory</li>
+<li>Class Mechanics</li>
+<li>Class Inheritance</li>
+<li>Mixins</li>
+</ul>
+</section><section><h3 id="class-theory">Class Theory</h3>
+<ul>
+<li>&quot;Class/Inheritance&quot; - modeling real world problem domains in our software</li>
+<li>Compound data with behaviour</li>
+<li>Classes imply a way of <em>classifying</em> a certain data structure (Car, Vehicle)<ul>
+<li>Inheritance</li>
+</ul>
+</li>
+<li>&quot;Polymorphism&quot; - override parent behaviour in it&#39;s child<ul>
+<li>relative Polymorphism - reference base behaviour from overridden behaviour</li>
+</ul>
+</li>
+</ul>
+</section><section><h3 id="-class-design-pattern">&quot;Class&quot; Design Pattern</h3>
+<p>It&#39;s not about &quot;Iterator&quot;, &quot;Observer&quot;, etc</p>
+<ul>
+<li><p>&quot;procedural programming&quot;</p>
+<ul>
+<li>lack of higher abstraction -&gt; spaghetti code</li>
+<li>classes were the proper way to organize code</li>
+</ul>
+</li>
+<li><p>&quot;functional programing&quot;</p>
+<ul>
+<li>classes are just one of several common design patterns</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>Is it optional abstraction on top of code ?</p>
+</blockquote>
+<ul>
+<li>Java - no</li>
+<li>C/C++, PHP - yes</li>
+</ul>
+</section><section><h3 id="javascript-classes-">JavaScript &quot;Classes&quot;</h3>
+<p>But does that mean JavaScript actually <em>has</em> classes?</p>
+<blockquote>
+<p>Plain and simple: <strong>No.</strong></p>
+</blockquote>
+<ul>
+<li>ES6 provide <code>class</code> keyword</li>
+<li>it&#39;s all about implementing approximation of classic class functionality</li>
+</ul>
+<blockquote>
+<p>real mechanics is quite different</p>
+</blockquote>
+</section><section><h3 id="class-mechanics">Class Mechanics</h3>
+<ul>
+<li>class <code>Stack</code></li>
+<li>must instantiate <code>Stack</code></li>
+</ul>
+</section><section><h3 id="building">Building</h3>
+<p>&#39;Class&#39; is a blue-print</p>
+<p><img src="img/fig1.png"></p>
+<p><strong>This object is a <em>copy</em></strong> of all the characteristics described by the class.</p>
+</section><section><h3 id="constructor">Constructor</h3>
+<blockquote>
+<p>pseudo-code</p>
+</blockquote>
+<pre><code class="lang-js">class CoolGuy {
+
+    specialTrick = nothing
+
+    CoolGuy( trick ) {
+        specialTrick = trick
+    }
+
+    showOff() {
+        output( &quot;Here&#39;s my trick: &quot;, specialTrick )
+    }
+}</code></pre>
+</section><section><h3 id="constructor">Constructor</h3>
+<pre><code class="lang-js">Joe = new CoolGuy( &quot;jumping rope&quot; )
+
+Joe.showOff() // Here&#39;s my trick: jumping rope</code></pre>
+<ul>
+<li>constructor of a class <em>belongs</em> to the </li>
+<li>the same name as the class</li>
+</ul>
+</section><section><h3 id="class-inheritance">Class Inheritance</h3>
+<ul>
+<li>parent/child metaphor </li>
+<li>child class contains an initial copy of the behavior from the parent</li>
+</ul>
+<blockquote>
+<p>actually in parent/child metaphor we have to talk about two parent&#39;s DNA</p>
+</blockquote>
+</section><section><h3 id="revisit-vehicle-and-car-">Revisit <code>Vehicle</code> and <code>Car</code></h3>
+<blockquote>
+<p>constructors omitted for brevity</p>
+</blockquote>
+<pre><code class="lang-js">class Vehicle {
+    engines = 1
+
+    ignition() {
+        output( &quot;Turning on my engine.&quot; )
+    }
+
+    drive() {
+        ignition()
+        output( &quot;Steering and moving forward!&quot; )
+    }
+}</code></pre>
+</section><section><h3 id="revisit-vehicle-and-car-">Revisit <code>Vehicle</code> and <code>Car</code></h3>
+<pre><code class="lang-js">class Car inherits Vehicle {
+    wheels = 4
+
+    drive() {
+        inherited:drive()
+        output( &quot;Rolling on all &quot;, wheels, &quot; wheels!&quot; )
+    }
+}</code></pre>
+</section><section><h3 id="revisit-vehicle-and-car-">Revisit <code>Vehicle</code> and <code>Car</code></h3>
+<pre><code class="lang-js">class SpeedBoat inherits Vehicle {
+    engines = 2
+
+    ignition() {
+        output( &quot;Turning on my &quot;, engines, &quot; engines.&quot; )
+    }
+
+    pilot() {
+        inherited:drive()
+        output( &quot;Speeding through the water with ease!&quot; )
+    }
+}</code></pre>
+</section><section><h3 id="polymorphism">Polymorphism</h3>
+<ul>
+<li><code>Car</code>s <code>drive()</code> method calls <code>inherited:drive()</code></li>
+<li><code>SpeedBoat</code>s <code>pilot()</code> use inherited copy of <code>drive()</code></li>
+</ul>
+<p>We would call that technic &#39;relative polymorphism&#39;</p>
+<ul>
+<li>any method can reference another method at higher level</li>
+<li>method name can have multiple definition at different levels</li>
+</ul>
+</section><section><h3 id="polymorphism">Polymorphism</h3>
+<ul>
+<li><code>inherited:</code> -&gt; <code>super</code></li>
+<li><code>drive()</code> and <code>ignition()</code> is defined in both <code>Vehicle</code> and <code>Car</code> </li>
+</ul>
+<blockquote>
+<p>In JS ES6 class &quot;solves&quot; issue with <code>super</code></p>
+</blockquote>
+</section><section><h3 id="class-inheritance-implies-copies">Class inheritance implies copies</h3>
+<p><img src="fig1.png"></p>
+</section><section><h3 id="multiple-inheritance">Multiple Inheritance</h3>
+<p><img src="fig2.png"></p>
+<ul>
+<li>&quot;Diamond Problem&quot;</li>
+<li>JS does not provide a native mechanism</li>
+</ul>
+</section><section><h3 id="mixins">Mixins</h3>
+<p>JS&#39;s object mechanism does not <em>automatically</em> perform copy behavior when you &quot;inherit&quot; or &quot;instantiate&quot;</p>
+<ul>
+<li>object&#39;s liked together</li>
+<li>JS devs fake the missing copy behaviour</li>
+</ul>
+</section><section><h3 id="explicit-mixins">Explicit Mixins</h3>
+<pre><code class="lang-js">// vastly simplified `mixin(..)` example:
+function mixin( sourceObj, targetObj ) {
+    for (var key in sourceObj) {
+        // only copy if not already present
+        if (!(key in targetObj)) {
+            targetObj[key] = sourceObj[key];
+        }
+    }
+
+    return targetObj;
+}</code></pre>
+</section><section><h3 id="explicit-mixins">Explicit Mixins</h3>
+<pre><code class="lang-js">var Vehicle = {
+    engines: 1,
+
+    ignition: function() {
+        console.log( &quot;Turning on my engine.&quot; );
+    },
+
+    drive: function() {
+        this.ignition();
+        console.log( &quot;Steering and moving forward!&quot; );
+    }
+};</code></pre>
+</section><section><h3 id="explicit-mixins">Explicit Mixins</h3>
+<pre><code class="lang-js">var Car = mixin( Vehicle, {
+    wheels: 4,
+
+    drive: function() {
+        Vehicle.drive.call( this );
+        console.log( &quot;Rolling on all &quot; + this.wheels + &quot; wheels!&quot; );
+    }
+} );</code></pre>
+<ul>
+<li>no classes, only objects</li>
+<li>functions are not duplicated</li>
+</ul>
+</section><section><h3 id="-polymorphism-revisited">&quot;Polymorphism&quot; Revisited</h3>
+<p><code>Vehicle.drive.call( this )</code> - &quot;explicit pseudo-polymorphism&quot;</p>
+<ul>
+<li>creates manual/explicit linkage</li>
+<li>hard to maintain</li>
+</ul>
+</section><section><h3 id="mixing-copies">Mixing Copies</h3>
+<pre><code class="lang-js">// alternate mixin, less &quot;safe&quot; to overwrites
+function mixin( sourceObj, targetObj ) {
+    for (var key in sourceObj) {
+        targetObj[key] = sourceObj[key];
+    }
+
+    return targetObj;
+}
+
+var Vehicle = {
+    // ...
+};
+
+// first, create an empty object with
+// Vehicle&#39;s stuff copied in
+var Car = mixin( Vehicle, { } );
+
+// now copy the intended contents into Car
+mixin( {
+    wheels: 4,
+
+    drive: function() {
+        // ...
+    }
+}, Car );</code></pre>
+</section><section><h3 id="mixing-copies">Mixing Copies</h3>
+<ul>
+<li>both share that same common objects (such as array)</li>
+<li>full copy doesn&#39;t occurs</li>
+<li>no direct way to handle collisions</li>
+</ul>
+</section><section><h3 id="parasitic-inheritance">Parasitic Inheritance</h3>
+<pre><code class="lang-js">// &quot;Traditional JS Class&quot; `Vehicle`
+function Vehicle() {
+    this.engines = 1;
+}
+Vehicle.prototype.ignition = function() {
+    console.log( &quot;Turning on my engine.&quot; );
+};
+Vehicle.prototype.drive = function() {
+    this.ignition();
+    console.log( &quot;Steering and moving forward!&quot; );
+};</code></pre>
+</section><section><h3 id="parasitic-inheritance">Parasitic Inheritance</h3>
+<pre><code class="lang-js">/ &quot;Parasitic Class&quot; `Car`
+function Car() {
+    // first, `car` is a `Vehicle`
+    var car = new Vehicle();
+
+    // now, let&#39;s modify our `car` to specialize it
+    car.wheels = 4;
+
+    // save a privileged reference to `Vehicle::drive()`
+    var vehDrive = car.drive;
+
+    // override `Vehicle::drive()`
+    car.drive = function() {
+        vehDrive.call( this );
+        console.log( &quot;Rolling on all &quot; + this.wheels + &quot; wheels!&quot; );
+    };
+
+    return car;
+}</code></pre>
+</section><section><h3 id="parasitic-inheritance">Parasitic Inheritance</h3>
+<pre><code class="lang-js">var myCar = new Car();
+
+myCar.drive();
+// Turning on my engine.
+// Steering and moving forward!
+// Rolling on all 4 wheels!</code></pre>
+</section><section><h3 id="implicit-mixins">Implicit Mixins</h3>
+<pre><code class="lang-js">var Something = {
+    cool: function() {
+        this.greeting = &quot;Hello World&quot;;
+        this.count = this.count ? this.count + 1 : 1;
+    }
+};
+
+Something.cool();
+Something.greeting; // &quot;Hello World&quot;
+Something.count; // 1
+
+var Another = {
+    cool: function() {
+        // implicit mixin of `Something` to `Another`
+        Something.cool.call( this );
+    }
+};
+
+Another.cool();
+Another.greeting; // &quot;Hello World&quot;
+Another.count; // 1 (not shared state with `Something`)</code></pre>
 </section>
 			</div>
 
