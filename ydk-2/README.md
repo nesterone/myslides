@@ -493,13 +493,365 @@ console.log( b ); // 5
 
 > ES6 provide additional prefix in stack trace - "bound foo"
 
+### API Call "Contexts"
 
+```js
+function foo(el) {
+	console.log( el, this.id );
+}
 
+var obj = {
+	id: "awesome"
+};
 
+// use `obj` as `this` for `foo(..)` calls
+[1, 2, 3].forEach( foo, obj ); // 1 awesome  2 awesome  3 awesome
+```
 
+### `new` Binding
 
+```js
+something = new MyClass(..);
+```
 
+* constructors are **just functions**
+* known as a "constructor call"
 
+### "Constructor Call"
+
+1. new object is created
+2. `[[Prototype]]`-linked
+3. `this` binding for new object
+4. return the newly constructed object
+
+> In 4 step you can return another object with 'return' keyword
+
+### "Constructor Call"
+
+```js
+function foo(a) {
+	this.a = a;
+}
+
+var bar = new foo( 2 );
+console.log( bar.a ); // 2
+```
+
+### Everything In Order
+
+Which is more precedent, *implicit binding* or *explicit binding*?
+
+```js
+function foo() {
+	console.log( this.a );
+}
+var obj1 = {
+	a: 2,
+	foo: foo
+};
+var obj2 = {
+	a: 3,
+	foo: foo
+};
+obj1.foo(); // 2
+obj2.foo(); // 3
+obj1.foo.call( obj2 ); // 3 - implistic take over
+obj2.foo.call( obj1 ); // 2
+```
+
+### *new* Binding Order
+
+```js
+function foo(something) {
+	this.a = something;
+}
+var obj1 = {
+	foo: foo
+};
+var obj2 = {};
+obj1.foo( 2 );
+console.log( obj1.a ); // 2
+
+obj1.foo.call( obj2, 3 );
+console.log( obj2.a ); // 3
+
+var bar = new obj1.foo( 4 );
+console.log( obj1.a ); // 2
+console.log( bar.a ); // 4
+```
+* not clear what the order 
+
+### *new* Binding Order
+
+Use hard binding to test order
+
+```js
+function foo(something) {
+	this.a = something;
+}
+
+var obj1 = {};
+
+var bar = foo.bind( obj1 );
+bar( 2 );
+console.log( obj1.a ); // 2
+
+var baz = new bar( 3 );
+console.log( obj1.a ); // 2 - doesn't change obj1
+console.log( baz.a ); // 3
+```
+* Whoa! `bar` is hard-bound against `obj1
+
+### Not With Our Version of 'bind'
+
+```js
+function bind(fn, obj) {
+	return function() {
+		fn.apply( obj, arguments );
+	};
+}
+```
+
+### Build-in 'bind' Allows
+
+MDN polyfill, ES5 version is more complex 
+
+```js
+if (!Function.prototype.bind) {
+	Function.prototype.bind = function(oThis) {
+		if (typeof this !== "function") {
+			// closest thing possible to the ECMAScript 5
+			// internal IsCallable function
+			throw new TypeError( "Function.prototype.bind - what " +
+				"is trying to be bound is not callable"
+			);
+		}
+		var aArgs = Array.prototype.slice.call( arguments, 1 ),
+			fToBind = this,
+			fNOP = function(){},
+			fBound = function(){
+				return fToBind.apply(
+					(
+						this instanceof fNOP &&
+						oThis ? this : oThis    // check for 'new' call
+					),
+					aArgs.concat( Array.prototype.slice.call( arguments ) )
+				);
+			}
+		;
+		fNOP.prototype = this.prototype;
+		fBound.prototype = new fNOP();
+		return fBound;
+	};
+}
+```
+
+### Currying
+
+```js
+function foo(p1,p2) {
+	this.val = p1 + p2;
+}
+
+// using `null` here because we don't care about
+// the `this` hard-binding in this scenario, and
+// it will be overridden by the `new` call anyway!
+var bar = foo.bind( null, "p1" );
+
+var baz = new bar( "p2" );
+
+baz.val; // p1p2
+```
+
+### Determining `this` rules
+
+```js
+
+// #1 - new Binding
+var bar = new foo(); // `this` is the newly constructed object
+
+// #2 - Explicit Binding
+var bar = foo.call( obj2 ); // `this` is the explicitly specified object.
+
+// #3 - Implicit Binding
+var bar = obj1.foo(); // `this` is *that* context object.
+
+// #4 - Default Binding
+var bar = foo(); // `undefined` or global object
+
+```
+
+###  Binding Exceptions
+
+Ignored this
+
+```js
+function foo() {
+	console.log( this.a );
+}
+
+var a = 2;
+
+foo.call( null ); // 2
+```
+
+### What about curring ?
+
+```js
+function foo(a,b) {
+	console.log( "a:" + a + ", b:" + b );
+}
+
+// spreading out array as parameters
+foo.apply( null, [2, 3] ); // a:2, b:3
+
+// currying with `bind(..)`
+var bar = foo.bind( null, 2 );
+bar( 3 ); // a:2, b:3
+```
+* ES6 `foo(...[1,2])` fixes problem
+* hiding danger 
+
+### Safer this
+
+```js
+function foo(a,b) {
+	console.log( "a:" + a + ", b:" + b );
+}
+
+// our DMZ empty object
+var ø = Object.create( null );
+
+// spreading out array as parameters
+foo.apply( ø, [2, 3] ); // a:2, b:3
+
+// currying with `bind(..)`
+var bar = foo.bind( ø, 2 );
+bar( 3 ); // a:2, b:3
+```
+
+### Indirection
+
+```js
+function foo() {
+	console.log( this.a );
+}
+
+var a = 2;
+var o = { a: 3, foo: foo };
+var p = { a: 4 };
+
+o.foo(); // 3
+(p.foo = o.foo)(); // 2  - default binding
+```
+
+### Softening Binding
+
+```js
+if (!Function.prototype.softBind) {
+	Function.prototype.softBind = function(obj) {
+		var fn = this,
+			curried = [].slice.call( arguments, 1 ),
+			bound = function bound() {
+				return fn.apply(
+					(!this ||
+						(typeof window !== "undefined" &&
+							this === window) ||
+						(typeof global !== "undefined" &&
+							this === global)
+					) ? obj : this,
+					curried.concat.apply( curried, arguments )
+				);
+			};
+		bound.prototype = Object.create( fn.prototype );
+		return bound;
+	};
+}
+```
+
+### Softening Binding
+
+```js
+function foo() {
+   console.log("name: " + this.name);
+}
+
+var obj = { name: "obj" },
+    obj2 = { name: "obj2" },
+    obj3 = { name: "obj3" };
+
+var fooOBJ = foo.softBind( obj );
+
+fooOBJ(); // name: obj
+
+obj2.foo = foo.softBind(obj);
+obj2.foo(); // name: obj2   <---- look!!!
+
+fooOBJ.call( obj3 ); // name: obj3   <---- look!
+
+setTimeout( obj2.foo, 10 ); // name: obj   <---- falls back to soft-binding
+```
+
+## Lexical `this`
+
+ES6 introduces a special kind of function 
+
+```js
+function foo() {
+	// return an arrow function
+	return (a) => {
+		// `this` here is lexically adopted from `foo()`
+		console.log( this.a );
+	};
+}
+
+var obj1 = {
+	a: 2
+};
+
+var obj2 = {
+	a: 3
+};
+
+var bar = foo.call( obj1 );
+bar.call( obj2 ); // 2, not 3!
+```
+* arrow-function cannot be overridden 
+
+## Lexical `this`
+
+Common use-case
+
+```js
+function foo() {
+	setTimeout(() => {
+		// `this` here is lexically adopted from `foo()`
+		console.log( this.a );
+	},100);
+}
+
+var obj = {
+	a: 2
+};
+
+foo.call( obj ); // 2
+```
+### Just a sugar for plain old practice
+
+```js
+function foo() {
+	var self = this; // lexical capture of `this`
+	setTimeout( function(){
+		console.log( self.a );
+	}, 100 );
+}
+
+var obj = {
+	a: 2
+};
+
+foo.call( obj ); // 2
+```
 
 
 ###Objects
