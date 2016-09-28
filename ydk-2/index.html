@@ -1712,6 +1712,297 @@ var Another = {
 Another.cool();
 Another.greeting; // &quot;Hello World&quot;
 Another.count; // 1 (not shared state with `Something`)</code></pre>
+</section><section><h3 id="prototypes">Prototypes</h3>
+<ul>
+<li><code>[[Prototype]]</code></li>
+<li>&quot;Class&quot;</li>
+<li>&quot;(Prototypal) Inheritance&quot;</li>
+<li>Object Links</li>
+</ul>
+</section><section><h3 id="-prototype-">[[Prototype]]</h3>
+<pre><code class="lang-js">var myObject = {
+    a: 2
+};
+
+myObject.a; // 2</code></pre>
+<ul>
+<li><code>[[Get]]</code> and <code>[[Put]]</code> behaviours</li>
+</ul>
+</section><section><h3 id="-get-">[[Get]]</h3>
+<pre><code class="lang-js">var anotherObject = {
+    a: 2
+};
+
+// create an object linked to `anotherObject`
+var myObject = Object.create( anotherObject );
+
+myObject.a; // 2</code></pre>
+</section><section><h3 id="-object-prototype-"><code>Object.prototype</code></h3>
+<p>The top-end of every <em>normal</em> <code>[[Prototype]]</code> chain</p>
+<ul>
+<li>a lot of familiar utilities here</li>
+</ul>
+</section><section><h3 id="setting-shadowing-properties">Setting &amp; Shadowing Properties</h3>
+<pre><code class="lang-js">myObject.foo = &quot;bar&quot;;</code></pre>
+<p>If <code>foo</code> is already present up in the chain surprising behaviour may occurs</p>
+</section><section><h3 id="setting-shadowing-properties">Setting &amp; Shadowing Properties</h3>
+<p><code>foo</code> is found anywhere higher on the <code>[[Prototype]]</code></p>
+<ol>
+<li>it&#39;s <code>writable:true</code>, then shadowing occurs</li>
+<li>it&#39;s <code>writable:false</code>, no shadowing occurs<ul>
+<li>in <code>strict mode</code>, an error will be thrown.</li>
+</ul>
+</li>
+<li>it&#39;s a setter, then the setter will always be called</li>
+</ol>
+</section><section><h3 id="implicit-shadowing">Implicit Shadowing</h3>
+<pre><code class="lang-js">var anotherObject = {
+    a: 2
+};
+var myObject = Object.create( anotherObject );
+anotherObject.a; // 2
+myObject.a; // 2
+
+anotherObject.hasOwnProperty( &quot;a&quot; ); // true
+myObject.hasOwnProperty( &quot;a&quot; ); // false
+myObject.a++; // oops, implicit shadowing!
+
+anotherObject.a; // 2
+myObject.a; // 3
+myObject.hasOwnProperty( &quot;a&quot; ); // true</code></pre>
+<ul>
+<li>only proper way is <code>anotherObject.a++</code></li>
+</ul>
+</section><section><h3 id="-class-">&quot;Class&quot;</h3>
+<p>No abstract patterns/blueprints for objects called &quot;classes&quot;</p>
+<p>JS is one of that totally &quot;OO languages&quot;</p>
+</section><section><h3 id="-class-functions">&quot;Class&quot; Functions</h3>
+<pre><code class="lang-js">function Foo() {
+    // ...
+}
+
+Foo.prototype; // { }</code></pre>
+</section><section><h3 id="-prototype-linked"><code>[[Prototype]]</code> linked</h3>
+<pre><code class="lang-js">function Foo() {
+    // ...
+}
+
+var a = new Foo();
+
+Object.getPrototypeOf( a ) === Foo.prototype; // true</code></pre>
+</section><section><h3 id="-prototype-linked"><code>[[Prototype]]</code> linked</h3>
+<p><img src="fig3.png"></p>
+<p>&quot;Inheritance&quot; implies a <em>copy</em> operation, and JavaScript doesn&#39;t copy object properties (natively, by default</p>
+</section><section><h3 id="-constructors-">&quot;Constructors&quot;</h3>
+<pre><code class="lang-js">function Foo() {
+    // ...
+}
+
+var a = new Foo();</code></pre>
+</section><section><h3 id="-constructors-">&quot;Constructors&quot;</h3>
+<pre><code class="lang-js">function Foo() {
+    // ...
+}
+
+Foo.prototype.constructor === Foo; // true
+
+var a = new Foo();
+a.constructor === Foo; // true</code></pre>
+</section><section><h3 id="constructor-or-call-">Constructor Or Call?</h3>
+<pre><code class="lang-js">function NothingSpecial() {
+    console.log( &quot;Don&#39;t mind me!&quot; );
+}
+
+var a = new NothingSpecial();
+// &quot;Don&#39;t mind me!&quot;
+
+a; // {}</code></pre>
+</section><section><h3 id="mechanics">Mechanics</h3>
+<pre><code class="lang-js">function Foo(name) {
+    this.name = name;
+}
+
+Foo.prototype.myName = function() {
+    return this.name;
+};
+
+var a = new Foo( &quot;a&quot; );
+var b = new Foo( &quot;b&quot; );
+
+a.myName(); // &quot;a&quot;
+b.myName(); // &quot;b&quot;</code></pre>
+<ol>
+<li><code>this.name = name</code>: adds the <code>.name</code></li>
+<li><code>Foo.prototype.myName = ...</code></li>
+</ol>
+</section><section><h3 id="mechanics">Mechanics</h3>
+<p><code>a</code> and <code>b</code> are created, the properties/functions on the <code>Foo.prototype</code> object are  not <em>copied</em> over to each of <code>a</code> and <code>b</code> objects</p>
+</section><section><h3 id="-constructor-redux">&quot;Constructor&quot; Redux</h3>
+<pre><code class="lang-js">function Foo() { /* .. */ }
+
+Foo.prototype = { /* .. */ }; // create a new prototype object
+
+var a1 = new Foo();
+a1.constructor === Foo; // false!
+a1.constructor === Object; // true!</code></pre>
+<ul>
+<li>&quot;constructor&quot; doesn&#39;t mean &quot;contacted by&quot;</li>
+</ul>
+</section><section><h3 id="misconception-busted">Misconception, busted</h3>
+<pre><code class="lang-js">function Foo() { /* .. */ }
+
+Foo.prototype = { /* .. */ }; // create a new prototype object
+
+// Need to properly &quot;fix&quot; the missing `.constructor`
+// property on the new object serving as `Foo.prototype`.
+// See Chapter 3 for `defineProperty(..)`.
+Object.defineProperty( Foo.prototype, &quot;constructor&quot; , {
+    enumerable: false,
+    writable: true,
+    configurable: true,
+    value: Foo    // point `.constructor` at `Foo`
+} );</code></pre>
+</section><section><h2 id="-prototypal-inheritance-">&quot;(Prototypal) Inheritance&quot;</h2>
+<p><img src="img/fig3.png"></p>
+</section><section><h2 id="-prototypal-inheritance-">&quot;(Prototypal) Inheritance&quot;</h2>
+<pre><code class="lang-js">function Foo(name) {
+    this.name = name;
+}
+
+Foo.prototype.myName = function() {
+    return this.name;
+};</code></pre>
+</section><section><h2 id="-prototypal-inheritance-">&quot;(Prototypal) Inheritance&quot;</h2>
+<pre><code class="lang-js">
+function Bar(name,label) {
+    Foo.call( this, name );
+    this.label = label;
+}
+
+// here, we make a new `Bar.prototype`
+// linked to `Foo.prototype`
+Bar.prototype = Object.create( Foo.prototype );
+
+// Beware! Now `Bar.prototype.constructor` is gone,
+// and might need to be manually &quot;fixed&quot; if you&#39;re
+// in the habit of relying on such properties!
+
+Bar.prototype.myLabel = function() {
+    return this.label;
+};</code></pre>
+</section><section><h3 id="-prototypal-inheritance-">&quot;(Prototypal) Inheritance&quot;</h3>
+<pre><code class="lang-js">var a = new Bar( &quot;a&quot;, &quot;obj a&quot; );
+
+a.myName(); // &quot;a&quot;
+a.myLabel(); // &quot;obj a&quot;</code></pre>
+</section><section><h3 id="common-mis-conception">Common mis-conception</h3>
+<pre><code class="lang-js">// doesn&#39;t work like you want!
+Bar.prototype = Foo.prototype;
+
+// works kinda like you want, but with
+// side-effects you probably don&#39;t want :(
+Bar.prototype = new Foo();</code></pre>
+</section><section><h3 id="es6-std-technic">ES6 std technic</h3>
+<pre><code class="lang-js">// pre-ES6
+// throws away default existing `Bar.prototype`
+Bar.prototype = Object.create( Foo.prototype );
+
+// ES6+
+// modifies existing `Bar.prototype`
+Object.setPrototypeOf( Bar.prototype, Foo.prototype );</code></pre>
+</section><section><h3 id="inspecting-class-relationships">Inspecting &quot;Class&quot; Relationships</h3>
+<pre><code class="lang-js">function Foo() {
+    // ...
+}
+
+Foo.prototype.blah = ...;
+
+var a = new Foo();</code></pre>
+</section><section><h3 id="introspect">Introspect</h3>
+<pre><code class="lang-js">a instanceof Foo; // true</code></pre>
+<p>It&#39;s not about instance but about a in <code>[[Prototype]]</code> chain</p>
+</section><section><h3 id="introspect">Introspect</h3>
+<pre><code class="lang-js">// helper utility to see if `o1` is
+// related to (delegates to) `o2`
+function isRelatedTo(o1, o2) {
+    function F(){}
+    F.prototype = o2;
+    return o1 instanceof F;
+}
+
+var a = {};
+var b = Object.create( a );
+
+isRelatedTo( b, a ); // true</code></pre>
+</section><section><h3 id="es5-utils">ES5 utils</h3>
+<pre><code class="lang-js">Foo.prototype.isPrototypeOf( a ); // true
+Object.getPrototypeOf( a );
+Object.getPrototypeOf( a ) === Foo.prototype; // true</code></pre>
+</section><section><h3 id="es6-__proto__-">ES6 <code>__proto__</code></h3>
+<pre><code class="lang-js">a.__proto__ === Foo.prototype; // true</code></pre>
+<ul>
+<li>already in most browsers</li>
+</ul>
+</section><section><h3 id="object-links">Object Links</h3>
+<p><code>[[Prototype]]</code> linkage tells the engine to look for the property/method on the linked-to object</p>
+</section><section><h3 id="create-ing-links">Create()ing Links</h3>
+<pre><code class="lang-js">var foo = {
+    something: function() {
+        console.log( &quot;Tell me something good...&quot; );
+    }
+};
+
+var bar = Object.create( foo );
+
+bar.something(); // Tell me something good...</code></pre>
+</section><section><h3 id="-object-create-polyfilled"><code>Object.create()</code> Polyfilled</h3>
+<p>Before ES5 </p>
+<pre><code class="lang-js">if (!Object.create) {
+    Object.create = function(o) {
+        function F(){}
+        F.prototype = o;
+        return new F();
+    };
+}</code></pre>
+<ul>
+<li>limited support</li>
+</ul>
+</section><section><h3 id="links-as-fallbacks-">Links As Fallbacks?</h3>
+<pre><code class="lang-js">var anotherObject = {
+    cool: function() {
+        console.log( &quot;cool!&quot; );
+    }
+};
+
+var myObject = Object.create( anotherObject );
+
+myObject.doCool = function() {
+    this.cool(); // internal delegation!
+};
+
+myObject.doCool(); // &quot;cool!&quot;</code></pre>
+</section><section><h3 id="entire-relation-for-traditional-classes-">Entire Relation for traditional &quot;classes&quot;</h3>
+<pre><code class="lang-js">function Foo(who) {
+    this.me = who;
+}
+Foo.prototype.identify = function() {
+    return &quot;I am &quot; + this.me;
+};
+function Bar(who) {
+    Foo.call( this, who );
+}
+Bar.prototype = Object.create( Foo.prototype );
+Bar.prototype.speak = function() {
+    alert( &quot;Hello, &quot; + this.identify() + &quot;.&quot; );
+};
+var b1 = new Bar( &quot;b1&quot; );
+var b2 = new Bar( &quot;b2&quot; );
+b1.speak();
+b2.speak();</code></pre>
+</section><section><h3 id="entire-relation-for-traditional-classes-">Entire Relation for traditional &quot;classes&quot;</h3>
+<p><img src="img/fig4.png"></p>
+</section><section><h3 id="entire-relation-for-traditional-classes-">Entire Relation for traditional &quot;classes&quot;</h3>
+<p><img src="img/fig5.png"></p>
 </section>
 			</div>
 

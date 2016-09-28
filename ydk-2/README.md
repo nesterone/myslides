@@ -2061,3 +2061,417 @@ Another.cool();
 Another.greeting; // "Hello World"
 Another.count; // 1 (not shared state with `Something`)
 ```
+
+### Prototypes
+
+* `[[Prototype]]`
+* "Class"
+* "(Prototypal) Inheritance"
+* Object Links
+
+### [[Prototype]]
+
+```js
+var myObject = {
+	a: 2
+};
+
+myObject.a; // 2
+```
+
+* `[[Get]]` and `[[Put]]` behaviours
+
+### [[Get]]
+
+```js
+var anotherObject = {
+	a: 2
+};
+
+// create an object linked to `anotherObject`
+var myObject = Object.create( anotherObject );
+
+myObject.a; // 2
+```
+
+### `Object.prototype`
+
+The top-end of every *normal* `[[Prototype]]` chain
+
+* a lot of familiar utilities here
+
+### Setting & Shadowing Properties
+
+```js
+myObject.foo = "bar";
+```
+
+If `foo` is already present up in the chain surprising behaviour may occurs
+
+### Setting & Shadowing Properties
+
+`foo` is found anywhere higher on the `[[Prototype]]`
+
+1. it's `writable:true`, then shadowing occurs
+2. it's `writable:false`, no shadowing occurs
+    * in `strict mode`, an error will be thrown.
+3. it's a setter, then the setter will always be called
+
+### Implicit Shadowing
+
+```js
+var anotherObject = {
+	a: 2
+};
+var myObject = Object.create( anotherObject );
+anotherObject.a; // 2
+myObject.a; // 2
+
+anotherObject.hasOwnProperty( "a" ); // true
+myObject.hasOwnProperty( "a" ); // false
+myObject.a++; // oops, implicit shadowing!
+
+anotherObject.a; // 2
+myObject.a; // 3
+myObject.hasOwnProperty( "a" ); // true
+```
+
+* only proper way is `anotherObject.a++`
+
+### "Class"
+
+No abstract patterns/blueprints for objects called "classes"
+
+JS is one of that totally "OO languages"
+
+### "Class" Functions
+
+```js
+function Foo() {
+	// ...
+}
+
+Foo.prototype; // { }
+```
+
+### `[[Prototype]]` linked
+
+```js
+function Foo() {
+	// ...
+}
+
+var a = new Foo();
+
+Object.getPrototypeOf( a ) === Foo.prototype; // true
+```
+
+### `[[Prototype]]` linked
+
+<img src="fig3.png">
+
+"Inheritance" implies a *copy* operation, and JavaScript doesn't copy object properties (natively, by default
+
+### "Constructors"
+
+```js
+function Foo() {
+	// ...
+}
+
+var a = new Foo();
+```
+
+### "Constructors"
+
+```js
+function Foo() {
+	// ...
+}
+
+Foo.prototype.constructor === Foo; // true
+
+var a = new Foo();
+a.constructor === Foo; // true
+```
+
+### Constructor Or Call?
+
+```js
+function NothingSpecial() {
+	console.log( "Don't mind me!" );
+}
+
+var a = new NothingSpecial();
+// "Don't mind me!"
+
+a; // {}
+```
+
+### Mechanics
+
+```js
+function Foo(name) {
+	this.name = name;
+}
+
+Foo.prototype.myName = function() {
+	return this.name;
+};
+
+var a = new Foo( "a" );
+var b = new Foo( "b" );
+
+a.myName(); // "a"
+b.myName(); // "b"
+```
+
+1. `this.name = name`: adds the `.name`
+2. `Foo.prototype.myName = ...`
+
+### Mechanics
+
+`a` and `b` are created, the properties/functions on the `Foo.prototype` object are  not *copied* over to each of `a` and `b` objects
+
+### "Constructor" Redux
+
+```js
+function Foo() { /* .. */ }
+
+Foo.prototype = { /* .. */ }; // create a new prototype object
+
+var a1 = new Foo();
+a1.constructor === Foo; // false!
+a1.constructor === Object; // true!
+```
+
+* "constructor" doesn't mean "contacted by"
+
+### Misconception, busted
+
+```js
+function Foo() { /* .. */ }
+
+Foo.prototype = { /* .. */ }; // create a new prototype object
+
+// Need to properly "fix" the missing `.constructor`
+// property on the new object serving as `Foo.prototype`.
+// See Chapter 3 for `defineProperty(..)`.
+Object.defineProperty( Foo.prototype, "constructor" , {
+	enumerable: false,
+	writable: true,
+	configurable: true,
+	value: Foo    // point `.constructor` at `Foo`
+} );
+```
+
+## "(Prototypal) Inheritance"
+
+<img src="img/fig3.png">
+
+## "(Prototypal) Inheritance"
+
+```js
+function Foo(name) {
+	this.name = name;
+}
+
+Foo.prototype.myName = function() {
+	return this.name;
+};
+
+```
+
+## "(Prototypal) Inheritance"
+
+```js
+
+function Bar(name,label) {
+	Foo.call( this, name );
+	this.label = label;
+}
+
+// here, we make a new `Bar.prototype`
+// linked to `Foo.prototype`
+Bar.prototype = Object.create( Foo.prototype );
+
+// Beware! Now `Bar.prototype.constructor` is gone,
+// and might need to be manually "fixed" if you're
+// in the habit of relying on such properties!
+
+Bar.prototype.myLabel = function() {
+	return this.label;
+};
+
+```
+
+### "(Prototypal) Inheritance"
+
+```js
+var a = new Bar( "a", "obj a" );
+
+a.myName(); // "a"
+a.myLabel(); // "obj a"
+```
+
+### Common mis-conception
+
+```js
+// doesn't work like you want!
+Bar.prototype = Foo.prototype;
+
+// works kinda like you want, but with
+// side-effects you probably don't want :(
+Bar.prototype = new Foo();
+```
+
+### ES6 std technic
+
+```js
+// pre-ES6
+// throws away default existing `Bar.prototype`
+Bar.prototype = Object.create( Foo.prototype );
+
+// ES6+
+// modifies existing `Bar.prototype`
+Object.setPrototypeOf( Bar.prototype, Foo.prototype );
+```
+
+### Inspecting "Class" Relationships
+
+```js
+function Foo() {
+	// ...
+}
+
+Foo.prototype.blah = ...;
+
+var a = new Foo();
+```
+
+### Introspect
+
+```js
+a instanceof Foo; // true
+```
+
+It's not about instance but about a in `[[Prototype]]` chain
+
+
+### Introspect
+
+```js
+// helper utility to see if `o1` is
+// related to (delegates to) `o2`
+function isRelatedTo(o1, o2) {
+	function F(){}
+	F.prototype = o2;
+	return o1 instanceof F;
+}
+
+var a = {};
+var b = Object.create( a );
+
+isRelatedTo( b, a ); // true
+```
+
+### ES5 utils
+
+```js
+Foo.prototype.isPrototypeOf( a ); // true
+Object.getPrototypeOf( a );
+Object.getPrototypeOf( a ) === Foo.prototype; // true
+```
+
+### ES6 `__proto__`
+
+```js
+a.__proto__ === Foo.prototype; // true
+```
+
+* already in most browsers
+
+### Object Links
+
+`[[Prototype]]` linkage tells the engine to look for the property/method on the linked-to object
+
+### Create()ing Links
+
+```js
+var foo = {
+	something: function() {
+		console.log( "Tell me something good..." );
+	}
+};
+
+var bar = Object.create( foo );
+
+bar.something(); // Tell me something good...
+```
+
+
+### `Object.create()` Polyfilled
+
+Before ES5 
+
+```js
+if (!Object.create) {
+	Object.create = function(o) {
+		function F(){}
+		F.prototype = o;
+		return new F();
+	};
+}
+```
+
+* limited support
+
+
+### Links As Fallbacks?
+
+```js
+var anotherObject = {
+	cool: function() {
+		console.log( "cool!" );
+	}
+};
+
+var myObject = Object.create( anotherObject );
+
+myObject.doCool = function() {
+	this.cool(); // internal delegation!
+};
+
+myObject.doCool(); // "cool!"
+
+```
+
+### Entire Relation for traditional "classes" 
+ 
+```js
+function Foo(who) {
+	this.me = who;
+}
+Foo.prototype.identify = function() {
+	return "I am " + this.me;
+};
+function Bar(who) {
+	Foo.call( this, who );
+}
+Bar.prototype = Object.create( Foo.prototype );
+Bar.prototype.speak = function() {
+	alert( "Hello, " + this.identify() + "." );
+};
+var b1 = new Bar( "b1" );
+var b2 = new Bar( "b2" );
+b1.speak();
+b2.speak();
+```
+
+### Entire Relation for traditional "classes" 
+
+<img src="img/fig4.png">
+
+### Entire Relation for traditional "classes" 
+
+<img src="img/fig5.png">
