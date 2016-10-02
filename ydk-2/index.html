@@ -2501,6 +2501,145 @@ Object.getPrototypeOf( Bar ) === Foo; // true
 Foo.isPrototypeOf( b1 ); // true
 Bar.isPrototypeOf( b1 ); // true
 Object.getPrototypeOf( b1 ) === Bar; // true</code></pre>
+</section><section><h3 id="es6-class-">ES6 <code>class</code></h3>
+<p>Reduces verbosity of <code>.prototype</code> references cluttering the code</p>
+</section><section><h3 id="-class-"><code>class</code></h3>
+<pre><code class="lang-js">//Parent class
+class Widget {
+    constructor(width,height) {
+        this.width = width || 50;
+        this.height = height || 50;
+        this.$elem = null;
+    }
+    render($where){
+        if (this.$elem) {
+            this.$elem.css( {
+                width: this.width + &quot;px&quot;,
+                height: this.height + &quot;px&quot;
+            } ).appendTo( $where );
+        }
+    }
+}</code></pre>
+</section><section><h3 id="-class-"><code>class</code></h3>
+<pre><code class="lang-js">//Child class
+class Button extends Widget {
+    constructor(width,height,label) {
+        super( width, height );
+        this.label = label || &quot;Default&quot;;
+        this.$elem = $( &quot;&lt;button&gt;&quot; ).text( this.label );
+    }
+    render($where) {
+        super.render( $where );
+        this.$elem.click( this.onClick.bind( this ) );
+    }
+    onClick(evt) {
+        console.log( &quot;Button &#39;&quot; + this.label + &quot;&#39; clicked!&quot; );
+    }
+}</code></pre>
+</section><section><h3 id="looking-nicer">Looking Nicer</h3>
+<ol>
+<li>no more  references to <code>.prototype</code> cluttering the code.</li>
+<li><code>extends</code> wrap manual crafting for <code>[[Prototype]]</code></li>
+<li><code>super(..)</code> now gives us a very helpful <strong>relative polymorphism</strong> capability</li>
+<li><code>class</code> doesn&#39;t allow you to add properties, only methods</li>
+<li><code>extends</code> lets extend even builf-in objects like Array, RegExp in a natural way</li>
+</ol>
+</section><section><h3 id="-class-gotchas"><code>class</code> Gotchas</h3>
+<pre><code class="lang-js">class C {
+    constructor() {
+        this.num = Math.random();
+    }
+    rand() {
+        console.log( &quot;Random: &quot; + this.num );
+    }
+}
+
+var c1 = new C();
+c1.rand(); // &quot;Random: 0.4324299...&quot;
+
+C.prototype.rand = function() {
+    console.log( &quot;Random: &quot; + Math.round( this.num * 1000 ));
+};
+
+var c2 = new C();
+c2.rand(); // &quot;Random: 867&quot;
+
+c1.rand(); // &quot;Random: 432&quot; -- oops!!!</code></pre>
+</section><section><h3 id="shared-properties">Shared properties</h3>
+<pre><code class="lang-js">class C {
+    constructor() {
+        // make sure to modify the shared state,
+        // not set a shadowed property on the
+        // instances!
+        C.prototype.count++;
+
+        // here, `this.count` works as expected
+        // via delegation
+        console.log( &quot;Hello: &quot; + this.count );
+    }
+}
+
+// add a property for shared state directly to
+// prototype object
+C.prototype.count = 0;
+
+var c1 = new C();
+// Hello: 1
+
+var c2 = new C();
+// Hello: 2
+
+c1.count === 2; // true
+c1.count === c2.count; // true</code></pre>
+</section><section><h3 id="shadowing-property-method">Shadowing property/method</h3>
+<pre><code class="lang-js">class C {
+    constructor(id) {
+        // oops, gotcha, we&#39;re shadowing `id()` method
+        // with a property value on the instance
+        this.id = id;
+    }
+    id() {
+        console.log( &quot;Id: &quot; + this.id );
+    }
+}
+
+var c1 = new C( &quot;c1&quot; );
+c1.id(); // TypeError -- `c1.id` is now the string &quot;c1&quot;</code></pre>
+</section><section><h3 id="-super-static-binding"><code>super</code> static binding</h3>
+<pre><code class="lang-js">class P {
+    foo() { console.log( &quot;P.foo&quot; ); }
+}
+
+class C extends P {
+    foo() {
+        super();
+    }
+}
+
+var c1 = new C();
+c1.foo(); // &quot;P.foo&quot;
+
+var D = {
+    foo: function() { console.log( &quot;D.foo&quot; ); }
+};
+
+var E = {
+    foo: C.prototype.foo
+};
+
+// Link E to D for delegation
+Object.setPrototypeOf( E, D );
+
+E.foo(); // &quot;P.foo&quot;</code></pre>
+</section><section><h3 id="review">Review</h3>
+<ul>
+<li><strong>one of the most powerful parts</strong> of JS is that it <em>is</em> dynamic<ul>
+<li>pretend to be (but not actually be!) static</li>
+</ul>
+</li>
+<li>offer the choose between &quot;Classes&quot; and &quot;OLOO&quot; design</li>
+<li>&quot;OLOO&quot; looks simpler, however community prefer traditional &quot;Classes&quot; design </li>
+</ul>
 </section>
 			</div>
 
