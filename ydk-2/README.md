@@ -3101,8 +3101,165 @@ Bar.isPrototypeOf( b1 ); // true
 Object.getPrototypeOf( b1 ) === Bar; // true
 ```
 
+### ES6 `class`
 
+Reduces verbosity of `.prototype` references cluttering the code
 
+### `class`
 
+```js
+//Parent class
+class Widget {
+	constructor(width,height) {
+		this.width = width || 50;
+		this.height = height || 50;
+		this.$elem = null;
+	}
+	render($where){
+		if (this.$elem) {
+			this.$elem.css( {
+				width: this.width + "px",
+				height: this.height + "px"
+			} ).appendTo( $where );
+		}
+	}
+}
+```
 
+### `class`
 
+```js
+//Child class
+class Button extends Widget {
+	constructor(width,height,label) {
+		super( width, height );
+		this.label = label || "Default";
+		this.$elem = $( "<button>" ).text( this.label );
+	}
+	render($where) {
+		super.render( $where );
+		this.$elem.click( this.onClick.bind( this ) );
+	}
+	onClick(evt) {
+		console.log( "Button '" + this.label + "' clicked!" );
+	}
+}
+```
+
+### Looking Nicer
+
+1. no more  references to `.prototype` cluttering the code.
+2. `extends` wrap manual crafting for `[[Prototype]]`
+3. `super(..)` now gives us a very helpful **relative polymorphism** capability
+4. `class` doesn't allow you to add properties, only methods
+6. `extends` lets extend even builf-in objects like Array, RegExp in a natural way
+
+### `class` Gotchas
+
+```js
+class C {
+	constructor() {
+		this.num = Math.random();
+	}
+	rand() {
+		console.log( "Random: " + this.num );
+	}
+}
+
+var c1 = new C();
+c1.rand(); // "Random: 0.4324299..."
+
+C.prototype.rand = function() {
+	console.log( "Random: " + Math.round( this.num * 1000 ));
+};
+
+var c2 = new C();
+c2.rand(); // "Random: 867"
+
+c1.rand(); // "Random: 432" -- oops!!!
+```
+
+### Shared properties
+
+```js
+class C {
+	constructor() {
+		// make sure to modify the shared state,
+		// not set a shadowed property on the
+		// instances!
+		C.prototype.count++;
+
+		// here, `this.count` works as expected
+		// via delegation
+		console.log( "Hello: " + this.count );
+	}
+}
+
+// add a property for shared state directly to
+// prototype object
+C.prototype.count = 0;
+
+var c1 = new C();
+// Hello: 1
+
+var c2 = new C();
+// Hello: 2
+
+c1.count === 2; // true
+c1.count === c2.count; // true
+```
+
+### Shadowing property/method
+
+```js
+class C {
+	constructor(id) {
+		// oops, gotcha, we're shadowing `id()` method
+		// with a property value on the instance
+		this.id = id;
+	}
+	id() {
+		console.log( "Id: " + this.id );
+	}
+}
+
+var c1 = new C( "c1" );
+c1.id(); // TypeError -- `c1.id` is now the string "c1"
+```
+
+### `super` static binding
+
+```js
+class P {
+	foo() { console.log( "P.foo" ); }
+}
+
+class C extends P {
+	foo() {
+		super();
+	}
+}
+
+var c1 = new C();
+c1.foo(); // "P.foo"
+
+var D = {
+	foo: function() { console.log( "D.foo" ); }
+};
+
+var E = {
+	foo: C.prototype.foo
+};
+
+// Link E to D for delegation
+Object.setPrototypeOf( E, D );
+
+E.foo(); // "P.foo"
+```
+
+### Review
+
+* **one of the most powerful parts** of JS is that it *is* dynamic
+    * pretend to be (but not actually be!) static
+* offer the choose between "Classes" and "OLOO" design
+* "OLOO" looks simpler, however community prefer traditional "Classes" design 
