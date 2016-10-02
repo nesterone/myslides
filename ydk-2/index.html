@@ -1562,9 +1562,9 @@ Joe.showOff() // Here&#39;s my trick: jumping rope</code></pre>
 <p>In JS ES6 class &quot;solves&quot; issue with <code>super</code></p>
 </blockquote>
 </section><section><h3 id="class-inheritance-implies-copies">Class inheritance implies copies</h3>
-<p><img src="fig1.png"></p>
+<p><img src="img/fig1.png"></p>
 </section><section><h3 id="multiple-inheritance">Multiple Inheritance</h3>
-<p><img src="fig2.png"></p>
+<p><img src="img/fig2.png"></p>
 <ul>
 <li>&quot;Diamond Problem&quot;</li>
 <li>JS does not provide a native mechanism</li>
@@ -1791,7 +1791,7 @@ var a = new Foo();
 
 Object.getPrototypeOf( a ) === Foo.prototype; // true</code></pre>
 </section><section><h3 id="-prototype-linked"><code>[[Prototype]]</code> linked</h3>
-<p><img src="fig3.png"></p>
+<p><img src="img/fig3.png"></p>
 <p>&quot;Inheritance&quot; implies a <em>copy</em> operation, and JavaScript doesn&#39;t copy object properties (natively, by default</p>
 </section><section><h3 id="-constructors-">&quot;Constructors&quot;</h3>
 <pre><code class="lang-js">function Foo() {
@@ -1981,28 +1981,432 @@ myObject.doCool = function() {
 };
 
 myObject.doCool(); // &quot;cool!&quot;</code></pre>
-</section><section><h3 id="entire-relation-for-traditional-classes-">Entire Relation for traditional &quot;classes&quot;</h3>
+</section><section><h3 id="other-resources-about-oop-mechanics">Other Resources about OOP mechanics</h3>
+<ul>
+<li>The Four Layers of JavaScript OOP<ul>
+<li><a href="https://speakerdeck.com/rauschma/the-four-layers-of-javascript-oop">Slides</a> </li>
+<li><a href="https://www.youtube.com/watch?v=VJOTcUsD2kA&amp;t=6m16s">Video</a></li>
+</ul>
+</li>
+</ul>
+</section><section><h2 id="behavior-delegation">Behavior Delegation</h2>
+<ul>
+<li>Towards Delegation-Oriented Design</li>
+<li>Classes vs. Objects</li>
+<li>Simpler Design</li>
+<li>Nicer Syntax</li>
+<li>Introspection</li>
+</ul>
+</section><section><h3 id="towards-delegation-oriented-design">Towards Delegation-Oriented Design</h3>
+<ul>
+<li><code>[[Prototype]]</code> represents a fundamentally different design pattern from classes</li>
+<li>Make a mental exercise in comparation of<ul>
+<li>class/inheritance design patter</li>
+<li>behaviour delegation design patter</li>
+</ul>
+</li>
+</ul>
+</section><section><h3 id="class-theory">Class Theory</h3>
+<pre><code class="lang-js">class Task {
+    id;
+
+    // constructor `Task()`
+    Task(ID) { id = ID; }
+    outputTask() { output( id ); }
+}
+
+class XYZ inherits Task {
+    label;
+
+    // constructor `XYZ()`
+    XYZ(ID,Label) { super( ID ); label = Label; }
+    outputTask() { super(); output( label ); }
+}
+
+class ABC inherits Task {
+    // ...
+}</code></pre>
+</section><section><h3 id="delegation-theory">Delegation Theory</h3>
+<pre><code class="lang-js">var Task = {
+    setID: function(ID) { this.id = ID; },
+    outputID: function() { console.log( this.id ); }
+};
+
+// make `XYZ` delegate to `Task`
+var XYZ = Object.create( Task );
+
+XYZ.prepareTask = function(ID,Label) {
+    this.setID( ID );
+    this.label = Label;
+};
+
+XYZ.outputTaskDetails = function() {
+    this.outputID();
+    console.log( this.label );
+};
+
+// ABC = Object.create( Task );
+// ABC ... = ...</code></pre>
+<ul>
+<li>hide API of <code>Task</code> from caller of <code>XYZ</code></li>
+</ul>
+</section><section><h3 id="behavior-delegation">Behavior Delegation</h3>
+<p>Let some object (<code>XYZ</code>) provide a delegation (to <code>Task</code>) for property or method references if not found on the object (<code>XYZ</code>).</p>
+<h4 id="mutual-delegation-disallowed-">Mutual Delegation (Disallowed)</h4>
+<p>A -&gt; B  and B &lt;- A</p>
+<p>Engine doesn&#39;t allow that</p>
+</section><section><h3 id="mental-models-compared">Mental Models Compared</h3>
+<p>Traditional &quot;Class/Inheritance&quot;</p>
 <pre><code class="lang-js">function Foo(who) {
     this.me = who;
 }
 Foo.prototype.identify = function() {
     return &quot;I am &quot; + this.me;
 };
+
 function Bar(who) {
     Foo.call( this, who );
 }
 Bar.prototype = Object.create( Foo.prototype );
+
 Bar.prototype.speak = function() {
     alert( &quot;Hello, &quot; + this.identify() + &quot;.&quot; );
 };
+
 var b1 = new Bar( &quot;b1&quot; );
 var b2 = new Bar( &quot;b2&quot; );
+
 b1.speak();
 b2.speak();</code></pre>
-</section><section><h3 id="entire-relation-for-traditional-classes-">Entire Relation for traditional &quot;classes&quot;</h3>
+</section><section><h3 id="mental-models-compared">Mental Models Compared</h3>
+<p>Behaviour Delegation (OLOO)</p>
+<pre><code class="lang-js">var Foo = {
+    init: function(who) {
+        this.me = who;
+    },
+    identify: function() {
+        return &quot;I am &quot; + this.me;
+    }
+};
+
+var Bar = Object.create( Foo );
+
+Bar.speak = function() {
+    alert( &quot;Hello, &quot; + this.identify() + &quot;.&quot; );
+};
+
+var b1 = Object.create( Bar );
+b1.init( &quot;b1&quot; );
+var b2 = Object.create( Bar );
+b2.init( &quot;b2&quot; );
+
+b1.speak();
+b2.speak();</code></pre>
+</section><section><h3 id="full-traditional-class-inheritance-mechanics">Full Traditional &quot;Class/Inheritance&quot; Mechanics</h3>
 <p><img src="img/fig4.png"></p>
-</section><section><h3 id="entire-relation-for-traditional-classes-">Entire Relation for traditional &quot;classes&quot;</h3>
+</section><section><h3 id="traditional-class-inheritance-mechanics">Traditional &quot;Class/Inheritance&quot; Mechanics</h3>
 <p><img src="img/fig5.png"></p>
+</section><section><h3 id="oloo-mechanics">OLOO Mechanics</h3>
+<p><img src="img/fig6.png"></p>
+</section><section><h2 id="classes-vs-objects">Classes vs. Objects</h2>
+<p>More concrete code scenarios</p>
+</section><section><h3 id="widget-classes-">Widget &quot;Classes&quot;</h3>
+<pre><code class="lang-js">// Parent class
+function Widget(width,height) {
+    this.width = width || 50;
+    this.height = height || 50;
+    this.$elem = null;
+}
+
+Widget.prototype.render = function($where){
+    if (this.$elem) {
+        this.$elem.css( {
+            width: this.width + &quot;px&quot;,
+            height: this.height + &quot;px&quot;
+        } ).appendTo( $where );
+    }
+};</code></pre>
+</section><section><h3 id="widget-classes-">Widget &quot;Classes&quot;</h3>
+<pre><code class="lang-js">function Button(width,height,label) {
+    // &quot;super&quot; constructor call
+    Widget.call( this, width, height );
+    this.label = label || &quot;Default&quot;;
+
+    this.$elem = $( &quot;&lt;button&gt;&quot; ).text( this.label );
+}
+
+// make `Button` &quot;inherit&quot; from `Widget`
+Button.prototype = Object.create( Widget.prototype );
+
+// override base &quot;inherited&quot; `render(..)`
+Button.prototype.render = function($where) {
+    // &quot;super&quot; call
+    Widget.prototype.render.call( this, $where );
+    this.$elem.click( this.onClick.bind( this ) );
+};
+
+Button.prototype.onClick = function(evt) {
+    console.log( &quot;Button &#39;&quot; + this.label + &quot;&#39; clicked!&quot; );
+};</code></pre>
+</section><section><h3 id="widget-classes-">Widget &quot;Classes&quot;</h3>
+<pre><code class="lang-js">$( document ).ready( function(){
+    var $body = $( document.body );
+    var btn1 = new Button( 125, 30, &quot;Hello&quot; );
+    var btn2 = new Button( 150, 40, &quot;World&quot; );
+
+    btn1.render( $body );
+    btn2.render( $body );
+} );</code></pre>
+</section><section><h3 id="es6-class-sugar">ES6 <code>class</code> sugar</h3>
+<pre><code class="lang-js">// Parent class
+class Widget {
+    constructor(width,height) {
+        this.width = width || 50;
+        this.height = height || 50;
+        this.$elem = null;
+    }
+    render($where){
+        if (this.$elem) {
+            this.$elem.css( {
+                width: this.width + &quot;px&quot;,
+                height: this.height + &quot;px&quot;
+            } ).appendTo( $where );
+        }
+    }
+}</code></pre>
+</section><section><h3 id="es6-class-sugar">ES6 <code>class</code> sugar</h3>
+<pre><code class="lang-js">class Button extends Widget {
+    constructor(width,height,label) {
+        super( width, height );
+        this.label = label || &quot;Default&quot;;
+        this.$elem = $( &quot;&lt;button&gt;&quot; ).text( this.label );
+    }
+    render($where) {
+        super.render( $where );
+        this.$elem.click( this.onClick.bind( this ) );
+    }
+    onClick(evt) {
+        console.log( &quot;Button &#39;&quot; + this.label + &quot;&#39; clicked!&quot; );
+    }
+}</code></pre>
+</section><section><h3 id="es6-class-sugar">ES6 <code>class</code> sugar</h3>
+<pre><code class="lang-js">$( document ).ready( function(){
+    var $body = $( document.body );
+    var btn1 = new Button( 125, 30, &quot;Hello&quot; );
+    var btn2 = new Button( 150, 40, &quot;World&quot; );
+
+    btn1.render( $body );
+    btn2.render( $body );
+} );</code></pre>
+<ul>
+<li>operates on top of &#39;[[Prototype]]&#39; mechanics</li>
+<li><code>super</code> it`s not a roses </li>
+</ul>
+</section><section><h3 id="delegating-widget-objects">Delegating Widget Objects</h3>
+<pre><code class="lang-js">var Widget = {
+    init: function(width,height){
+        this.width = width || 50;
+        this.height = height || 50;
+        this.$elem = null;
+    },
+    insert: function($where){
+        if (this.$elem) {
+            this.$elem.css( {
+                width: this.width + &quot;px&quot;,
+                height: this.height + &quot;px&quot;
+            } ).appendTo( $where );
+        }
+    }
+};</code></pre>
+</section><section><h3 id="delegating-widget-objects">Delegating Widget Objects</h3>
+<pre><code class="lang-js">var Button = Object.create( Widget );
+
+Button.setup = function(width,height,label){
+    // delegated call
+    this.init( width, height );
+    this.label = label || &quot;Default&quot;;
+
+    this.$elem = $( &quot;&lt;button&gt;&quot; ).text( this.label );
+};
+Button.build = function($where) {
+    // delegated call
+    this.insert( $where );
+    this.$elem.click( this.onClick.bind( this ) );
+};
+Button.onClick = function(evt) {
+    console.log( &quot;Button &#39;&quot; + this.label + &quot;&#39; clicked!&quot; );
+};</code></pre>
+</section><section><h3 id="delegating-widget-objects">Delegating Widget Objects</h3>
+<pre><code class="lang-js">$( document ).ready( function(){
+    var $body = $( document.body );
+
+    var btn1 = Object.create( Button );
+    btn1.setup( 125, 30, &quot;Hello&quot; );
+
+    var btn2 = Object.create( Button );
+    btn2.setup( 150, 40, &quot;World&quot; );
+
+    btn1.build( $body );
+    btn2.build( $body );
+} );</code></pre>
+<ul>
+<li>split construction and initialization</li>
+</ul>
+</section><section><h3 id="authentification-classes-">Authentification &quot;Classes&quot;</h3>
+<pre><code class="lang-js">// Parent class
+function Controller() {
+    this.errors = [];
+}
+Controller.prototype.showDialog = function(title,msg) {
+    // display title &amp; message to user in dialog
+};
+Controller.prototype.success = function(msg) {
+    this.showDialog( &quot;Success&quot;, msg );
+};
+Controller.prototype.failure = function(err) {
+    this.errors.push( err );
+    this.showDialog( &quot;Error&quot;, err );
+};</code></pre>
+</section><section><h3 id="authentification-classes-">Authentification &quot;Classes&quot;</h3>
+<pre><code class="lang-js">// Child class
+function LoginController() {
+    Controller.call( this );
+}
+// Link child class to parent
+LoginController.prototype = Object.create( Controller.prototype );
+LoginController.prototype.getUser = function() {
+    return document.getElementById( &quot;login_username&quot; ).value;
+};
+LoginController.prototype.getPassword = function() {
+    return document.getElementById( &quot;login_password&quot; ).value;
+};
+LoginController.prototype.validateEntry = function(user,pw) {
+    user = user || this.getUser();
+    pw = pw || this.getPassword();
+
+    if (!(user &amp;&amp; pw)) {
+        return this.failure( &quot;Please enter a username &amp; password!&quot; );
+    }
+    else if (pw.length &lt; 5) {
+        return this.failure( &quot;Password must be 5+ characters!&quot; );
+    }
+
+    // got here? validated!
+    return true;
+};
+// Override to extend base `failure()`
+LoginController.prototype.failure = function(err) {
+    // &quot;super&quot; call
+    Controller.prototype.failure.call( this, &quot;Login invalid: &quot; + err );
+}</code></pre>
+</section><section><h3 id="authentification-classes-">Authentification &quot;Classes&quot;</h3>
+<pre><code class="lang-js">// Child class
+function AuthController(login) {
+    Controller.call( this );
+    // in addition to inheritance, we also need composition
+    this.login = login;
+}
+// Link child class to parent
+AuthController.prototype = Object.create( Controller.prototype );
+AuthController.prototype.server = function(url,data) {
+    return $.ajax( {
+        url: url,
+        data: data
+    } );
+};
+AuthController.prototype.checkAuth = function() {
+    var user = this.login.getUser();
+    var pw = this.login.getPassword();
+
+    if (this.login.validateEntry( user, pw )) {
+        this.server( &quot;/check-auth&quot;,{
+            user: user,
+            pw: pw
+        } )
+        .then( this.success.bind( this ) )
+        .fail( this.failure.bind( this ) );
+    }
+};
+// Override to extend base `success()`
+AuthController.prototype.success = function() {
+    // &quot;super&quot; call
+    Controller.prototype.success.call( this, &quot;Authenticated!&quot; );
+};
+// Override to extend base `failure()`
+AuthController.prototype.failure = function(err) {
+    // &quot;super&quot; call
+    Controller.prototype.failure.call( this, &quot;Auth Failed: &quot; + err );
+};</code></pre>
+</section><section><h3 id="authentification-classes-">Authentification &quot;Classes&quot;</h3>
+<pre><code class="lang-js">var auth = new AuthController(
+    // in addition to inheritance, we also need composition
+    new LoginController()
+);
+auth.checkAuth();</code></pre>
+</section><section><h3 id="de-class-ified">De-class-ified</h3>
+<pre><code class="lang-js">var LoginController = {
+    errors: [],
+    getUser: function() {
+        return document.getElementById( &quot;login_username&quot; ).value;
+    },
+    getPassword: function() {
+        return document.getElementById( &quot;login_password&quot; ).value;
+    },
+    validateEntry: function(user,pw) {
+        user = user || this.getUser();
+        pw = pw || this.getPassword();
+
+        if (!(user &amp;&amp; pw)) {
+            return this.failure( &quot;Please enter a username &amp; password!&quot; );
+        }
+        else if (pw.length &lt; 5) {
+            return this.failure( &quot;Password must be 5+ characters!&quot; );
+        }
+
+        // got here? validated!
+        return true;
+    },
+    showDialog: function(title,msg) {
+        // display success message to user in dialog
+    },
+    failure: function(err) {
+        this.errors.push( err );
+        this.showDialog( &quot;Error&quot;, &quot;Login invalid: &quot; + err );
+    }
+};</code></pre>
+</section><section><h3 id="de-class-ified">De-class-ified</h3>
+<pre><code class="lang-js">// Link `AuthController` to delegate to `LoginController`
+var AuthController = Object.create( LoginController );
+
+AuthController.errors = [];
+AuthController.checkAuth = function() {
+    var user = this.getUser();
+    var pw = this.getPassword();
+
+    if (this.validateEntry( user, pw )) {
+        this.server( &quot;/check-auth&quot;,{
+            user: user,
+            pw: pw
+        } )
+        .then( this.accepted.bind( this ) )
+        .fail( this.rejected.bind( this ) );
+    }
+};
+AuthController.server = function(url,data) {
+    return $.ajax( {
+        url: url,
+        data: data
+    } );
+};
+AuthController.accepted = function() {
+    this.showDialog( &quot;Success&quot;, &quot;Authenticated!&quot; )
+};
+AuthController.rejected = function(err) {
+    this.failure( &quot;Auth Failed: &quot; + err );
+};</code></pre>
+</section><section><h3 id="de-class-ified">De-class-ified</h3>
+<pre><code class="lang-js">var controller1 = Object.create( AuthController );
+var controller2 = Object.create( AuthController );</code></pre>
 </section>
 			</div>
 
