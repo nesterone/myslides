@@ -2959,6 +2959,150 @@ AuthController.rejected = function(err) {
 ### De-class-ified
 
 ```js
-var controller1 = Object.create( AuthController );
-var controller2 = Object.create( AuthController );
+AuthController.checkAuth();
 ```
+
+
+### Nicer Syntax
+
+For "Classes"
+
+```js
+class Foo extends Bar{
+	methodName() { /* .. */ }
+}
+```
+
+### Nicer Syntax
+
+For "OLOO"
+
+```js
+// use nicer object literal syntax w/ concise methods!
+var AuthController = {
+	errors: [],
+	checkAuth() {
+		// ...
+	},
+	server(url,data) {
+		// ...
+	}
+	// ...
+};
+
+// NOW, link `AuthController` to delegate to `LoginController`
+Object.setPrototypeOf( AuthController, LoginController );
+```
+
+### Unlexical
+
+```js
+var Foo = {
+	bar() { /*..*/ },
+	baz: function baz() { /*..*/ }
+};
+```
+
+### Unlexical
+
+De-sugaring
+
+```js
+var Foo = {
+	bar: function() { /*..*/ },
+	baz: function baz() { /*..*/ }
+};
+```
+
+* names in a stack trace are ok
+* self-reference is still an issue 
+
+### Introspection
+
+```js
+function Foo() {
+	// ...
+}
+Foo.prototype.something = function(){
+	// ...
+}
+
+var a1 = new Foo();
+
+// later
+
+if (a1 instanceof Foo) {
+	a1.something();
+}
+```
+
+* it's telling that a1 and Foo.prototype are related
+
+### Type introspection
+
+```js
+function Foo() { /* .. */ }
+Foo.prototype...
+
+function Bar() { /* .. */ }
+Bar.prototype = Object.create( Foo.prototype );
+
+var b1 = new Bar( "b1" );
+```
+
+### Type introspection
+
+In various ways
+
+```js
+// relating `Foo` and `Bar` to each other
+Bar.prototype instanceof Foo; // true
+Object.getPrototypeOf( Bar.prototype ) === Foo.prototype; // true
+Foo.prototype.isPrototypeOf( Bar.prototype ); // true
+
+// relating `b1` to both `Foo` and `Bar`
+b1 instanceof Foo; // true
+b1 instanceof Bar; // true
+Object.getPrototypeOf( b1 ) === Bar.prototype; // true
+Foo.prototype.isPrototypeOf( b1 ); // true
+Bar.prototype.isPrototypeOf( b1 ); // true
+```
+
+### "Duck typing"
+
+```js
+if (a1.something) {
+	a1.something();
+}
+```
+
+### "OLOO" introspection
+
+
+```js
+var Foo = { /* .. */ };
+
+var Bar = Object.create( Foo );
+Bar...
+
+var b1 = Object.create( Bar );
+```
+
+### "OLOO" introspection
+
+```js
+// relating `Foo` and `Bar` to each other
+Foo.isPrototypeOf( Bar ); // true
+Object.getPrototypeOf( Bar ) === Foo; // true
+
+// relating `b1` to both `Foo` and `Bar`
+Foo.isPrototypeOf( b1 ); // true
+Bar.isPrototypeOf( b1 ); // true
+Object.getPrototypeOf( b1 ) === Bar; // true
+```
+
+
+
+
+
+
