@@ -1596,3 +1596,39 @@ https://github.com/dorey/JavaScript-Equality-Table
 
 
 ## Abstract Relational Comparison
+
+1. Convert with `ToNumber`
+2. If both `strings` use simple lexicographic comparasion
+
+```js
+var a = [ 42 ];
+var b = [ "43" ];
+
+a < b;	// true
+b < a;	// false
+
+var a1 = [ "42" ];
+var b1 = [ "043" ];
+
+a1 < b1;	// false
+
+var a2 = [ 4, 2 ];
+var b2 = [ 0, 4, 3 ];
+
+a2 < b2;	// false
+
+var a3 = [ 42 ];
+var b3 = "043";
+
+a3 < b3;						// false -- string comparison!
+Number( a ) < Number( b );	    // true -- number comparison!
+
+```
+
+## Review
+
+1. Coercions can be characterized as explicit or implicit
+1. Important task for the responsible JS developer is to take the time to learn all the ins and outs of coercion
+1. *Explicit* coercion is code which is obvious that the intent is to convert a value from one type to another
+1. *Implicit* coercion is coercion that is "hidden" as a side-effect of some other operation
+1. *Implicit* coercion is also about improving the readability of code
