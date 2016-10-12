@@ -11,8 +11,6 @@ inspired by [getify](https://github.com/getify/You-Dont-Know-JS/tree/master/type
 * Values
 * Natives
 * Coercion
-* Grammar
-
 
 ## Types
 
@@ -1190,6 +1188,411 @@ Boolean( g ); // false
 !!g;
 ```
 
+## Implicit Coercion
+
+*Implicit* coercion refers to type conversions that are hidden
+
+* Simplifying Implicitly
+* Implicitly: Strings <--> Numbers
+* Implicitly: Booleans --> Numbers
+* Implicitly: * --> Boolean
+* Operators `||` and `&&`
+* Symbol Coercion
+
+### Simplifying Implicitly 
+
+Don't assume *implicit* coercion is ALL bad
+
+```js
+SomeType x = SomeType( AnotherType( y ) )
+
+//over 
+
+SomeType x = SomeType( y )
+
+```
+
+
+### Implicitly: Strings <--> Numbers
+
+1. `number` to `string` with `a+b`, if object, then run `ToPrimitive`->`ToNumber`->`toString`
+1. `string` to `number` with `a-b`, it runs  `ToNumber`
+
+
+```js
+var a = "42";
+var b = "0";
+
+var c = 42;
+var d = 0;
+
+a + b; // "420"
+c + d; // 42
+
+var a1 = [1,2];
+var b1 = [3,4];
+
+a1 + b1; // "1,23,4"
+
+var a2 = 42;
+var b2 = a2 + "";
+
+b2; // "42"
+
+var a3 = {
+	valueOf: function() { return 42; },
+	toString: function() { return 4; }
+};
+
+a3 + "";			// "42"
+
+String( a3 );	// "4"
+
+var a4 = "3.14";
+var b4 = a - 0;
+
+b4; // 3.14
+
+```
+
+### Implicitly: Booleans --> Numbers
+
+```js
+function onlyOne() {
+	var sum = 0;
+	for (var i=0; i < arguments.length; i++) {
+		// skip falsy values. same as treating
+		// them as 0's, but avoids NaN's.
+		if (arguments[i]) {
+			sum += arguments[i]; // sum += Number(Boolean(arguments[i]));
+		}
+	}
+	return sum == 1;
+}
+
+var a = true;
+var b = false;
+
+onlyOne( b, a );				// true
+onlyOne( b, a, b, b, b );		// true
+
+onlyOne( b, b );				// false
+onlyOne( b, a, b, b, b, a );	// false
+```
+
+### Implicitly: * --> Boolean
+
+1. The test expression in an `if (..)` statement.
+2. The test expression (second clause) in a `for ( .. ; .. ; .. )` header.
+3. The test expression in `while (..)` and `do..while(..)` loops.
+4. The test expression (first clause) in `? :` ternary expressions.
+5. The left-hand operand (which serves as a test expression -- see below!) to the `||` ("logical or") and `&&` ("logical and") operators.
+
+```js
+var a = 42;
+var b = "abc";
+var c;
+var d = null;
+
+if (a) {
+	console.log( "yep" );		// yep
+}
+
+while (c) {
+	console.log( "nope, never runs" );
+}
+
+c = d ? a : b;
+c;								// "abc"
+
+if ((a && d) || c) {
+	console.log( "yep" );		// yep
+}
+```
 
 
 
+### Operators `||` and `&&`
+
+Select one of the two operand's values
+
+```js
+var a = 42;
+var b = "abc";
+var c = null;
+
+a || b;		// 42
+a && b;		// "abc"
+
+c || b;		// "abc"
+c && b;		// null
+
+a || b;
+// roughly equivalent to:
+a ? a : b;
+
+a && b;
+// roughly equivalent to:
+a ? b : a;
+
+
+
+```
+
+### Backup Defaults
+
+```js
+function foo(a,b) {
+	a = a || "hello";
+	b = b || "world";
+
+	console.log( a + " " + b );
+}
+
+foo();					// "hello world"
+foo( "yeah", "yeah!" );	// "yeah yeah!"
+
+foo( "That's it!", "" ); // "That's it! world" <-- Oops!
+```
+
+### Guard Operator
+
+```js
+function foo() {
+	console.log( a );
+}
+
+var a = 42;
+
+a && foo(); // 42
+```
+
+### Compare Implicit and Explicit
+
+```js
+
+var a = 42;
+var b = null;
+var c = "foo";
+
+if (a && (b || c)) {
+	console.log( "yep" );
+}
+
+//or
+
+if (!!a && (!!b || !!c)) {
+	console.log( "yep" );
+}
+
+//or
+
+if (Boolean(a) && (Boolean(b) || Boolean(c))) {
+	console.log( "yep" );
+}
+
+```
+
+### Symbol Coercion
+
+Exceedingly rare for you to need to coerce a `symbol` value
+
+```js
+var s1 = Symbol( "cool" );
+String( s1 );					// "Symbol(cool)"
+
+var s2 = Symbol( "not cool" );
+s2 + "";						// TypeError
+```
+
+## Loose Equals vs. Strict Equals
+
+1. '==' allows coercion
+1. '===' disallow coercion
+
+* Abstract Equality
+* Edge Cases
+
+
+
+### Abstract Equality
+
+if the two values being compared are of the same type, they are simply and naturally compared via Identity
+
+* `NaN` is never equal to itself
+* `+0` and `-0` are equal to each other
+
+For objects(arrays, functions) references point to *the exact same value*
+
+### Comparing: `string`s to `number`s
+
+1. x == ToNumber(y)
+1. ToNumber(x) == y
+
+```js
+var a = 42;
+var b = "42";
+
+a === b;	// false
+a == b;		// true
+```
+
+### Comparing: anything to `boolean`
+
+1. x == ToNumber(y)
+1. ToNumber(x) == y
+
+**It is not performing a boolean test/coercion** at all
+
+```js
+var a = "42";
+var b = true;
+
+a == b;    // false
+
+42 == 1;   // false
+
+```
+
+Avoid '==' with `true` and `false`, however `===` is ok
+
+### Comparing: `null`s to `undefined`s
+
+1. If x is null and y is undefined, return true.
+1. If x is undefined and y is null, return true.
+
+
+```js
+var a = null;
+var b;
+
+a == b;		// true
+a == null;	// true
+b == null;	// true
+
+a == false;	// false
+b == false;	// false
+a == "";	// false
+b == "";	// false
+a == 0;		// false
+b == 0;		// false
+```
+
+### Comparing: `object`s to non-`object`s
+
+1. x == ToPrimitive(y)
+1. ToPrimitive(x) == y
+
+```js
+var a = 42;
+var b = [ 42 ];
+
+a == b;	// true
+
+42 == "42"; //true
+
+```
+
+### Edge Cases
+
+Examined how the *implicit* coercion of `==` loose equality works
+
+###  A Number By Any Other Value Would...
+
+```js
+var i = 2;
+
+Number.prototype.valueOf = function() {
+	return i++; // an evil trick
+};
+
+var a = new Number( 42 );
+
+if (a == 2 && a == 3) {
+	console.log( "Yep, this happened." );
+}
+```
+
+
+### False-y Comparisons
+
+```js
+"0" == null;			// false
+"0" == undefined;		// false
+"0" == false;			// true -- UH OH!
+"0" == NaN;				// false
+"0" == 0;				// true
+"0" == "";				// false
+
+false == null;			// false
+false == undefined;		// false
+false == NaN;			// false
+false == 0;				// true -- UH OH!
+false == "";			// true -- UH OH!
+false == [];			// true -- UH OH!
+false == {};			// false
+
+"" == null;				// false
+"" == undefined;		// false
+"" == NaN;				// false
+"" == 0;				// true -- UH OH!
+"" == [];				// true -- UH OH!
+"" == {};				// false
+
+0 == null;				// false
+0 == undefined;			// false
+0 == NaN;				// false
+0 == [];				// true -- UH OH!
+0 == {};				// false
+```
+
+
+### The Crazy Ones
+
+```js
+[] == ![];		// true
+[] == false;    // true
+
+2 == [2];       // true
+"" == [null]    // true
+
+0 == "\n";		// true
+
+```
+
+### Reasonable examples
+
+
+```js
+42 == "43";							// false
+"foo" == 42;						// false
+"true" == true;						// false
+
+42 == "42";							// true
+"foo" == [ "foo" ];					// true
+```
+
+### Sanity Check
+
+```js
+
+"0" == false;			// true -- UH OH!
+false == 0;				// true -- UH OH!
+false == "";			// true -- UH OH!
+false == [];			// true -- UH OH!
+
+
+"" == 0;				// true -- UH OH!
+"" == [];				// true -- UH OH!
+0 == [];				// true -- UH OH!
+```
+
+1. If either side of the comparison can have `true` or `false` values, don't ever, EVER use `==`.
+2. If either side of the comparison can have `[]`, `""`, or `0` values, seriously consider not using `==`.
+
+### JavaScript Equality Table
+
+https://github.com/dorey/JavaScript-Equality-Table
+
+
+## Abstract Relational Comparison

@@ -62,7 +62,6 @@
 <li>Values</li>
 <li>Natives</li>
 <li>Coercion</li>
-<li>Grammar</li>
 </ul>
 </section><section><h2 id="types">Types</h2>
 <ul>
@@ -968,6 +967,318 @@ Boolean( f ); // false
 !!f;          // false
 Boolean( g ); // false
 !!g;</code></pre>
+</section><section><h2 id="implicit-coercion">Implicit Coercion</h2>
+<p><em>Implicit</em> coercion refers to type conversions that are hidden</p>
+<ul>
+<li>Simplifying Implicitly</li>
+<li>Implicitly: Strings &lt;--&gt; Numbers</li>
+<li>Implicitly: Booleans --&gt; Numbers</li>
+<li>Implicitly: * --&gt; Boolean</li>
+<li>Operators <code>||</code> and <code>&amp;&amp;</code></li>
+<li>Symbol Coercion</li>
+</ul>
+</section><section><h3 id="simplifying-implicitly">Simplifying Implicitly</h3>
+<p>Don&#39;t assume <em>implicit</em> coercion is ALL bad</p>
+<pre><code class="lang-js">SomeType x = SomeType( AnotherType( y ) )
+
+//over 
+
+SomeType x = SomeType( y )</code></pre>
+</section><section><h3 id="implicitly-strings-numbers">Implicitly: Strings &lt;--&gt; Numbers</h3>
+<ol>
+<li><code>number</code> to <code>string</code> with <code>a+b</code>, if object, then run <code>ToPrimitive</code>-&gt;<code>ToNumber</code>-&gt;<code>toString</code></li>
+<li><code>string</code> to <code>number</code> with <code>a-b</code>, it runs  <code>ToNumber</code></li>
+</ol>
+<pre><code class="lang-js">var a = &quot;42&quot;;
+var b = &quot;0&quot;;
+
+var c = 42;
+var d = 0;
+
+a + b; // &quot;420&quot;
+c + d; // 42
+
+var a1 = [1,2];
+var b1 = [3,4];
+
+a1 + b1; // &quot;1,23,4&quot;
+
+var a2 = 42;
+var b2 = a2 + &quot;&quot;;
+
+b2; // &quot;42&quot;
+
+var a3 = {
+    valueOf: function() { return 42; },
+    toString: function() { return 4; }
+};
+
+a3 + &quot;&quot;;            // &quot;42&quot;
+
+String( a3 );    // &quot;4&quot;
+
+var a4 = &quot;3.14&quot;;
+var b4 = a - 0;
+
+b4; // 3.14</code></pre>
+</section><section><h3 id="implicitly-booleans-numbers">Implicitly: Booleans --&gt; Numbers</h3>
+<pre><code class="lang-js">function onlyOne() {
+    var sum = 0;
+    for (var i=0; i &lt; arguments.length; i++) {
+        // skip falsy values. same as treating
+        // them as 0&#39;s, but avoids NaN&#39;s.
+        if (arguments[i]) {
+            sum += arguments[i]; // sum += Number(Boolean(arguments[i]));
+        }
+    }
+    return sum == 1;
+}
+
+var a = true;
+var b = false;
+
+onlyOne( b, a );                // true
+onlyOne( b, a, b, b, b );        // true
+
+onlyOne( b, b );                // false
+onlyOne( b, a, b, b, b, a );    // false</code></pre>
+</section><section><h3 id="implicitly-boolean">Implicitly: * --&gt; Boolean</h3>
+<ol>
+<li>The test expression in an <code>if (..)</code> statement.</li>
+<li>The test expression (second clause) in a <code>for ( .. ; .. ; .. )</code> header.</li>
+<li>The test expression in <code>while (..)</code> and <code>do..while(..)</code> loops.</li>
+<li>The test expression (first clause) in <code>? :</code> ternary expressions.</li>
+<li>The left-hand operand (which serves as a test expression -- see below!) to the <code>||</code> (&quot;logical or&quot;) and <code>&amp;&amp;</code> (&quot;logical and&quot;) operators.</li>
+</ol>
+<pre><code class="lang-js">var a = 42;
+var b = &quot;abc&quot;;
+var c;
+var d = null;
+
+if (a) {
+    console.log( &quot;yep&quot; );        // yep
+}
+
+while (c) {
+    console.log( &quot;nope, never runs&quot; );
+}
+
+c = d ? a : b;
+c;                                // &quot;abc&quot;
+
+if ((a &amp;&amp; d) || c) {
+    console.log( &quot;yep&quot; );        // yep
+}</code></pre>
+</section><section><h3 id="operators-and-">Operators <code>||</code> and <code>&amp;&amp;</code></h3>
+<p>Select one of the two operand&#39;s values</p>
+<pre><code class="lang-js">var a = 42;
+var b = &quot;abc&quot;;
+var c = null;
+
+a || b;        // 42
+a &amp;&amp; b;        // &quot;abc&quot;
+
+c || b;        // &quot;abc&quot;
+c &amp;&amp; b;        // null
+
+a || b;
+// roughly equivalent to:
+a ? a : b;
+
+a &amp;&amp; b;
+// roughly equivalent to:
+a ? b : a;</code></pre>
+</section><section><h3 id="backup-defaults">Backup Defaults</h3>
+<pre><code class="lang-js">function foo(a,b) {
+    a = a || &quot;hello&quot;;
+    b = b || &quot;world&quot;;
+
+    console.log( a + &quot; &quot; + b );
+}
+
+foo();                    // &quot;hello world&quot;
+foo( &quot;yeah&quot;, &quot;yeah!&quot; );    // &quot;yeah yeah!&quot;
+
+foo( &quot;That&#39;s it!&quot;, &quot;&quot; ); // &quot;That&#39;s it! world&quot; &lt;-- Oops!</code></pre>
+</section><section><h3 id="guard-operator">Guard Operator</h3>
+<pre><code class="lang-js">function foo() {
+    console.log( a );
+}
+
+var a = 42;
+
+a &amp;&amp; foo(); // 42</code></pre>
+</section><section><h3 id="compare-implicit-and-explicit">Compare Implicit and Explicit</h3>
+<pre><code class="lang-js">
+var a = 42;
+var b = null;
+var c = &quot;foo&quot;;
+
+if (a &amp;&amp; (b || c)) {
+    console.log( &quot;yep&quot; );
+}
+
+//or
+
+if (!!a &amp;&amp; (!!b || !!c)) {
+    console.log( &quot;yep&quot; );
+}
+
+//or
+
+if (Boolean(a) &amp;&amp; (Boolean(b) || Boolean(c))) {
+    console.log( &quot;yep&quot; );
+}</code></pre>
+</section><section><h3 id="symbol-coercion">Symbol Coercion</h3>
+<p>Exceedingly rare for you to need to coerce a <code>symbol</code> value</p>
+<pre><code class="lang-js">var s1 = Symbol( &quot;cool&quot; );
+String( s1 );                    // &quot;Symbol(cool)&quot;
+
+var s2 = Symbol( &quot;not cool&quot; );
+s2 + &quot;&quot;;                        // TypeError</code></pre>
+</section><section><h2 id="loose-equals-vs-strict-equals">Loose Equals vs. Strict Equals</h2>
+<ol>
+<li>&#39;==&#39; allows coercion</li>
+<li><p>&#39;===&#39; disallow coercion</p>
+</li>
+<li><p>Abstract Equality</p>
+</li>
+<li>Edge Cases</li>
+</ol>
+</section><section><h3 id="abstract-equality">Abstract Equality</h3>
+<p>if the two values being compared are of the same type, they are simply and naturally compared via Identity</p>
+<ul>
+<li><code>NaN</code> is never equal to itself</li>
+<li><code>+0</code> and <code>-0</code> are equal to each other</li>
+</ul>
+<p>For objects(arrays, functions) references point to <em>the exact same value</em></p>
+</section><section><h3 id="comparing-string-s-to-number-s">Comparing: <code>string</code>s to <code>number</code>s</h3>
+<ol>
+<li>x == ToNumber(y)</li>
+<li>ToNumber(x) == y</li>
+</ol>
+<pre><code class="lang-js">var a = 42;
+var b = &quot;42&quot;;
+
+a === b;    // false
+a == b;        // true</code></pre>
+</section><section><h3 id="comparing-anything-to-boolean-">Comparing: anything to <code>boolean</code></h3>
+<ol>
+<li>x == ToNumber(y)</li>
+<li>ToNumber(x) == y</li>
+</ol>
+<p><strong>It is not performing a boolean test/coercion</strong> at all</p>
+<pre><code class="lang-js">var a = &quot;42&quot;;
+var b = true;
+
+a == b;    // false
+
+42 == 1;   // false</code></pre>
+<p>Avoid &#39;==&#39; with <code>true</code> and <code>false</code>, however <code>===</code> is ok</p>
+</section><section><h3 id="comparing-null-s-to-undefined-s">Comparing: <code>null</code>s to <code>undefined</code>s</h3>
+<ol>
+<li>If x is null and y is undefined, return true.</li>
+<li>If x is undefined and y is null, return true.</li>
+</ol>
+<pre><code class="lang-js">var a = null;
+var b;
+
+a == b;        // true
+a == null;    // true
+b == null;    // true
+
+a == false;    // false
+b == false;    // false
+a == &quot;&quot;;    // false
+b == &quot;&quot;;    // false
+a == 0;        // false
+b == 0;        // false</code></pre>
+</section><section><h3 id="comparing-object-s-to-non-object-s">Comparing: <code>object</code>s to non-<code>object</code>s</h3>
+<ol>
+<li>x == ToPrimitive(y)</li>
+<li>ToPrimitive(x) == y</li>
+</ol>
+<pre><code class="lang-js">var a = 42;
+var b = [ 42 ];
+
+a == b;    // true
+
+42 == &quot;42&quot;; //true</code></pre>
+</section><section><h3 id="edge-cases">Edge Cases</h3>
+<p>Examined how the <em>implicit</em> coercion of <code>==</code> loose equality works</p>
+</section><section><h3 id="a-number-by-any-other-value-would-">A Number By Any Other Value Would...</h3>
+<pre><code class="lang-js">var i = 2;
+
+Number.prototype.valueOf = function() {
+    return i++; // an evil trick
+};
+
+var a = new Number( 42 );
+
+if (a == 2 &amp;&amp; a == 3) {
+    console.log( &quot;Yep, this happened.&quot; );
+}</code></pre>
+</section><section><h3 id="false-y-comparisons">False-y Comparisons</h3>
+<pre><code class="lang-js">&quot;0&quot; == null;            // false
+&quot;0&quot; == undefined;        // false
+&quot;0&quot; == false;            // true -- UH OH!
+&quot;0&quot; == NaN;                // false
+&quot;0&quot; == 0;                // true
+&quot;0&quot; == &quot;&quot;;                // false
+
+false == null;            // false
+false == undefined;        // false
+false == NaN;            // false
+false == 0;                // true -- UH OH!
+false == &quot;&quot;;            // true -- UH OH!
+false == [];            // true -- UH OH!
+false == {};            // false
+
+&quot;&quot; == null;                // false
+&quot;&quot; == undefined;        // false
+&quot;&quot; == NaN;                // false
+&quot;&quot; == 0;                // true -- UH OH!
+&quot;&quot; == [];                // true -- UH OH!
+&quot;&quot; == {};                // false
+
+0 == null;                // false
+0 == undefined;            // false
+0 == NaN;                // false
+0 == [];                // true -- UH OH!
+0 == {};                // false</code></pre>
+</section><section><h3 id="the-crazy-ones">The Crazy Ones</h3>
+<pre><code class="lang-js">[] == ![];        // true
+[] == false;    // true
+
+2 == [2];       // true
+&quot;&quot; == [null]    // true
+
+0 == &quot;\n&quot;;        // true</code></pre>
+</section><section><h3 id="reasonable-examples">Reasonable examples</h3>
+<pre><code class="lang-js">42 == &quot;43&quot;;                            // false
+&quot;foo&quot; == 42;                        // false
+&quot;true&quot; == true;                        // false
+
+42 == &quot;42&quot;;                            // true
+&quot;foo&quot; == [ &quot;foo&quot; ];                    // true</code></pre>
+</section><section><h3 id="sanity-check">Sanity Check</h3>
+<pre><code class="lang-js">
+&quot;0&quot; == false;            // true -- UH OH!
+false == 0;                // true -- UH OH!
+false == &quot;&quot;;            // true -- UH OH!
+false == [];            // true -- UH OH!
+
+
+&quot;&quot; == 0;                // true -- UH OH!
+&quot;&quot; == [];                // true -- UH OH!
+0 == [];                // true -- UH OH!</code></pre>
+<ol>
+<li>If either side of the comparison can have <code>true</code> or <code>false</code> values, don&#39;t ever, EVER use <code>==</code>.</li>
+<li>If either side of the comparison can have <code>[]</code>, <code>&quot;&quot;</code>, or <code>0</code> values, seriously consider not using <code>==</code>.</li>
+</ol>
+</section><section><h3 id="javascript-equality-table">JavaScript Equality Table</h3>
+<p><a href="https://github.com/dorey/JavaScript-Equality-Table">https://github.com/dorey/JavaScript-Equality-Table</a></p>
+</section><section><h2 id="abstract-relational-comparison">Abstract Relational Comparison</h2>
 </section>
 			</div>
 
