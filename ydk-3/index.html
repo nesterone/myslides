@@ -556,6 +556,159 @@ console.log( b ); // 2, not 3</code></pre>
 <li>Simple values assigned/passed by <code>value-copy</code></li>
 <li>Compound values assigned/passed by <code>reference-copy</code></li>
 </ol>
+</section><section><h2 id="natives">Natives</h2>
+<ul>
+<li>Internal <code>[[Class]]</code></li>
+<li>Boxing Wrappers</li>
+<li>Unboxing</li>
+<li>Natives as Constructors</li>
+<li>Review</li>
+</ul>
+</section><section><h3 id="list-of-natives">List of Natives</h3>
+<ul>
+<li><code>String()</code></li>
+<li><code>Number()</code></li>
+<li><code>Boolean()</code></li>
+<li><code>Array()</code></li>
+<li><code>Object()</code></li>
+<li><code>Function()</code></li>
+<li><code>RegExp()</code></li>
+<li><code>Date()</code></li>
+<li><code>Error()</code></li>
+<li><code>Symbol()</code> -- added in ES6!</li>
+</ul>
+</section><section><h3 id="object-wrappers-around-primitives">Object wrappers around primitives</h3>
+<pre><code class="lang-js">var a = new String( &quot;abc&quot; );
+
+typeof a; // &quot;object&quot; ... not &quot;String&quot;
+
+a instanceof String; // true
+
+Object.prototype.toString.call( a ); // &quot;[object String]&quot;</code></pre>
+</section><section><h3 id="internal-class-">Internal <code>[[Class]]</code></h3>
+<p>Internal <em>class</em> classification rather than related to classes from traditional class-oriented coding</p>
+<pre><code class="lang-js">Object.prototype.toString.call( [1,2,3] );            // &quot;[object Array]&quot;
+Object.prototype.toString.call( /regex-literal/i );    // &quot;[object RegExp]&quot;
+
+Object.prototype.toString.call( null );            // &quot;[object Null]&quot;
+Object.prototype.toString.call( undefined );    // &quot;[object Undefined]&quot;
+
+Object.prototype.toString.call( &quot;abc&quot; );    // &quot;[object String]&quot;
+Object.prototype.toString.call( 42 );        // &quot;[object Number]&quot;
+Object.prototype.toString.call( true );        // &quot;[object Boolean]&quot;</code></pre>
+</section><section><h3 id="boxing-wrappers">Boxing Wrappers</h3>
+<pre><code class="lang-js">var a = &quot;abc&quot;;
+
+a.length; // 3
+a.toUpperCase(); // &quot;ABC&quot;</code></pre>
+<p>It&#39;s better to just let the boxing happen implicitly where necessary</p>
+</section><section><h3 id="object-wrapper-gotchas">Object Wrapper Gotchas</h3>
+<pre><code class="lang-js">var a = new Boolean( false );
+
+if (!a) {
+
+    console.log( &quot;Oops&quot; ); // never runs
+}</code></pre>
+</section><section><h2 id="unboxing">Unboxing</h2>
+<pre><code class="lang-js">var a = new String( &quot;abc&quot; );
+var b = new Number( 42 );
+var c = new Boolean( true );
+
+a.valueOf(); // &quot;abc&quot;
+b.valueOf(); // 42
+c.valueOf(); // true</code></pre>
+<p>Unboxing can also happen implicitly</p>
+</section><section><h2 id="natives-as-constructors">Natives as Constructors</h2>
+<ul>
+<li>Arrays(..)</li>
+<li><code>Object(..)</code>, <code>Function(..)</code>, and <code>RegExp(..)</code></li>
+<li><code>Date(..)</code> and <code>Error(..)</code></li>
+<li><code>Symbol(..)</code></li>
+</ul>
+</section><section><h3 id="arrays-">Arrays(..)</h3>
+<pre><code class="lang-js">var a = new Array( 1, 2, 3 );
+a; // [1, 2, 3]
+
+var b = [1, 2, 3];
+b; // [1, 2, 3]</code></pre>
+</section><section><h3 id="sparse-arrays">Sparse Arrays</h3>
+<pre><code class="lang-js">
+var a = new Array( 3 );
+
+a.length; // 3
+a;
+
+var a = new Array( 3 ); // [ undefined x 3 ]
+var b = [ undefined, undefined, undefined ];
+var c = [];
+c.length = 3;
+
+a; // [ undefined x 3 ]
+b; // [ undefined, undefined, undefined ]
+c; // []
+
+a.join( &quot;-&quot; ); // &quot;--&quot;
+b.join( &quot;-&quot; ); // &quot;--&quot;
+
+a.map(function(v,i){ return i; }); // [ undefined x 3 ]
+b.map(function(v,i){ return i; }); // [ 0, 1, 2 ]
+
+var a = Array.apply( null, { length: 3 } );
+a; // [ undefined, undefined, undefined ]</code></pre>
+</section><section><h3 id="-object-function-and-regexp-"><code>Object(..)</code>, <code>Function(..)</code>, and <code>RegExp(..)</code></h3>
+<pre><code class="lang-js">var c = new Object();
+c.foo = &quot;bar&quot;;
+c; // { foo: &quot;bar&quot; }
+
+var d = { foo: &quot;bar&quot; };
+d; // { foo: &quot;bar&quot; }
+
+var e = new Function( &quot;a&quot;, &quot;return a * 2;&quot; );
+var f = function(a) { return a * 2; };
+function g(a) { return a * 2; }
+
+var h = new RegExp( &quot;^a*b+&quot;, &quot;g&quot; );
+var i = /^a*b+/g;
+
+var name = &quot;Kyle&quot;;
+//usage of constructor form
+var namePattern = new RegExp( &quot;\\b(?:&quot; + name + &quot;)+\\b&quot;, &quot;ig&quot; );
+
+var matches = someText.match( namePattern );</code></pre>
+<p>Prefer literal form over <code>constructor</code></p>
+</section><section><h3 id="-date-and-error-"><code>Date(..)</code> and <code>Error(..)</code></h3>
+<p>No literal form</p>
+<pre><code class="lang-js">if (!Date.now) {
+    //emulate ES5 feature
+    Date.now = function(){
+        return (new Date()).getTime();
+    };
+}
+
+var currentDate = Date.now();</code></pre>
+</section><section><h3 id="-symbol-"><code>Symbol(..)</code></h3>
+<pre><code class="lang-js">var mysym = Symbol( &quot;my own symbol&quot; );
+mysym;                // Symbol(my own symbol)
+mysym.toString();    // &quot;Symbol(my own symbol)&quot;
+typeof mysym;         // &quot;symbol&quot;
+
+var a = { };
+a[mysym] = &quot;foobar&quot;;
+
+Object.getOwnPropertySymbols( a );
+// [ Symbol(my own symbol) ]</code></pre>
+<p><code>Symbol</code>s are <em>not</em> <code>object</code>s, they are simple scalar primitives.</p>
+</section><section><h3 id="native-prototypes">Native Prototypes</h3>
+<p>Each of the built-in native constructors has its own <code>.prototype</code> object:</p>
+<pre><code class="lang-js">// don&#39;t leave it that way, though, or expect weirdness!
+// reset the `Array.prototype` to empty
+Array.prototype.length = 0;</code></pre>
+<p>Override native prototype is a bad idea</p>
+</section><section><h2 id="review">Review</h2>
+<ol>
+<li>JS provides object wrappers around primitive values</li>
+<li><code>&quot;abc&quot;.length</code> automatically boxes value with object wrapper </li>
+</ol>
 </section>
 			</div>
 

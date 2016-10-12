@@ -673,3 +673,211 @@ primitive value is *not mutable*, even boxed (wrapped in an object)
 1. `number`s include several special values, like `NaN`, `+Infinity`, `-Infinity`, `-0`
 1. Simple values assigned/passed by `value-copy`
 1. Compound values assigned/passed by `reference-copy`
+
+## Natives
+
+* Internal `[[Class]]`
+* Boxing Wrappers
+* Unboxing
+* Natives as Constructors
+* Review
+
+### List of Natives
+
+* `String()`
+* `Number()`
+* `Boolean()`
+* `Array()`
+* `Object()`
+* `Function()`
+* `RegExp()`
+* `Date()`
+* `Error()`
+* `Symbol()` -- added in ES6!
+
+### Object wrappers around primitives
+
+```js
+var a = new String( "abc" );
+
+typeof a; // "object" ... not "String"
+
+a instanceof String; // true
+
+Object.prototype.toString.call( a ); // "[object String]"
+```
+
+### Internal `[[Class]]`
+
+Internal *class* classification rather than related to classes from traditional class-oriented coding
+
+```js
+Object.prototype.toString.call( [1,2,3] );			// "[object Array]"
+Object.prototype.toString.call( /regex-literal/i );	// "[object RegExp]"
+
+Object.prototype.toString.call( null );			// "[object Null]"
+Object.prototype.toString.call( undefined );	// "[object Undefined]"
+
+Object.prototype.toString.call( "abc" );	// "[object String]"
+Object.prototype.toString.call( 42 );		// "[object Number]"
+Object.prototype.toString.call( true );		// "[object Boolean]"
+```
+
+### Boxing Wrappers
+
+```js
+var a = "abc";
+
+a.length; // 3
+a.toUpperCase(); // "ABC"
+```
+
+It's better to just let the boxing happen implicitly where necessary
+
+
+### Object Wrapper Gotchas 
+
+```js
+var a = new Boolean( false );
+
+if (!a) {
+   
+	console.log( "Oops" ); // never runs
+}
+```
+
+## Unboxing
+
+```js
+var a = new String( "abc" );
+var b = new Number( 42 );
+var c = new Boolean( true );
+
+a.valueOf(); // "abc"
+b.valueOf(); // 42
+c.valueOf(); // true
+```
+
+Unboxing can also happen implicitly
+
+## Natives as Constructors
+
+* Arrays(..)
+* `Object(..)`, `Function(..)`, and `RegExp(..)`
+* `Date(..)` and `Error(..)`
+* `Symbol(..)`
+
+
+### Arrays(..)
+
+```js
+var a = new Array( 1, 2, 3 );
+a; // [1, 2, 3]
+
+var b = [1, 2, 3];
+b; // [1, 2, 3]
+```
+
+### Sparse Arrays
+
+```js
+
+var a = new Array( 3 );
+
+a.length; // 3
+a;
+
+var a = new Array( 3 ); // [ undefined x 3 ]
+var b = [ undefined, undefined, undefined ];
+var c = [];
+c.length = 3;
+
+a; // [ undefined x 3 ]
+b; // [ undefined, undefined, undefined ]
+c; // []
+
+a.join( "-" ); // "--"
+b.join( "-" ); // "--"
+
+a.map(function(v,i){ return i; }); // [ undefined x 3 ]
+b.map(function(v,i){ return i; }); // [ 0, 1, 2 ]
+
+var a = Array.apply( null, { length: 3 } );
+a; // [ undefined, undefined, undefined ]
+
+```
+
+### `Object(..)`, `Function(..)`, and `RegExp(..)`
+
+```js
+var c = new Object();
+c.foo = "bar";
+c; // { foo: "bar" }
+
+var d = { foo: "bar" };
+d; // { foo: "bar" }
+
+var e = new Function( "a", "return a * 2;" );
+var f = function(a) { return a * 2; };
+function g(a) { return a * 2; }
+
+var h = new RegExp( "^a*b+", "g" );
+var i = /^a*b+/g;
+
+var name = "Kyle";
+//usage of constructor form
+var namePattern = new RegExp( "\\b(?:" + name + ")+\\b", "ig" );
+
+var matches = someText.match( namePattern );
+```
+
+Prefer literal form over `constructor`
+
+### `Date(..)` and `Error(..)`
+
+No literal form
+
+```js
+if (!Date.now) {
+    //emulate ES5 feature
+	Date.now = function(){
+		return (new Date()).getTime();
+	};
+}
+
+var currentDate = Date.now();
+```
+
+### `Symbol(..)`
+
+```js
+var mysym = Symbol( "my own symbol" );
+mysym;				// Symbol(my own symbol)
+mysym.toString();	// "Symbol(my own symbol)"
+typeof mysym; 		// "symbol"
+
+var a = { };
+a[mysym] = "foobar";
+
+Object.getOwnPropertySymbols( a );
+// [ Symbol(my own symbol) ]
+```
+
+`Symbol`s are *not* `object`s, they are simple scalar primitives.
+
+### Native Prototypes
+
+Each of the built-in native constructors has its own `.prototype` object:
+
+```js
+// don't leave it that way, though, or expect weirdness!
+// reset the `Array.prototype` to empty
+Array.prototype.length = 0;
+```
+
+Override native prototype is a bad idea
+
+## Review
+
+1. JS provides object wrappers around primitive values
+1. `"abc".length` automatically boxes value with object wrapper 
