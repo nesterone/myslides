@@ -133,6 +133,68 @@ if (typeof someApi !== &quot;undefined&quot;){
 <li><code>undefined</code> and &quot;undeclared&quot; are different</li>
 <li>usage of <code>typeof</code> for safe existence check</li>
 </ul>
+</section><section><h2 id="values">Values</h2>
+<ul>
+<li>Arrays</li>
+<li>Strings</li>
+<li>Numbers</li>
+<li>Special Values</li>
+<li>Values vs. Reference</li>
+<li>Review</li>
+</ul>
+</section><section><h2 id="arrays">Arrays</h2>
+<ul>
+<li>Arrays</li>
+<li>Array-Likes</li>
+</ul>
+</section><section><h3 id="arrays">Arrays</h3>
+<pre><code class="lang-js">
+var a = [ 1, &quot;2&quot;, [3] ];
+
+a.length;        // 3
+a[0] === 1;        // true
+a[2][0] === 3;    // true
+
+a.length;    // 0
+
+a[0] = 1;
+a[1] = &quot;2&quot;;
+a[2] = [ 3 ];
+
+a.length;    // 3</code></pre>
+</section><section><h3 id="-sparse-arrays">&quot;Sparse&quot; Arrays</h3>
+<pre><code class="lang-js">var a = [ ];
+
+a[0] = 1;
+// no `a[1]` slot set here
+a[2] = [ 3 ];
+
+a[1];        // undefined
+
+a.length;    // 3</code></pre>
+</section><section><h3 id="string-ad-index">String ad Index</h3>
+<pre><code class="lang-js">var a = [ ];
+
+a[&quot;13&quot;] = 42; // coersion from string to number
+
+a.length; // 14</code></pre>
+<p>use number for index</p>
+</section><section><h3 id="array-likes">Array-Likes</h3>
+<ul>
+<li>&#39;arguments&#39; in function</li>
+<li>some of DOM elements (NodesList)</li>
+</ul>
+<pre><code class="lang-js">function foo() {
+    var arr = Array.prototype.slice.call( arguments );
+    arr.push( &quot;bam&quot; );
+    console.log( arr );
+}
+
+foo( &quot;bar&quot;, &quot;baz&quot; ); // [&quot;bar&quot;,&quot;baz&quot;,&quot;bam&quot;]
+
+// in ES6
+
+var arr = Array.from( arguments );</code></pre>
 </section>
 			</div>
 

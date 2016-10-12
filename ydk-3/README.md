@@ -107,3 +107,85 @@ if (typeof someApi !== "undefined"){
 * seven build-in types
 * `undefined` and "undeclared" are different
 * usage of `typeof` for safe existence check
+
+## Values
+
+* Arrays
+* Strings
+* Numbers
+* Special Values
+* Values vs. Reference
+* Review
+
+## Arrays
+
+* Arrays
+* Array-Likes
+
+### Arrays
+
+```js
+
+var a = [ 1, "2", [3] ];
+
+a.length;		// 3
+a[0] === 1;		// true
+a[2][0] === 3;	// true
+
+a.length;	// 0
+
+a[0] = 1;
+a[1] = "2";
+a[2] = [ 3 ];
+
+a.length;	// 3
+
+```
+
+### "Sparse" Arrays
+
+```js
+var a = [ ];
+
+a[0] = 1;
+// no `a[1]` slot set here
+a[2] = [ 3 ];
+
+a[1];		// undefined
+
+a.length;	// 3
+```
+
+### String ad Index
+
+```js
+var a = [ ];
+
+a["13"] = 42; // coersion from string to number
+
+a.length; // 14
+```
+
+use number for index
+
+### Array-Likes
+
+* 'arguments' in function
+* some of DOM elements (NodesList)
+
+```js
+function foo() {
+	var arr = Array.prototype.slice.call( arguments );
+	arr.push( "bam" );
+	console.log( arr );
+}
+
+foo( "bar", "baz" ); // ["bar","baz","bam"]
+
+// in ES6
+
+var arr = Array.from( arguments );
+
+```
+
+
