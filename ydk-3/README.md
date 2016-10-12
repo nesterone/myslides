@@ -881,3 +881,315 @@ Override native prototype is a bad idea
 
 1. JS provides object wrappers around primitive values
 1. `"abc".length` automatically boxes value with object wrapper 
+
+
+## Coercion
+
+* Converting Values
+* Abstract Value Operations
+* Explicit Coercion
+* Implicit Coercion
+* Loose Equals vs. Strict Equals
+* Abstract Relation Comparison
+* Review
+
+## Coercion
+
+Our goal is to fully explore the pros and cons (yes, there *are* pros!) of coercion
+
+## Converting Values
+
+* "type casting"  in statically typed languages at compile time
+* "type coercion" in runtime for dynamically typed languages
+* "explicit" and "implicit" coercions are 'relative'
+
+```js
+var a = 42;
+
+var b = a + "";			// implicit coercion
+
+var c = String( a );	// explicit coercion
+```
+
+
+## Abstract Value Operations
+
+* ToString
+    * JSON Stringification
+* ToNumber
+* ToBoolean
+
+
+## Abstract Value Operations
+
+ES5 defines 6 several "abstract operations"
+
+Let's pay attention to: 
+
+ToString, ToNumber, ToBoolean and a bit in ToPrimitive
+
+### ToString
+
+```js
+
+String(null);      //"null"
+String(undefined); //"undefined"
+
+// multiplying `1.07` by `1000`, seven times over
+var a = 1.07 * 1000 * 1000 * 1000 * 1000 * 1000 * 1000 * 1000;
+
+// seven times three digits => 21 digits
+a.toString(); // "1.07e21"
+
+var b = {};
+
+console.log(b);  //  Object.prototype.toString() -> [object Object]
+
+var arr = [1,2,3];
+
+arr.toString(); // "1,2,3"
+
+```
+
+### JSON Stringification
+
+1. `string`, `number`, `boolean` converted via `ToString` abstract operation.
+2. `toJSON()` method is automatically called to (sort of) "coerce" the object to be *JSON-safe* before stringification.
+
+### JSON-safe stringification
+
+```js
+var o = { };
+
+var a = {
+	b: 42,
+	c: o,
+	d: function(){}
+};
+
+// create a circular reference inside `a`
+o.e = a;
+
+// would throw an error on the circular reference
+// JSON.stringify( a );
+
+// define a custom JSON value serialization
+a.toJSON = function() {
+	// only include the `b` property for serialization
+	return { b: this.b };
+};
+
+JSON.stringify( a ); // "{"b":42}"
+```
+
+### ToNumber
+
+1. `true` -> 1, `false` -> 0
+1. `string` -> `NaN`, if can't pars to `number`, treats '0' in the beginning of string as 8-base number
+1.  Objects(and arrays) run `ToPrimitive` first
+    * `ToPrimitive` search for `valueOf`, if not then `toString`, otherwise throws `TypeError`
+
+### Override `valueOf`
+
+```js
+var a = {
+	valueOf: function(){
+		return "42";
+	}
+};
+
+var b = {
+	toString: function(){
+		return "42";
+	}
+};
+
+var c = [4,2];
+c.toString = function(){
+	return this.join( "" );	// "42"
+};
+
+Number( a );			// 42
+Number( b );			// 42
+Number( c );			// 42
+Number( "" );			// 0
+Number( [] );			// 0
+Number( [ "abc" ] );	// NaN
+```
+
+
+### ToBoolean
+
+Lots of confusions and misconceptions
+
+* Falsy Values
+* Falsy Objects
+
+### Falsy Values
+
+* `undefined`
+* `null`
+* `false`
+* `+0`, `-0`, and `NaN`
+* `""`
+
+Everything else truthy
+
+### Falsy Objects
+
+```js
+
+Boolean({});            // true
+Boolean(document.all);  // false, WHAT!?
+
+```
+
+## Explicit Coercion
+
+Make it clear and obvious that we converting value of one type to another type
+
+* Explicitly: Strings <--> Numbers
+* Explicitly: Parsing Numeric Strings
+* Explicitly: * --> Boolean
+
+### Explicitly: Strings <--> Numbers
+
+1. `String` and `Number` functions without `new`
+1. `toString()`
+1. Unary operator +/-, however avoid their usage
+
+```js
+var a = 42;
+var b = String( a );    // "42"
+
+var c = "3.14";
+var d = Number( c );    // 3.14
+
+var a1 = 42;
+var b1 = a.toString();  // "42"
+
+var c1 = "3.14";
+var d1 = +c;            // 3.14
+
+
+var c = "3.14";
+var d = 5+ +c;          // 8.14
+
+1 + - + + + - + 1;	    // 2
+```
+
+### Data To number
+
+Because data object coerced to timestamp
+
+```js
+var d = new Date( "Mon, 18 Aug 2014 08:53:06 CDT" );
+
++d; // 1408369986000
+
+var timestamp = +new Date();
+var timestamp1 = new Date().getTime();
+
+if (!Date.now) {
+    // emulate ES5 
+	Date.now = function() {
+		return +new Date();
+	};
+}
+
+var timestamp2 = Date.new();
+```
+
+### The Curious Case of the ~
+
+1. `~` aka "bitwise NOT"
+2. Run `ToInt32`
+1. `~x` is roughly the same as `-(x+1)`
+
+```js
+~42;	// -(42+1) ==> -43
+
+var a = "Hello World";
+
+~a.indexOf( "lo" );			// -4   <-- truthy!
+
+if (~a.indexOf( "lo" )) {	// true
+	// found it!
+}
+
+~a.indexOf( "ol" );			// 0    <-- falsy!
+!~a.indexOf( "ol" );		// true
+
+if (!~a.indexOf( "ol" )) {	// true
+	// not found!
+}
+
+```
+
+### Explicitly: Parsing Numeric Strings
+
+1. Separate parsing from coercion
+1. Never use non-string values with `parseInt`
+
+```js
+var a = "42";
+var b = "42px";
+
+Number( a );	// 42
+parseInt( a );	// 42
+
+Number( b );	// NaN
+parseInt( b );	// 42
+
+var obj = {
+	num: 21,
+	toString: function() { return String( this.num * 2 ); }
+};
+
+parseInt( obj ); // 42
+
+parseInt( 1/0, 19 ); // 18
+parseInt( 0.000008 );		// 0   ("0" from "0.000008")
+parseInt( 0.0000008 );		// 8   ("8" from "8e-7")
+parseInt( false, 16 );		// 250 ("fa" from "false")
+parseInt( parseInt, 16 );	// 15  ("f" from "function..")
+parseInt( "0x10" );			// 16
+parseInt( "103", 2 );		// 2
+
+```
+
+### Explicitly: * --> Boolean
+
+1. `Boolean` without `new`
+1. `!!` double-negate operator
+
+```js
+var a = "0";
+var b = [];
+var c = {};
+
+var d = "";
+var e = 0;
+var f = null;
+var g;
+
+Boolean( a ); // true
+!!a;          // true
+Boolean( b ); // true
+!!b;          // true
+Boolean( c ); // true
+!!c;          // true
+
+Boolean( d ); // false
+!!d           // false
+Boolean( e ); // false
+!!e;          // false
+Boolean( f ); // false
+!!f;          // false
+Boolean( g ); // false
+!!g;
+```
+
+
+
+

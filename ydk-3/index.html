@@ -709,6 +709,265 @@ Array.prototype.length = 0;</code></pre>
 <li>JS provides object wrappers around primitive values</li>
 <li><code>&quot;abc&quot;.length</code> automatically boxes value with object wrapper </li>
 </ol>
+</section><section><h2 id="coercion">Coercion</h2>
+<ul>
+<li>Converting Values</li>
+<li>Abstract Value Operations</li>
+<li>Explicit Coercion</li>
+<li>Implicit Coercion</li>
+<li>Loose Equals vs. Strict Equals</li>
+<li>Abstract Relation Comparison</li>
+<li>Review</li>
+</ul>
+</section><section><h2 id="coercion">Coercion</h2>
+<p>Our goal is to fully explore the pros and cons (yes, there <em>are</em> pros!) of coercion</p>
+</section><section><h2 id="converting-values">Converting Values</h2>
+<ul>
+<li>&quot;type casting&quot;  in statically typed languages at compile time</li>
+<li>&quot;type coercion&quot; in runtime for dynamically typed languages</li>
+<li>&quot;explicit&quot; and &quot;implicit&quot; coercions are &#39;relative&#39;</li>
+</ul>
+<pre><code class="lang-js">var a = 42;
+
+var b = a + &quot;&quot;;            // implicit coercion
+
+var c = String( a );    // explicit coercion</code></pre>
+</section><section><h2 id="abstract-value-operations">Abstract Value Operations</h2>
+<ul>
+<li>ToString<ul>
+<li>JSON Stringification</li>
+</ul>
+</li>
+<li>ToNumber</li>
+<li>ToBoolean</li>
+</ul>
+</section><section><h2 id="abstract-value-operations">Abstract Value Operations</h2>
+<p>ES5 defines 6 several &quot;abstract operations&quot;</p>
+<p>Let&#39;s pay attention to: </p>
+<p>ToString, ToNumber, ToBoolean and a bit in ToPrimitive</p>
+</section><section><h3 id="tostring">ToString</h3>
+<pre><code class="lang-js">
+String(null);      //&quot;null&quot;
+String(undefined); //&quot;undefined&quot;
+
+// multiplying `1.07` by `1000`, seven times over
+var a = 1.07 * 1000 * 1000 * 1000 * 1000 * 1000 * 1000 * 1000;
+
+// seven times three digits =&gt; 21 digits
+a.toString(); // &quot;1.07e21&quot;
+
+var b = {};
+
+console.log(b);  //  Object.prototype.toString() -&gt; [object Object]
+
+var arr = [1,2,3];
+
+arr.toString(); // &quot;1,2,3&quot;</code></pre>
+</section><section><h3 id="json-stringification">JSON Stringification</h3>
+<ol>
+<li><code>string</code>, <code>number</code>, <code>boolean</code> converted via <code>ToString</code> abstract operation.</li>
+<li><code>toJSON()</code> method is automatically called to (sort of) &quot;coerce&quot; the object to be <em>JSON-safe</em> before stringification.</li>
+</ol>
+</section><section><h3 id="json-safe-stringification">JSON-safe stringification</h3>
+<pre><code class="lang-js">var o = { };
+
+var a = {
+    b: 42,
+    c: o,
+    d: function(){}
+};
+
+// create a circular reference inside `a`
+o.e = a;
+
+// would throw an error on the circular reference
+// JSON.stringify( a );
+
+// define a custom JSON value serialization
+a.toJSON = function() {
+    // only include the `b` property for serialization
+    return { b: this.b };
+};
+
+JSON.stringify( a ); // &quot;{&quot;b&quot;:42}&quot;</code></pre>
+</section><section><h3 id="tonumber">ToNumber</h3>
+<ol>
+<li><code>true</code> -&gt; 1, <code>false</code> -&gt; 0</li>
+<li><code>string</code> -&gt; <code>NaN</code>, if can&#39;t pars to <code>number</code>, treats &#39;0&#39; in the beginning of string as 8-base number</li>
+<li>Objects(and arrays) run <code>ToPrimitive</code> first<ul>
+<li><code>ToPrimitive</code> search for <code>valueOf</code>, if not then <code>toString</code>, otherwise throws <code>TypeError</code></li>
+</ul>
+</li>
+</ol>
+</section><section><h3 id="override-valueof-">Override <code>valueOf</code></h3>
+<pre><code class="lang-js">var a = {
+    valueOf: function(){
+        return &quot;42&quot;;
+    }
+};
+
+var b = {
+    toString: function(){
+        return &quot;42&quot;;
+    }
+};
+
+var c = [4,2];
+c.toString = function(){
+    return this.join( &quot;&quot; );    // &quot;42&quot;
+};
+
+Number( a );            // 42
+Number( b );            // 42
+Number( c );            // 42
+Number( &quot;&quot; );            // 0
+Number( [] );            // 0
+Number( [ &quot;abc&quot; ] );    // NaN</code></pre>
+</section><section><h3 id="toboolean">ToBoolean</h3>
+<p>Lots of confusions and misconceptions</p>
+<ul>
+<li>Falsy Values</li>
+<li>Falsy Objects</li>
+</ul>
+</section><section><h3 id="falsy-values">Falsy Values</h3>
+<ul>
+<li><code>undefined</code></li>
+<li><code>null</code></li>
+<li><code>false</code></li>
+<li><code>+0</code>, <code>-0</code>, and <code>NaN</code></li>
+<li><code>&quot;&quot;</code></li>
+</ul>
+<p>Everything else truthy</p>
+</section><section><h3 id="falsy-objects">Falsy Objects</h3>
+<pre><code class="lang-js">
+Boolean({});            // true
+Boolean(document.all);  // false, WHAT!?</code></pre>
+</section><section><h2 id="explicit-coercion">Explicit Coercion</h2>
+<p>Make it clear and obvious that we converting value of one type to another type</p>
+<ul>
+<li>Explicitly: Strings &lt;--&gt; Numbers</li>
+<li>Explicitly: Parsing Numeric Strings</li>
+<li>Explicitly: * --&gt; Boolean</li>
+</ul>
+</section><section><h3 id="explicitly-strings-numbers">Explicitly: Strings &lt;--&gt; Numbers</h3>
+<ol>
+<li><code>String</code> and <code>Number</code> functions without <code>new</code></li>
+<li><code>toString()</code></li>
+<li>Unary operator +/-, however avoid their usage</li>
+</ol>
+<pre><code class="lang-js">var a = 42;
+var b = String( a );    // &quot;42&quot;
+
+var c = &quot;3.14&quot;;
+var d = Number( c );    // 3.14
+
+var a1 = 42;
+var b1 = a.toString();  // &quot;42&quot;
+
+var c1 = &quot;3.14&quot;;
+var d1 = +c;            // 3.14
+
+
+var c = &quot;3.14&quot;;
+var d = 5+ +c;          // 8.14
+
+1 + - + + + - + 1;        // 2</code></pre>
+</section><section><h3 id="data-to-number">Data To number</h3>
+<p>Because data object coerced to timestamp</p>
+<pre><code class="lang-js">var d = new Date( &quot;Mon, 18 Aug 2014 08:53:06 CDT&quot; );
+
++d; // 1408369986000
+
+var timestamp = +new Date();
+var timestamp1 = new Date().getTime();
+
+if (!Date.now) {
+    // emulate ES5 
+    Date.now = function() {
+        return +new Date();
+    };
+}
+
+var timestamp2 = Date.new();</code></pre>
+</section><section><h3 id="the-curious-case-of-the-">The Curious Case of the ~</h3>
+<ol>
+<li><code>~</code> aka &quot;bitwise NOT&quot;</li>
+<li>Run <code>ToInt32</code></li>
+<li><code>~x</code> is roughly the same as <code>-(x+1)</code></li>
+</ol>
+<pre><code class="lang-js">~42;    // -(42+1) ==&gt; -43
+
+var a = &quot;Hello World&quot;;
+
+~a.indexOf( &quot;lo&quot; );            // -4   &lt;-- truthy!
+
+if (~a.indexOf( &quot;lo&quot; )) {    // true
+    // found it!
+}
+
+~a.indexOf( &quot;ol&quot; );            // 0    &lt;-- falsy!
+!~a.indexOf( &quot;ol&quot; );        // true
+
+if (!~a.indexOf( &quot;ol&quot; )) {    // true
+    // not found!
+}</code></pre>
+</section><section><h3 id="explicitly-parsing-numeric-strings">Explicitly: Parsing Numeric Strings</h3>
+<ol>
+<li>Separate parsing from coercion</li>
+<li>Never use non-string values with <code>parseInt</code></li>
+</ol>
+<pre><code class="lang-js">var a = &quot;42&quot;;
+var b = &quot;42px&quot;;
+
+Number( a );    // 42
+parseInt( a );    // 42
+
+Number( b );    // NaN
+parseInt( b );    // 42
+
+var obj = {
+    num: 21,
+    toString: function() { return String( this.num * 2 ); }
+};
+
+parseInt( obj ); // 42
+
+parseInt( 1/0, 19 ); // 18
+parseInt( 0.000008 );        // 0   (&quot;0&quot; from &quot;0.000008&quot;)
+parseInt( 0.0000008 );        // 8   (&quot;8&quot; from &quot;8e-7&quot;)
+parseInt( false, 16 );        // 250 (&quot;fa&quot; from &quot;false&quot;)
+parseInt( parseInt, 16 );    // 15  (&quot;f&quot; from &quot;function..&quot;)
+parseInt( &quot;0x10&quot; );            // 16
+parseInt( &quot;103&quot;, 2 );        // 2</code></pre>
+</section><section><h3 id="explicitly-boolean">Explicitly: * --&gt; Boolean</h3>
+<ol>
+<li><code>Boolean</code> without <code>new</code></li>
+<li><code>!!</code> double-negate operator</li>
+</ol>
+<pre><code class="lang-js">var a = &quot;0&quot;;
+var b = [];
+var c = {};
+
+var d = &quot;&quot;;
+var e = 0;
+var f = null;
+var g;
+
+Boolean( a ); // true
+!!a;          // true
+Boolean( b ); // true
+!!b;          // true
+Boolean( c ); // true
+!!c;          // true
+
+Boolean( d ); // false
+!!d           // false
+Boolean( e ); // false
+!!e;          // false
+Boolean( f ); // false
+!!f;          // false
+Boolean( g ); // false
+!!g;</code></pre>
 </section>
 			</div>
 
