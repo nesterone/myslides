@@ -188,4 +188,68 @@ var arr = Array.from( arguments );
 
 ```
 
+### String
 
+* Arrays and Strings Similarities
+* Arrays and String Differences
+* Reuse of Methods from Arrays
+
+### Arrays and Strings Similarities
+
+
+```js
+var a = "foo";
+var b = ["f","o","o"];
+
+a.length;							// 3
+b.length;							// 3
+
+a.indexOf( "o" );					// 1
+b.indexOf( "o" );					// 1
+
+var c = a.concat( "bar" );			// "foobar"
+var d = b.concat( ["b","a","r"] );	// ["f","o","o","b","a","r"]
+
+a === c;							// false
+b === d;							// false
+
+a;									// "foo"
+b;									// ["f","o","o"]
+
+```
+
+### Strings are immutable
+
+```js
+a[1] = "O";
+b[1] = "O";
+
+a; // "foo"
+b; // ["f","O","o"];
+
+c = a.toUpperCase();
+a === c;	// false
+a;			// "foo"
+c;			// "FOO"
+
+b.push( "!" );
+b;			// ["f","O","o","!"]
+
+```
+
+### Reuse of Methods from Arrays
+
+* "borrow" non-mutation array methods 
+
+```js
+a.join;			// undefined
+a.map;			// undefined
+
+var c = Array.prototype.join.call( a, "-" );
+var d = Array.prototype.map.call( a, function(v){
+	return v.toUpperCase() + ".";
+} ).join( "" );
+
+c;				// "f-o-o"
+d;				// "F.O.O."
+```

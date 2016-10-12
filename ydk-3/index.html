@@ -195,6 +195,58 @@ foo( &quot;bar&quot;, &quot;baz&quot; ); // [&quot;bar&quot;,&quot;baz&quot;,&qu
 // in ES6
 
 var arr = Array.from( arguments );</code></pre>
+</section><section><h3 id="string">String</h3>
+<ul>
+<li>Arrays and Strings Similarities</li>
+<li>Arrays and String Differences</li>
+<li>Reuse of Methods from Arrays</li>
+</ul>
+</section><section><h3 id="arrays-and-strings-similarities">Arrays and Strings Similarities</h3>
+<pre><code class="lang-js">var a = &quot;foo&quot;;
+var b = [&quot;f&quot;,&quot;o&quot;,&quot;o&quot;];
+
+a.length;                            // 3
+b.length;                            // 3
+
+a.indexOf( &quot;o&quot; );                    // 1
+b.indexOf( &quot;o&quot; );                    // 1
+
+var c = a.concat( &quot;bar&quot; );            // &quot;foobar&quot;
+var d = b.concat( [&quot;b&quot;,&quot;a&quot;,&quot;r&quot;] );    // [&quot;f&quot;,&quot;o&quot;,&quot;o&quot;,&quot;b&quot;,&quot;a&quot;,&quot;r&quot;]
+
+a === c;                            // false
+b === d;                            // false
+
+a;                                    // &quot;foo&quot;
+b;                                    // [&quot;f&quot;,&quot;o&quot;,&quot;o&quot;]</code></pre>
+</section><section><h3 id="strings-are-immutable">Strings are immutable</h3>
+<pre><code class="lang-js">a[1] = &quot;O&quot;;
+b[1] = &quot;O&quot;;
+
+a; // &quot;foo&quot;
+b; // [&quot;f&quot;,&quot;O&quot;,&quot;o&quot;];
+
+c = a.toUpperCase();
+a === c;    // false
+a;            // &quot;foo&quot;
+c;            // &quot;FOO&quot;
+
+b.push( &quot;!&quot; );
+b;            // [&quot;f&quot;,&quot;O&quot;,&quot;o&quot;,&quot;!&quot;]</code></pre>
+</section><section><h3 id="reuse-of-methods-from-arrays">Reuse of Methods from Arrays</h3>
+<ul>
+<li>&quot;borrow&quot; non-mutation array methods </li>
+</ul>
+<pre><code class="lang-js">a.join;            // undefined
+a.map;            // undefined
+
+var c = Array.prototype.join.call( a, &quot;-&quot; );
+var d = Array.prototype.map.call( a, function(v){
+    return v.toUpperCase() + &quot;.&quot;;
+} ).join( &quot;&quot; );
+
+c;                // &quot;f-o-o&quot;
+d;                // &quot;F.O.O.&quot;</code></pre>
 </section>
 			</div>
 
