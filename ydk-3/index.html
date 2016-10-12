@@ -1028,7 +1028,7 @@ b4; // 3.14</code></pre>
         // skip falsy values. same as treating
         // them as 0&#39;s, but avoids NaN&#39;s.
         if (arguments[i]) {
-            sum += arguments[i]; // sum += Number(Boolean(arguments[i]));
+            sum += arguments[i]; // sum += Number(arguments[i]);
         }
     }
     return sum == 1;
@@ -1050,19 +1050,17 @@ onlyOne( b, a, b, b, b, a );    // false</code></pre>
 <li>The test expression (first clause) in <code>? :</code> ternary expressions.</li>
 <li>The left-hand operand (which serves as a test expression -- see below!) to the <code>||</code> (&quot;logical or&quot;) and <code>&amp;&amp;</code> (&quot;logical and&quot;) operators.</li>
 </ol>
+</section><section><h3 id="implicitly-boolean">Implicitly: * --&gt; Boolean</h3>
 <pre><code class="lang-js">var a = 42;
 var b = &quot;abc&quot;;
 var c;
 var d = null;
-
 if (a) {
     console.log( &quot;yep&quot; );        // yep
 }
-
 while (c) {
     console.log( &quot;nope, never runs&quot; );
 }
-
 c = d ? a : b;
 c;                                // &quot;abc&quot;
 
@@ -1279,6 +1277,39 @@ false == [];            // true -- UH OH!
 </section><section><h3 id="javascript-equality-table">JavaScript Equality Table</h3>
 <p><a href="https://github.com/dorey/JavaScript-Equality-Table">https://github.com/dorey/JavaScript-Equality-Table</a></p>
 </section><section><h2 id="abstract-relational-comparison">Abstract Relational Comparison</h2>
+<ol>
+<li>Convert with <code>ToNumber</code></li>
+<li>If both <code>strings</code> use simple lexicographic comparasion</li>
+</ol>
+<pre><code class="lang-js">var a = [ 42 ];
+var b = [ &quot;43&quot; ];
+
+a &lt; b;    // true
+b &lt; a;    // false
+
+var a1 = [ &quot;42&quot; ];
+var b1 = [ &quot;043&quot; ];
+
+a1 &lt; b1;    // false
+
+var a2 = [ 4, 2 ];
+var b2 = [ 0, 4, 3 ];
+
+a2 &lt; b2;    // false
+
+var a3 = [ 42 ];
+var b3 = &quot;043&quot;;
+
+a3 &lt; b3;                        // false -- string comparison!
+Number( a ) &lt; Number( b );        // true -- number comparison!</code></pre>
+</section><section><h2 id="review">Review</h2>
+<ol>
+<li>Coercions can be characterized as explicit or implicit</li>
+<li>Important task for the responsible JS developer is to take the time to learn all the ins and outs of coercion</li>
+<li><em>Explicit</em> coercion is code which is obvious that the intent is to convert a value from one type to another</li>
+<li><em>Implicit</em> coercion is coercion that is &quot;hidden&quot; as a side-effect of some other operation</li>
+<li><em>Implicit</em> coercion is also about improving the readability of code</li>
+</ol>
 </section>
 			</div>
 

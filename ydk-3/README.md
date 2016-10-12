@@ -1264,7 +1264,7 @@ function onlyOne() {
 		// skip falsy values. same as treating
 		// them as 0's, but avoids NaN's.
 		if (arguments[i]) {
-			sum += arguments[i]; // sum += Number(Boolean(arguments[i]));
+			sum += arguments[i]; // sum += Number(arguments[i]);
 		}
 	}
 	return sum == 1;
@@ -1288,20 +1288,19 @@ onlyOne( b, a, b, b, b, a );	// false
 4. The test expression (first clause) in `? :` ternary expressions.
 5. The left-hand operand (which serves as a test expression -- see below!) to the `||` ("logical or") and `&&` ("logical and") operators.
 
+### Implicitly: * --> Boolean
+
 ```js
 var a = 42;
 var b = "abc";
 var c;
 var d = null;
-
 if (a) {
 	console.log( "yep" );		// yep
 }
-
 while (c) {
 	console.log( "nope, never runs" );
 }
-
 c = d ? a : b;
 c;								// "abc"
 
