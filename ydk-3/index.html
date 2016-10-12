@@ -247,6 +247,315 @@ var d = Array.prototype.map.call( a, function(v){
 
 c;                // &quot;f-o-o&quot;
 d;                // &quot;F.O.O.&quot;</code></pre>
+</section><section><h2 id="numbers">Numbers</h2>
+<ul>
+<li>Numeric Syntax</li>
+<li>Small Decimal Values</li>
+<li>Safe Integer Ranges</li>
+<li>Testing for Integers</li>
+<li>32-bit (Signed) Integers</li>
+</ul>
+</section><section><h3 id="numbers">Numbers</h3>
+<p>In JS we have only Numbers. &quot;IEEE 754&quot; standard, often called &quot;floating-point.&quot;</p>
+</section><section><h3 id="numeric-syntax">Numeric Syntax</h3>
+<pre><code class="lang-js">var a = 42;     // base-10 decimal literals
+var b = 42.3;
+var c1 = 0.3;   
+var c2 = .3;    // valid
+var d1 = 42.0
+var d2 = 42.    // valid</code></pre>
+</section><section><h3 id="exponent-form">Exponent Form</h3>
+<pre><code class="lang-js">var a = 5E10;
+a;                    // 50000000000
+a.toExponential();    // &quot;5e+10&quot;
+
+var b = a * a;      // very large numbers
+b;                    // 2.5e+21
+
+var c = 1 / a;
+c;                    // 2e-11</code></pre>
+</section><section><h3 id="fixed-and-precision">Fixed and Precision</h3>
+<pre><code class="lang-js">var a = 42.59;
+
+a.toFixed( 0 ); // &quot;43&quot;
+a.toFixed( 1 ); // &quot;42.6&quot;
+a.toFixed( 2 ); // &quot;42.59&quot;
+a.toFixed( 3 ); // &quot;42.590&quot;
+a.toFixed( 4 ); // &quot;42.5900&quot;
+
+a.toPrecision( 1 ); // &quot;4e+1&quot;
+a.toPrecision( 2 ); // &quot;43&quot;
+a.toPrecision( 3 ); // &quot;42.6&quot;
+a.toPrecision( 4 ); // &quot;42.59&quot;
+a.toPrecision( 5 ); // &quot;42.590&quot;
+a.toPrecision( 6 ); // &quot;42.5900&quot;</code></pre>
+</section><section><h3 id="other-bases">Other Bases</h3>
+<pre><code class="lang-js">0xf3; // hexadecimal for: 243
+0Xf3; // ditto
+
+0363; // octal for: 243, doesn&#39;t allowed in strict mode
+
+//ES 6
+0o363;        // octal for: 243
+0O363;        // or
+
+0b11110011;    // binary for: 243
+0B11110011; // or</code></pre>
+</section><section><h3 id="small-decimal-values">Small Decimal Values</h3>
+<ul>
+<li>all languages based on &quot;IEEE 754&quot;</li>
+</ul>
+<pre><code class="lang-js">0.1 + 0.2 === 0.3; // false</code></pre>
+</section><section><h3 id="compare-small-decimal-values">Compare Small Decimal Values</h3>
+<pre><code class="lang-js">if (!Number.EPSILON) {
+    //emulate ES6
+    Number.EPSILON = Math.pow(2,-52);
+}
+
+function numbersCloseEnoughToEqual(n1,n2) {
+    return Math.abs( n1 - n2 ) &lt; Number.EPSILON;
+}
+
+var a = 0.1 + 0.2;
+var b = 0.3;
+
+numbersCloseEnoughToEqual( a, b );                    // true
+numbersCloseEnoughToEqual( 0.0000001, 0.0000002 );    // fals</code></pre>
+</section><section><h3 id="safe-integer-ranges">Safe Integer Ranges</h3>
+<ul>
+<li>Number.MAX_VALUE and Number.MIN_VALUE - not quite useful</li>
+<li>ES6 Number.MAX_SAFE_INTEGER and Number.MIN_SAFE_INTEGER</li>
+<li>Big numbers may get official support soon</li>
+</ul>
+</section><section><h3 id="testing-for-integers">Testing for Integers</h3>
+<pre><code class="lang-js">if (!Number.isInteger) {
+    //emulate ES6
+    Number.isInteger = function(num) {
+        return typeof num == &quot;number&quot; &amp;&amp; num % 1 == 0;
+    };
+}
+
+Number.isInteger( 42 );        // true
+Number.isInteger( 42.000 );    // true
+Number.isInteger( 42.3 );    // false</code></pre>
+</section><section><h3 id="32-bit-signed-integers">32-bit (Signed) Integers</h3>
+<ul>
+<li>64-bit Floating Point</li>
+<li>bitwise operation only in 32-bit</li>
+</ul>
+</section><section><h2 id="special-values">Special Values</h2>
+<ul>
+<li>The Non-value Values</li>
+<li>Undefined</li>
+<li>Special Numbers</li>
+<li>Special Equality</li>
+</ul>
+</section><section><h3 id="the-non-value-values">The Non-value Values</h3>
+<ul>
+<li><code>null</code> is an empty value</li>
+<li><code>undefined</code> is a missing value</li>
+</ul>
+<p>Or:</p>
+<ul>
+<li><code>undefined</code> hasn&#39;t had a value yet</li>
+<li><code>null</code> had a value and doesn&#39;t anymore</li>
+</ul>
+</section><section><h3 id="undefined">Undefined</h3>
+<pre><code class="lang-js">
+function foo() {
+    undefined = 2; // really bad idea!
+}
+
+foo();</code></pre>
+</section><section><h3 id="undefined">Undefined</h3>
+<pre><code class="lang-js">
+function foo() {
+    &quot;use strict&quot;;
+    undefined = 2; // TypeError!
+}
+
+foo();</code></pre>
+</section><section><h3 id="undefined">Undefined</h3>
+<pre><code class="lang-js">
+function foo() {
+    &quot;use strict&quot;;
+    var undefined = 2;
+    console.log( undefined ); // 2
+}
+
+foo();</code></pre>
+<p><strong>Friends don&#39;t let friends override <code>undefined</code>.</strong> Ever.</p>
+</section><section><h3 id="-void-operator"><code>void</code> Operator</h3>
+<p>The expression <code>void ___</code> &quot;voids&quot; out any value (undefined)</p>
+<pre><code class="lang-js">function doSomething() {
+    // note: `APP.ready` is provided by our application
+    if (!APP.ready) {
+        // try again later
+        return void setTimeout( doSomething, 100 );
+    }
+
+    var result;
+
+    // do some other stuff
+    return result;
+}
+
+// were we able to do it right away?
+if (doSomething()) {
+    // handle next tasks right away
+}</code></pre>
+</section><section><h3 id="special-numbers">Special Numbers</h3>
+<p>The <code>number</code> type includes several special values. We&#39;ll take a look at each in detail.</p>
+</section><section><h3 id="the-not-number-number">The Not Number, Number</h3>
+<p><code>NaN</code> literally stands for &quot;not a <code>number</code>&quot;</p>
+<pre><code class="lang-js">var a = 2 / &quot;foo&quot;;        // NaN
+
+typeof a === &quot;number&quot;;    // true
+
+a == NaN;    // false
+a === NaN;    // false</code></pre>
+</section><section><h3 id="19-years-isnan-bug">19 years <code>isNaN</code> bug</h3>
+<pre><code class="lang-js">var a = 2 / &quot;foo&quot;;
+var b = &quot;foo&quot;;
+
+a; // NaN
+b; // &quot;foo&quot;
+
+window.isNaN( a ); // true
+window.isNaN( b ); // true -- ouch!
+
+if (!Number.isNaN) {
+    // emulate ES6
+    Number.isNaN = function(n) {
+        return (
+            typeof n === &quot;number&quot; &amp;&amp;
+            window.isNaN( n )
+        );
+    };
+}
+
+var a = 2 / &quot;foo&quot;;
+var b = &quot;foo&quot;;
+
+Number.isNaN( a ); // true
+Number.isNaN( b ); // false -- phew!</code></pre>
+</section><section><h3 id="infinities">Infinities</h3>
+<pre><code class="lang-js">var a = 1 / 0;    // Infinity, yep not an error
+var b = -1 / 0;    // -Infinity
+
+var a = Number.MAX_VALUE;    // 1.7976931348623157e+308
+a + a;                        // Infinity
+a + Math.pow( 2, 970 );        // Infinity
+a + Math.pow( 2, 969 );        // 1.7976931348623157e+308</code></pre>
+</section><section><h3 id="zeros">Zeros</h3>
+<pre><code class="lang-js">var a = 0 / -3; // -0
+var b = 0 * -3; // -0
+
+var a = 0 / -3;
+
+// (some browser) consoles at least get it right
+a;                            // -0
+
+// but the spec insists on lying to you!
+a.toString();                // &quot;0&quot;
+a + &quot;&quot;;                        // &quot;0&quot;
+String( a );                // &quot;0&quot;
+
+// strangely, even JSON gets in on the deception
+JSON.stringify( a );        // &quot;0&quot;
+
+-0 == 0;    // true
++0 == 0;   // true
+-0 === 0;    // true
++0 === 0;   // true</code></pre>
+</section><section><h3 id="distinguish-zeros">Distinguish Zeros</h3>
+<pre><code class="lang-js">function isNegZero(n) {
+    n = Number( n );
+    return (n === 0) &amp;&amp; (1 / n === -Infinity);
+}
+
+isNegZero( -0 );        // true
+isNegZero( 0 / -3 );    // true
+isNegZero( 0 );            // false</code></pre>
+</section><section><h3 id="special-equality-for-tricky-cases-">Special Equality (for tricky cases)</h3>
+<pre><code class="lang-js">if (!Object.is) {
+    // emulate ES6
+    Object.is = function(v1, v2) {
+        // test for `-0`
+        if (v1 === 0 &amp;&amp; v2 === 0) {
+            return 1 / v1 === 1 / v2;
+        }
+        // test for `NaN`
+        if (v1 !== v1) {
+            return v2 !== v2;
+        }
+        // everything else
+        return v1 === v2;
+    };
+}
+
+var a = 2 / &quot;foo&quot;;
+var b = -3 * 0;
+
+Object.is( a, NaN );    // true
+Object.is( b, -0 );        // true
+
+Object.is( b, 0 );        // false</code></pre>
+</section><section><h2 id="value-vs-reference">Value vs. Reference</h2>
+<p>In JavaScript, there are no pointers</p>
+</section><section><h3 id="value-copy">Value Copy</h3>
+<pre><code class="lang-js">var a = 2;
+var b = a; // `b` is always a copy of the value in `a`
+b++;
+a; // 2
+b; // 3</code></pre>
+<p>All simple values: <code>null</code>, <code>undefined</code>, <code>string</code>, <code>number</code>, <code>boolean</code>, and ES6&#39;s <code>symbol</code>.</p>
+</section><section><h3 id="reference-copy">Reference Copy</h3>
+<pre><code class="lang-js">var c = [1,2,3];
+var d = c; // `d` is a reference to the shared `[1,2,3]` value
+d.push( 4 );
+c; // [1,2,3,4]
+d; // [1,2,3,4]</code></pre>
+<p>For Objects</p>
+</section><section><h3 id="common-confusions-with-function-parameters">Common Confusions With Function Parameters</h3>
+<pre><code class="lang-js">function foo(x) {
+    x.push( 4 );
+    x; // [1,2,3,4]
+
+    // later
+    x = [4,5,6];
+    x.push( 7 );
+    x; // [4,5,6,7]
+}
+
+var a = [1,2,3];
+
+foo( a );
+
+a; // [1,2,3,4]  not  [4,5,6,7]</code></pre>
+</section><section><h3 id="common-confusions-with-function-parameters">Common Confusions With Function Parameters</h3>
+<pre><code class="lang-js">function foo(x) {
+    x = x + 1;
+    x; // 3
+}
+
+var a = 2;
+var b = new Number( a ); // or equivalently `Object(a)`
+
+foo( b );
+console.log( b ); // 2, not 3</code></pre>
+<p>primitive value is <em>not mutable</em>, even boxed (wrapped in an object)</p>
+</section><section><h2 id="review">Review</h2>
+<ol>
+<li><code>array</code>s are simply numerically indexed collections of any value-type</li>
+<li>Numbers in JavaScript include both &quot;integers&quot; and floating-point values</li>
+<li>The <code>null</code> type has just one value: <code>null</code></li>
+<li><code>undefined</code> is basically the default value</li>
+<li><code>void</code> operator lets you create the <code>undefined</code> value from any other value</li>
+<li><code>number</code>s include several special values, like <code>NaN</code>, <code>+Infinity</code>, <code>-Infinity</code>, <code>-0</code></li>
+<li>Simple values assigned/passed by <code>value-copy</code></li>
+<li>Compound values assigned/passed by <code>reference-copy</code></li>
+</ol>
 </section>
 			</div>
 
