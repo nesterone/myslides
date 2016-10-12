@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>You Don't Know JS - scope & closure</title>
+
+		<meta name="description" content="scope & closure">
+		<meta name="author" content="Igor Nesterenko">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.min.css">
+		<link rel="stylesheet" href="css/theme/default.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+		<script>
+			if( window.location.search.match( /print-pdf/gi ) ) {
+				var link = document.createElement( 'link' );
+				link.rel = 'stylesheet';
+				link.type = 'text/css';
+				link.href = 'css/print/pdf.css';
+				document.getElementsByTagName( 'head' )[0].appendChild( link );
+			}
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+
+        <style type="text/css">
+            .left-side {
+                text-align: left;
+
+            }
+        </style>
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+                <section><h3 id="you-don-t-know-js-types-grammar">You Don&#39;t Know JS: Types &amp; Grammar</h3>
+<h5 id="types-grammar">types &amp; grammar</h5>
+<p>inspired by <a href="https://github.com/getify/You-Dont-Know-JS/tree/master/types%20%26%20grammar">getify</a></p>
+</section><section><h3 id="presented-by">Presented by</h3>
+<ul>
+<li><a href="https://twitter.com/nesterone">Igor Nesterenko</a></li>
+</ul>
+</section><section><h3 id="high-level-overview">High-level Overview</h3>
+<ul>
+<li>Types</li>
+<li>Values</li>
+<li>Natives</li>
+<li>Coercion</li>
+<li>Grammar</li>
+</ul>
+</section><section><h2 id="types">Types</h2>
+<ul>
+<li>What it&#39;s type ? Why does it matter ?</li>
+<li>Built-in Types</li>
+<li>Values as Types</li>
+<li>Review</li>
+</ul>
+</section><section><h3 id="what-it-s-type-why-does-it-matter-">What it&#39;s type ? Why does it matter ?</h3>
+<ul>
+<li>These two values have different types.</li>
+<li>There are many different ways that coercion can happen</li>
+</ul>
+</section><section><h3 id="built-in-types">Built-in Types</h3>
+<ul>
+<li><code>null</code></li>
+<li><code>undefined</code></li>
+<li><code>boolean</code></li>
+<li><code>number</code></li>
+<li><code>string</code></li>
+<li><code>object</code></li>
+<li><code>symbol</code> -- added in ES6!</li>
+</ul>
+</section><section><h3 id="the-typeof-">The &quot;typeof&quot;</h3>
+<pre><code class="lang-js">typeof undefined     === &quot;undefined&quot;; // true
+typeof true          === &quot;boolean&quot;;   // true
+typeof 42            === &quot;number&quot;;    // true
+typeof &quot;42&quot;          === &quot;string&quot;;    // true
+typeof { life: 42 }  === &quot;object&quot;;    // true
+
+// added in ES6!
+typeof Symbol()      === &quot;symbol&quot;;    // true</code></pre>
+</section><section><h3 id="-typeof-bug">&quot;typeof&quot; bug</h3>
+<p><code>typeof null === &quot;object&quot;; // true</code></p>
+</section><section><h3 id="-subtypes-of-object">&quot;Subtypes&quot; of object</h3>
+<pre><code class="lang-js">typeof function a(){ /* .. */ } === &quot;function&quot;; // true, callable object
+typeof [1,2,3] === &quot;object&quot;; // true</code></pre>
+</section><section><h3 id="values-as-types">Values as Types</h3>
+<p>In JavaScript, variables don&#39;t have types -- <strong>values have types</strong></p>
+</section><section><h3 id="-undefined-vs-undeclared-"><code>undefined</code> vs &quot;undeclared&quot;</h3>
+<p>In JavaScript, they&#39;re quite different</p>
+<pre><code class="lang-js">var a;
+
+typeof a; // &quot;undefined&quot;
+typeof b; // &quot;undefined&quot;, safety guard
+
+a; // undefined
+b; // ReferenceError: b is not defined</code></pre>
+</section><section><h3 id="-typeof-undeclared"><code>typeof</code> Undeclared</h3>
+<ul>
+<li>feature detection </li>
+<li>different JS environments</li>
+<li>different modes: development, production</li>
+</ul>
+<pre><code class="lang-js">
+// this is a safe existence check
+if (typeof DEBUG !== &quot;undefined&quot;) {
+    console.log( &quot;Debugging is starting&quot; );
+}
+
+// this is a safe existence check
+if (typeof someApi !== &quot;undefined&quot;){
+    simeApi.runIt();
+}</code></pre>
+</section><section><h3 id="review">Review</h3>
+<ul>
+<li>seven build-in types</li>
+<li><code>undefined</code> and &quot;undeclared&quot; are different</li>
+<li>usage of <code>typeof</code> for safe existence check</li>
+</ul>
+</section>
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.min.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+                slideNumber: true,
+
+				theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+				transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+				// Parallax scrolling
+				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+				// parallaxBackgroundSize: '2100px 900px',
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
