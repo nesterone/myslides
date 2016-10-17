@@ -254,3 +254,412 @@ bar():
 
 
 ### Run-to-Completion
+
+* Code inside of `foo()` (and `bar()`) is atomic
+
+```js
+var a = 1;
+var b = 2;
+
+function foo() {
+	a++;
+	b = b * a;
+	a = b + 3;
+}
+
+function bar() {
+	b--;
+	a = 8 + b;
+	b = a * 2;
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( "http://some.url.1", foo );
+ajax( "http://some.url.2", bar );
+```
+
+### In Chunks
+
+* chunk 1 - happens now (sync)
+* chunk 2 and 3 happens later (async)
+
+Chunk 1:
+```js
+var a = 1;
+var b = 2;
+```
+
+Chunk 2 (`foo()`):
+```js
+a++;
+b = b * a;
+a = b + 3;
+```
+
+Chunk 3 (`bar()`):
+```js
+b--;
+a = 8 + b;
+b = a * 2;
+```
+
+### Outcome 1
+
+```js
+var a = 1;
+var b = 2;
+
+// foo()
+a++;
+b = b * a;
+a = b + 3;
+
+// bar()
+b--;
+a = 8 + b;
+b = a * 2;
+
+a; // 11
+b; // 22
+```
+
+### Outcome 2
+
+```js
+var a = 1;
+var b = 2;
+
+// bar()
+b--;
+a = 8 + b;
+b = a * 2;
+
+// foo()
+a++;
+b = b * a;
+a = b + 3;
+
+a; // 183
+b; // 180
+```
+
+### "Race Condition"
+
+Cannot predict reliably how a and b will turn out
+
+### ES6 Generators
+
+Introduces special type of function which doesn't have 'run-to-completion' behaviour
+
+## Concurrency
+
+Concurrency is when two or more "processes" are executing simultaneously over the same period
+
+> Prefer "process" over "task" because terminology-wise
+
+### Use Case: Scroll and Ajax
+
+* user scrolls fast enought, many `onscroll` events fired
+* ajax responses taking place
+
+### "Process" 1 (`onscroll` events)
+
+```
+onscroll, request 1
+onscroll, request 2
+onscroll, request 3
+onscroll, request 4
+onscroll, request 5
+onscroll, request 6
+onscroll, request 7
+```
+
+### "Process" 2 (Ajax response events)
+
+```
+response 1
+response 2
+response 3
+response 4
+response 5
+response 6
+response 7
+```
+
+### 'onscroll' and Ajax request at the same moment
+
+```
+onscroll, request 1
+onscroll, request 2          response 1
+onscroll, request 3          response 2
+response 3
+onscroll, request 4
+onscroll, request 5
+onscroll, request 6          response 4
+onscroll, request 7
+response 6
+response 5
+response 7
+```
+
+### Event Loop Queue
+
+```
+onscroll, request 1   <--- Process 1 starts
+onscroll, request 2
+response 1            <--- Process 2 starts
+onscroll, request 3
+response 2
+response 3
+onscroll, request 4
+onscroll, request 5
+onscroll, request 6
+response 4
+onscroll, request 7   <--- Process 1 finishes
+response 6
+response 5
+response 7            <--- Process 2 finishes
+```
+
+Notice how `response 6` and `response 5` came back out of expected order?
+
+### Noninteracting
+
+```js
+var res = {};
+
+function foo(results) {
+	res.foo = results;
+}
+
+function bar(results) {
+	res.bar = results;
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( "http://some.url.1", foo );
+ajax( "http://some.url.2", bar );
+```
+
+* if not interaction then non-determinism is perfectly acceptable
+
+
+### Sometimes broken without coordination 
+
+```js
+var res = [];
+
+function response(data) {
+	res.push( data );
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( "http://some.url.1", response );
+ajax( "http://some.url.2", response );
+```
+
+### Coordinated Interaction
+
+```js
+var res = [];
+
+function response(data) {
+	if (data.url == "http://some.url.1") {
+		res[0] = data;
+	}
+	else if (data.url == "http://some.url.2") {
+		res[1] = data;
+	}
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( "http://some.url.1", response );
+ajax( "http://some.url.2", response );
+```
+
+### Always broken without coordination 
+
+```js
+var a, b;
+
+function foo(x) {
+	a = x * 2;
+	baz();
+}
+
+function bar(y) {
+	b = y * 2;
+	baz();
+}
+
+function baz() {
+	console.log(a + b); // ops !!!
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( "http://some.url.1", foo );
+ajax( "http://some.url.2", bar );
+```
+
+### Simple way to address issue
+
+```js
+var a, b;
+
+function foo(x) {
+	a = x * 2;
+	if (a && b) {
+		baz();
+	}
+}
+
+function bar(y) {
+	b = y * 2;
+	if (a && b) {
+		baz();
+	}
+}
+
+function baz() {
+	console.log( a + b );
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( "http://some.url.1", foo );
+ajax( "http://some.url.2", bar );
+```
+
+### Another broken code
+
+```js
+var a;
+
+function foo(x) {
+	a = x * 2;
+	baz();
+}
+
+function bar(x) {
+	a = x / 2;
+	baz();
+}
+
+function baz() {
+	console.log( a );
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( "http://some.url.1", foo );
+ajax( "http://some.url.2", bar );
+```
+
+### Let only the first to got thought
+
+```js
+var a;
+
+function foo(x) {
+	if (a == undefined) {
+		a = x * 2;
+		baz();
+	}
+}
+function bar(x) {
+	if (a == undefined) {
+		a = x / 2;
+		baz();
+	}
+}
+function baz() {
+	console.log( a );
+}
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( "http://some.url.1", foo );
+ajax( "http://some.url.2", bar );
+```
+
+### Cooperation
+
+```js
+var res = [];
+
+// `response(..)` receives array of results from the Ajax call
+function response(data) {
+	// add onto existing `res` array
+	res = res.concat(
+		// make a new transformed array with all `data` values doubled
+		data.map( function(val){
+			return val * 2;
+		} )
+	);
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( "http://some.url.1", response );
+ajax( "http://some.url.2", response );
+```
+* with really bug `data` can hangs UI for few seconds
+
+### Break long-running "process" into steps
+
+```js
+var res = [];
+// `response(..)` receives array of results from the Ajax call
+function response(data) {
+	// let's just do 1000 at a time
+	var chunk = data.splice( 0, 1000 );
+
+	// add onto existing `res` array
+	res = res.concat(
+		// make a new transformed array with all `chunk` values doubled
+		chunk.map( function(val){
+			return val * 2;
+		} )
+	);
+	// anything left to process?
+	if (data.length > 0) {
+		// async schedule next batch
+		setTimeout( function(){
+			response( data );
+		}, 0 );
+	}
+}
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( "http://some.url.1", response );
+ajax( "http://some.url.2", response );
+```
+
+### Controlling Event Loop Ordering
+
+* no single direct way to ensure async event ordering
+* `setTimeout(..)` hack to push function at the end of event loop queue
+* `process.nextTick(..)` Node.js analog
+
+
+## Jobs
+
+* ES6 provides "Job queue" concept
+
+```js
+console.log( "A" );
+
+setTimeout( function(){
+	console.log( "B" );
+}, 0 );
+
+// theoretical "Job API"
+schedule( function(){
+	console.log( "C" );
+
+	schedule( function(){
+		console.log( "D" );
+	} );
+} );
+```
+
+* print out `A C D B` instead of `A B C D`
+
+
+## Statement Ordering
+
+## Review
