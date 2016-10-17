@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>You Don't Know JS - scope & closure</title>
+
+		<meta name="description" content="scope & closure">
+		<meta name="author" content="Igor Nesterenko">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.min.css">
+		<link rel="stylesheet" href="css/theme/default.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+		<script>
+			if( window.location.search.match( /print-pdf/gi ) ) {
+				var link = document.createElement( 'link' );
+				link.rel = 'stylesheet';
+				link.type = 'text/css';
+				link.href = 'css/print/pdf.css';
+				document.getElementsByTagName( 'head' )[0].appendChild( link );
+			}
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+
+        <style type="text/css">
+            .left-side {
+                text-align: left;
+
+            }
+        </style>
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+                <section><h3 id="you-don-t-know-js-async-performance">You Don&#39;t Know JS: Async &amp; Performance</h3>
+<h5 id="async-performance">async &amp; performance</h5>
+<p>inspired by <a href="https://github.com/getify/You-Dont-Know-JS/tree/master/async%20%26%20performance">getify</a></p>
+</section><section><h3 id="presented-by">Presented by</h3>
+<ul>
+<li><a href="https://twitter.com/nesterone">Igor Nesterenko</a></li>
+</ul>
+</section><section><h2 id="high-level-overview">High-level Overview</h2>
+<ul>
+<li>Asynchrony: Now &amp; Later</li>
+<li>Callbacks</li>
+<li>Promises</li>
+<li>Generators</li>
+<li>Program Performance</li>
+<li>Benchmarking &amp; Tuning</li>
+</ul>
+</section><section><h2 id="asynchrony-now-later">Asynchrony: Now &amp; Later</h2>
+<ul>
+<li>A Program in Chunks</li>
+<li>Event Loop</li>
+<li>Parallel Threading</li>
+<li>Concurrency</li>
+<li>Jobs</li>
+<li>Statement Ordering</li>
+<li>Review</li>
+</ul>
+</section><section><h3 id="asynchrony-now-later">Asynchrony: Now &amp; Later</h3>
+<ul>
+<li>How to express and manipulate program behavior spread out over a period of time ?</li>
+<li>We&#39;re going to have to understand much more deeply what asynchrony is and how it operates in JS </li>
+</ul>
+</section><section><h3 id="a-program-in-chunks">A Program in Chunks</h3>
+<pre><code class="lang-js">// ajax(..) is some arbitrary Ajax function given by a library
+var data = ajax( &quot;http://some.url.1&quot; );
+
+console.log( data );
+// Oops! `data` generally won&#39;t have the Ajax results</code></pre>
+</section><section><h3 id="callback">Callback</h3>
+<pre><code class="lang-js">// ajax(..) is some arbitrary Ajax function given by a library
+ajax( &quot;http://some.url.1&quot;, function myCallbackFunction(data){
+
+    console.log( data ); // Yay, I gots me some `data`!
+
+} );</code></pre>
+<ul>
+<li>never, ever do sync ajax request...</li>
+</ul>
+</section><section><h3 id="find-now-and-later">Find now and later</h3>
+<pre><code class="lang-js">function now() {
+    return 21;
+}
+
+function later() {
+    answer = answer * 2;
+    console.log( &quot;Meaning of life:&quot;, answer );
+}
+
+var answer = now();
+
+setTimeout( later, 1000 ); // Meaning of life: 42</code></pre>
+</section><section><h3 id="more-explicit">More Explicit</h3>
+<p>Now:</p>
+<pre><code class="lang-js">function now() {
+    return 21;
+}
+
+function later() { .. }
+
+var answer = now();
+
+setTimeout( later, 1000 );</code></pre>
+<p>Later:</p>
+<pre><code class="lang-js">answer = answer * 2;
+console.log( &quot;Meaning of life:&quot;, answer );</code></pre>
+</section><section><h3 id="async-console">Async Console</h3>
+<pre><code class="lang-js">var a = {
+    index: 1
+};
+
+// later
+console.log( a ); // ??
+
+// even later
+a.index++;</code></pre>
+<ul>
+<li><code>console.log</code> doesn&#39;t guaranty immediate output</li>
+<li>breakpoints and <code>JSON.stringify</code> for object snapshot</li>
+</ul>
+</section><section><h2 id="event-loop">Event Loop</h2>
+<ul>
+<li>Before ES6, no direct notion of async build into JS</li>
+<li>JS engine execute single chunk of code when asked... by whom?</li>
+<li>JS engine doesn&#39;t run in isolation, always inside a hosting env.</li>
+</ul>
+</section><section><h3 id="what-is-the-event-loop-">What is the event loop ?</h3>
+<p>Let&#39;s conceptualize:</p>
+<pre><code class="lang-js">// `eventLoop` is an array that acts as a queue (first-in, first-out)
+var eventLoop = [ ];
+var event;
+
+// keep going &quot;forever&quot;
+while (true) {
+    // perform a &quot;tick&quot;
+    if (eventLoop.length &gt; 0) {
+        // get the next event in the queue
+        event = eventLoop.shift();
+
+        // now, execute the next event
+        try {
+            event();
+        }
+        catch (err) {
+            reportError(err);
+        }
+    }
+}</code></pre>
+</section><section><h3 id="-settimeout-"><code>setTimeout(..)</code></h3>
+<p>You&#39;re guaranteed (roughly speaking) that your callback won&#39;t fire <em>before</em> the time interval you specify</p>
+</section><section><h3 id="es6-and-event-loop-">ES6 and <code>event loop</code></h3>
+<ul>
+<li>ES6 now specifies how the event loop works</li>
+<li>main reason is <code>ES6 Promise</code></li>
+</ul>
+</section><section><h2 id="parallel-threading">Parallel Threading</h2>
+<ul>
+<li>&quot;async&quot; - about gat between <code>now</code> and <code>later</code></li>
+<li>&quot;parallel&quot; - about things being able to occur simultaneously</li>
+</ul>
+</section><section><h3 id="parallel-computing">Parallel Computing</h3>
+<ul>
+<li>processes<ul>
+<li>threads (share memory of single process)</li>
+</ul>
+</li>
+<li>separate processors or separate computers</li>
+</ul>
+</section><section><h3 id="event-loop-by-contrast">Event Loop by Contrast</h3>
+<ul>
+<li>break work into tasks and execute them in serial</li>
+<li>disallowing parallel access and changes in memory</li>
+</ul>
+</section><section><h3 id="dozen-different-low-level-operations">Dozen different low-level operations</h3>
+<pre><code class="lang-js">function later() {
+    answer = answer * 2;  
+    console.log( &quot;Meaning of life:&quot;, answer );
+}</code></pre>
+<ul>
+<li>assignment</li>
+<li>reading of <code>answer</code></li>
+<li>multiplication by <code>2</code></li>
+</ul>
+</section><section><h3 id="unpredictable-behaviour-of-parallel-system">Unpredictable Behaviour of Parallel System</h3>
+<pre><code class="lang-js">var a = 20;
+
+function foo() {
+    a = a + 1;
+}
+
+function bar() {
+    a = a * 2;
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( &quot;http://some.url.1&quot;, foo );
+ajax( &quot;http://some.url.2&quot;, bar );</code></pre>
+<ul>
+<li>42 - ?</li>
+<li>41 - ?</li>
+</ul>
+</section><section><h3 id="thread-1-x-and-y-are-temporary-memory-locations-">Thread 1 (<code>X</code> and <code>Y</code> are temporary memory locations)</h3>
+<pre><code>foo():
+  a. load value of `a` in `X`
+  b. store `1` in `Y`
+  c. add `X` and `Y`, store result in `X`
+  d. store value of `X` in `a`</code></pre>
+</section><section><h3 id="thread-2-x-and-y-are-temporary-memory-locations-">Thread 2 (<code>X</code> and <code>Y</code> are temporary memory locations)</h3>
+<pre><code>bar():
+  a. load value of `a` in `X`
+  b. store `2` in `Y`
+  c. multiply `X` and `Y`, store result in `X`
+  d. store value of `X` in `a`</code></pre>
+</section><section><h3 id="if-truly-parallel-then-case-1">If truly parallel, then Case 1</h3>
+<pre><code>1a  (load value of `a` in `X`   ==&gt; `20`)
+2a  (load value of `a` in `X`   ==&gt; `20`)
+1b  (store `1` in `Y`   ==&gt; `1`)
+2b  (store `2` in `Y`   ==&gt; `2`)
+1c  (add `X` and `Y`, store result in `X`   ==&gt; `22`)
+1d  (store value of `X` in `a`   ==&gt; `22`)
+2c  (multiply `X` and `Y`, store result in `X`   ==&gt; `44`)
+2d  (store value of `X` in `a`   ==&gt; `44`)</code></pre>
+<ul>
+<li><code>a</code> will be <code>44</code></li>
+</ul>
+</section><section><h3 id="if-truly-parallel-then-case-1">If truly parallel, then Case 1</h3>
+<pre><code>1a  (load value of `a` in `X`   ==&gt; `20`)
+2a  (load value of `a` in `X`   ==&gt; `20`)
+2b  (store `2` in `Y`   ==&gt; `2`)
+1b  (store `1` in `Y`   ==&gt; `1`)
+2c  (multiply `X` and `Y`, store result in `X`   ==&gt; `20`)
+1c  (add `X` and `Y`, store result in `X`   ==&gt; `21`)
+1d  (store value of `X` in `a`   ==&gt; `21`)
+2d  (store value of `X` in `a`   ==&gt; `21`)</code></pre>
+<ul>
+<li><code>a</code> will be <code>21</code></li>
+<li>yep, threaded programming is very tricky </li>
+</ul>
+</section><section><h3 id="run-to-completion">Run-to-Completion</h3>
+</section>
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.min.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+                slideNumber: true,
+
+				theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+				transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+				// Parallax scrolling
+				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+				// parallaxBackgroundSize: '2100px 900px',
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
