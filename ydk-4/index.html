@@ -72,7 +72,6 @@
 <li>Parallel Threading</li>
 <li>Concurrency</li>
 <li>Jobs</li>
-<li>Statement Ordering</li>
 <li>Review</li>
 </ul>
 </section><section><h3 id="asynchrony-now-later">Asynchrony: Now &amp; Later</h3>
@@ -256,6 +255,342 @@ ajax( &quot;http://some.url.2&quot;, bar );</code></pre>
 <li>yep, threaded programming is very tricky </li>
 </ul>
 </section><section><h3 id="run-to-completion">Run-to-Completion</h3>
+<ul>
+<li>Code inside of <code>foo()</code> (and <code>bar()</code>) is atomic</li>
+</ul>
+<pre><code class="lang-js">var a = 1;
+var b = 2;
+
+function foo() {
+    a++;
+    b = b * a;
+    a = b + 3;
+}
+
+function bar() {
+    b--;
+    a = 8 + b;
+    b = a * 2;
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( &quot;http://some.url.1&quot;, foo );
+ajax( &quot;http://some.url.2&quot;, bar );</code></pre>
+</section><section><h3 id="in-chunks">In Chunks</h3>
+<ul>
+<li>chunk 1 - happens now (sync)</li>
+<li>chunk 2 and 3 happens later (async)</li>
+</ul>
+<p>Chunk 1:</p>
+<pre><code class="lang-js">var a = 1;
+var b = 2;</code></pre>
+<p>Chunk 2 (<code>foo()</code>):</p>
+<pre><code class="lang-js">a++;
+b = b * a;
+a = b + 3;</code></pre>
+<p>Chunk 3 (<code>bar()</code>):</p>
+<pre><code class="lang-js">b--;
+a = 8 + b;
+b = a * 2;</code></pre>
+</section><section><h3 id="outcome-1">Outcome 1</h3>
+<pre><code class="lang-js">var a = 1;
+var b = 2;
+
+// foo()
+a++;
+b = b * a;
+a = b + 3;
+
+// bar()
+b--;
+a = 8 + b;
+b = a * 2;
+
+a; // 11
+b; // 22</code></pre>
+</section><section><h3 id="outcome-2">Outcome 2</h3>
+<pre><code class="lang-js">var a = 1;
+var b = 2;
+
+// bar()
+b--;
+a = 8 + b;
+b = a * 2;
+
+// foo()
+a++;
+b = b * a;
+a = b + 3;
+
+a; // 183
+b; // 180</code></pre>
+</section><section><h3 id="-race-condition-">&quot;Race Condition&quot;</h3>
+<p>Cannot predict reliably how a and b will turn out</p>
+</section><section><h3 id="es6-generators">ES6 Generators</h3>
+<p>Introduces special type of function which doesn&#39;t have &#39;run-to-completion&#39; behaviour</p>
+</section><section><h2 id="concurrency">Concurrency</h2>
+<p>Concurrency is when two or more &quot;processes&quot; are executing simultaneously over the same period</p>
+<blockquote>
+<p>Prefer &quot;process&quot; over &quot;task&quot; because terminology-wise</p>
+</blockquote>
+</section><section><h3 id="use-case-scroll-and-ajax">Use Case: Scroll and Ajax</h3>
+<ul>
+<li>user scrolls fast enought, many <code>onscroll</code> events fired</li>
+<li>ajax responses taking place</li>
+</ul>
+</section><section><h3 id="-process-1-onscroll-events-">&quot;Process&quot; 1 (<code>onscroll</code> events)</h3>
+<pre><code>onscroll, request 1
+onscroll, request 2
+onscroll, request 3
+onscroll, request 4
+onscroll, request 5
+onscroll, request 6
+onscroll, request 7</code></pre>
+</section><section><h3 id="-process-2-ajax-response-events-">&quot;Process&quot; 2 (Ajax response events)</h3>
+<pre><code>response 1
+response 2
+response 3
+response 4
+response 5
+response 6
+response 7</code></pre>
+</section><section><h3 id="-onscroll-and-ajax-request-at-the-same-moment">&#39;onscroll&#39; and Ajax request at the same moment</h3>
+<pre><code>onscroll, request 1
+onscroll, request 2          response 1
+onscroll, request 3          response 2
+response 3
+onscroll, request 4
+onscroll, request 5
+onscroll, request 6          response 4
+onscroll, request 7
+response 6
+response 5
+response 7</code></pre>
+</section><section><h3 id="event-loop-queue">Event Loop Queue</h3>
+<pre><code>onscroll, request 1   &lt;--- Process 1 starts
+onscroll, request 2
+response 1            &lt;--- Process 2 starts
+onscroll, request 3
+response 2
+response 3
+onscroll, request 4
+onscroll, request 5
+onscroll, request 6
+response 4
+onscroll, request 7   &lt;--- Process 1 finishes
+response 6
+response 5
+response 7            &lt;--- Process 2 finishes</code></pre>
+<p>Notice how <code>response 6</code> and <code>response 5</code> came back out of expected order?</p>
+</section><section><h3 id="noninteracting">Noninteracting</h3>
+<pre><code class="lang-js">var res = {};
+
+function foo(results) {
+    res.foo = results;
+}
+
+function bar(results) {
+    res.bar = results;
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( &quot;http://some.url.1&quot;, foo );
+ajax( &quot;http://some.url.2&quot;, bar );</code></pre>
+<ul>
+<li>if not interaction then non-determinism is perfectly acceptable</li>
+</ul>
+</section><section><h3 id="sometimes-broken-without-coordination">Sometimes broken without coordination</h3>
+<pre><code class="lang-js">var res = [];
+
+function response(data) {
+    res.push( data );
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( &quot;http://some.url.1&quot;, response );
+ajax( &quot;http://some.url.2&quot;, response );</code></pre>
+</section><section><h3 id="coordinated-interaction">Coordinated Interaction</h3>
+<pre><code class="lang-js">var res = [];
+
+function response(data) {
+    if (data.url == &quot;http://some.url.1&quot;) {
+        res[0] = data;
+    }
+    else if (data.url == &quot;http://some.url.2&quot;) {
+        res[1] = data;
+    }
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( &quot;http://some.url.1&quot;, response );
+ajax( &quot;http://some.url.2&quot;, response );</code></pre>
+</section><section><h3 id="always-broken-without-coordination">Always broken without coordination</h3>
+<pre><code class="lang-js">var a, b;
+
+function foo(x) {
+    a = x * 2;
+    baz();
+}
+
+function bar(y) {
+    b = y * 2;
+    baz();
+}
+
+function baz() {
+    console.log(a + b); // ops !!!
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( &quot;http://some.url.1&quot;, foo );
+ajax( &quot;http://some.url.2&quot;, bar );</code></pre>
+</section><section><h3 id="simple-way-to-address-issue">Simple way to address issue</h3>
+<pre><code class="lang-js">var a, b;
+
+function foo(x) {
+    a = x * 2;
+    if (a &amp;&amp; b) {
+        baz();
+    }
+}
+
+function bar(y) {
+    b = y * 2;
+    if (a &amp;&amp; b) {
+        baz();
+    }
+}
+
+function baz() {
+    console.log( a + b );
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( &quot;http://some.url.1&quot;, foo );
+ajax( &quot;http://some.url.2&quot;, bar );</code></pre>
+</section><section><h3 id="another-broken-code">Another broken code</h3>
+<pre><code class="lang-js">var a;
+
+function foo(x) {
+    a = x * 2;
+    baz();
+}
+
+function bar(x) {
+    a = x / 2;
+    baz();
+}
+
+function baz() {
+    console.log( a );
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( &quot;http://some.url.1&quot;, foo );
+ajax( &quot;http://some.url.2&quot;, bar );</code></pre>
+</section><section><h3 id="let-only-the-first-to-got-thought">Let only the first to got thought</h3>
+<pre><code class="lang-js">var a;
+
+function foo(x) {
+    if (a == undefined) {
+        a = x * 2;
+        baz();
+    }
+}
+function bar(x) {
+    if (a == undefined) {
+        a = x / 2;
+        baz();
+    }
+}
+function baz() {
+    console.log( a );
+}
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( &quot;http://some.url.1&quot;, foo );
+ajax( &quot;http://some.url.2&quot;, bar );</code></pre>
+</section><section><h3 id="cooperation">Cooperation</h3>
+<pre><code class="lang-js">var res = [];
+
+// `response(..)` receives array of results from the Ajax call
+function response(data) {
+    // add onto existing `res` array
+    res = res.concat(
+        // make a new transformed array with all `data` values doubled
+        data.map( function(val){
+            return val * 2;
+        } )
+    );
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( &quot;http://some.url.1&quot;, response );
+ajax( &quot;http://some.url.2&quot;, response );</code></pre>
+<ul>
+<li>with really bug <code>data</code> can hangs UI for few seconds</li>
+</ul>
+</section><section><h3 id="break-long-running-process-into-steps">Break long-running &quot;process&quot; into steps</h3>
+<pre><code class="lang-js">var res = [];
+// `response(..)` receives array of results from the Ajax call
+function response(data) {
+    // let&#39;s just do 1000 at a time
+    var chunk = data.splice( 0, 1000 );
+
+    // add onto existing `res` array
+    res = res.concat(
+        // make a new transformed array with all `chunk` values doubled
+        chunk.map( function(val){
+            return val * 2;
+        } )
+    );
+    // anything left to process?
+    if (data.length &gt; 0) {
+        // async schedule next batch
+        setTimeout( function(){
+            response( data );
+        }, 0 );
+    }
+}
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( &quot;http://some.url.1&quot;, response );
+ajax( &quot;http://some.url.2&quot;, response );</code></pre>
+</section><section><h3 id="controlling-event-loop-ordering">Controlling Event Loop Ordering</h3>
+<ul>
+<li>no single direct way to ensure async event ordering</li>
+<li><code>setTimeout(..)</code> hack to push function at the end of event loop queue</li>
+<li><code>process.nextTick(..)</code> Node.js analog</li>
+</ul>
+</section><section><h2 id="jobs">Jobs</h2>
+<ul>
+<li>ES6 provides &quot;Job queue&quot; concept</li>
+</ul>
+<pre><code class="lang-js">console.log( &quot;A&quot; );
+
+setTimeout( function(){
+    console.log( &quot;B&quot; );
+}, 0 );
+
+// theoretical &quot;Job API&quot;
+schedule( function(){
+    console.log( &quot;C&quot; );
+
+    schedule( function(){
+        console.log( &quot;D&quot; );
+    } );
+} );</code></pre>
+<ul>
+<li>print out <code>A C D B</code> instead of <code>A B C D</code></li>
+</ul>
+</section><section><h2 id="review">Review</h2>
+<ul>
+<li>JS program is (practically) always broken into chucks (now and later)</li>
+<li>The event loop runs until the queue is empty</li>
+<li>Each iteration of the event loop is a &quot;tick&quot;</li>
+<li>UI, IO, timers are events in queue</li>
+<li>Only one event can be processed from the queue at a time</li>
+<li>Concurrency is when two or more chains of events interleave over time</li>
+<li>It&#39;s often necessary to do some form of interaction coordination between these concurrent &quot;processes&quot;</li>
+</ul>
 </section>
 			</div>
 

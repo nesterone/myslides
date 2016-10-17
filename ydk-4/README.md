@@ -22,7 +22,6 @@ inspired by [getify](https://github.com/getify/You-Dont-Know-JS/tree/master/asyn
 * Parallel Threading
 * Concurrency
 * Jobs
-* Statement Ordering
 * Review
 
 ### Asynchrony: Now & Later
@@ -635,7 +634,6 @@ ajax( "http://some.url.2", response );
 * `setTimeout(..)` hack to push function at the end of event loop queue
 * `process.nextTick(..)` Node.js analog
 
-
 ## Jobs
 
 * ES6 provides "Job queue" concept
@@ -659,7 +657,12 @@ schedule( function(){
 
 * print out `A C D B` instead of `A B C D`
 
-
-## Statement Ordering
-
 ## Review
+
+* JS program is (practically) always broken into chucks (now and later)
+* The event loop runs until the queue is empty
+* Each iteration of the event loop is a "tick"
+* UI, IO, timers are events in queue
+* Only one event can be processed from the queue at a time
+* Concurrency is when two or more chains of events interleave over time
+* It's often necessary to do some form of interaction coordination between these concurrent "processes"
