@@ -10,9 +10,7 @@ inspired by [getify](https://github.com/getify/You-Dont-Know-JS/tree/master/asyn
 * Asynchrony: Now & Later
 * Callbacks
 * Promises
-* Generators
 * Program Performance
-* Benchmarking & Tuning
 
 
 ## Asynchrony: Now & Later
