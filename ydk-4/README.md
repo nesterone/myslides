@@ -2176,3 +2176,221 @@ Both simple and complex
 1. Promises are awesome. Use them.
 1. They don't get rid of callbacks, they just can help in redirect the orchestration of those callbacks
 1. Promise chains also begin to address (though certainly not perfectly) a better way of expressing async flow in sequential fashion,
+
+
+## Program Performance
+
+* Web Workers
+* SIMD
+* asm.js
+* Review
+
+## Web Workers
+
+```js
+var w1 = new Worker( "http://some.url.1/mycoolworker.js" );
+```
+
+```js
+w1.addEventListener( "message", function(evt){
+	// evt.data
+} );
+```
+
+```js
+w1.postMessage( "something cool to say" );
+```
+
+Inside the Worker, the messaging is totally symmetrical:
+
+```js
+// "mycoolworker.js"
+
+addEventListener( "message", function(evt){
+	// evt.data
+} );
+
+postMessage( "a really cool reply" );
+```
+
+### Worker Environment
+
+* no DOM and global variables assess 
+* network operations available
+
+```js
+// inside the Worker
+importScripts( "foo.js", "bar.js" );
+```
+
+### Web Workers Use Cases
+
+* Processing intensive math calculations
+* Sorting large data sets
+* Data operations (compression, audio analysis, image pixel manipulations, etc.)
+* High-traffic network communications
+
+### Data Transfer
+
+1. By default data copied and transferred as a strings
+1. ["Structured Cloning Algorithm"](https://developer.mozilla.org/en-US/docs/Web/Guide/API/DOM/The_structured_clone_algorithm)
+1. ["Transferable Objects"](http://updates.html5rocks.com/2011/12/Transferable-Objects-Lightning-Fast)
+
+### Shared Workers
+
+```js
+var w1 = new SharedWorker( "http://some.url.1/mycoolworker.js" );
+```
+
+```js
+w1.port.addEventListener( "message", handleMessages );
+
+// ..
+
+w1.port.postMessage( "something cool" );
+```
+
+```js
+w1.port.start();
+```
+
+### Inside the Shared Worker
+
+```js
+// inside the shared Worker
+addEventListener( "connect", function(evt){
+	// the assigned port for this connection
+	var port = evt.ports[0];
+
+	port.addEventListener( "message", function(evt){
+		// ..
+
+		port.postMessage( .. );
+
+		// ..
+	} );
+
+	// initialize the port connection
+	port.start();
+} );
+```
+
+### Polyfilling Web Workers
+
+No any try multithreading, just hask with `setTimeout(..)`
+
+* [Modernizer Polyfill](https://github.com/Modernizr/Modernizr/wiki/HTML5-Cross-Browser-Polyfills#web-workers)
+* [Sketch `Worker`] here (https://gist.github.com/getify/1b26accb1a09aa53ad25)
+
+## SIMD (Single instruction, multiple data)
+
+'Data Parallelism' instead of 'Task Parallelism'
+
+```js
+var v1 = SIMD.float32x4( 3.14159, 21.0, 32.3, 55.55 );
+var v2 = SIMD.float32x4( 2.1, 3.2, 4.3, 5.4 );
+
+var v3 = SIMD.int32x4( 10, 101, 1001, 10001 );
+var v4 = SIMD.int32x4( 10, 20, 30, 40 );
+
+SIMD.float32x4.mul( v1, v2 );	// [ 6.597339, 67.2, 138.89, 299.97 ]
+SIMD.int32x4.add( v3, v4 );		// [ 20, 121, 1031, 10041 ]
+```
+
+* very raw
+
+## asm.js
+
+"asm.js" (http://asmjs.org/) is a label for a highly optimizable subset of the JavaScript language
+
+Handling specialized tasks such as intensive math operations
+
+
+### How to Optimize with asm.js
+
+```js
+var a = 42;
+
+// ..
+
+var b = a;
+```
+
+became 
+
+```js
+var a = 42;
+
+// ..
+
+var b = a | 0;
+```
+
+Operation should be 32-bit integer
+
+### asm.js Modules
+
+expect for stdlib namespace with helpers
+
+```js
+var heap = new ArrayBuffer( 0x10000 );	// 64k heap
+```
+
+```js
+var arr = new Float64Array( heap );
+```
+
+### asm.js Modules
+
+```js
+function fooASM(stdlib,foreign,heap) {
+	"use asm";
+
+	var arr = new stdlib.Int32Array( heap );
+
+	function foo(x,y) {
+		x = x | 0;
+		y = y | 0;
+
+		var i = 0;
+		var p = 0;
+		var sum = 0;
+		var count = ((y|0) - (x|0)) | 0;
+
+		// calculate all the inner adjacent multiplications
+		for (i = x | 0;
+			(i | 0) < (y | 0);
+			p = (p + 8) | 0, i = (i + 1) | 0
+		) {
+			// store result
+			arr[ p >> 3 ] = (i * (i + 1)) | 0;
+		}
+
+		// calculate average of all intermediate values
+		for (i = 0, p = 0;
+			(i | 0) < (count | 0);
+			p = (p + 8) | 0, i = (i + 1) | 0
+		) {
+			sum = (sum + arr[ p >> 3 ]) | 0;
+		}
+
+		return +(sum / count);
+	}
+
+	return {
+		foo: foo
+	};
+}
+
+var heap = new ArrayBuffer( 0x1000 );
+var foo = fooASM( window, null, heap ).foo;
+
+foo( 10, 20 );		// 233
+```
+
+## Review
+
+1. Async coding patterns give you the ability to write more performant code
+1. Web Workers let you run a JS file (aka program) in a separate thread using async events to message between the threads
+1. SIMD proposes to map CPU-level parallel math operations to JavaScript APIs for high-performance data-parallel operations
+1. asm.js small subset of JS to avoid hard-to-optimize parts of JS, good target for cross-compilation from other languages like C/C++
