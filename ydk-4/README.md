@@ -666,3 +666,184 @@ schedule( function(){
 * Only one event can be processed from the queue at a time
 * Concurrency is when two or more chains of events interleave over time
 * It's often necessary to do some form of interaction coordination between these concurrent "processes"
+
+## Callbacks
+
+* Continuations
+* Sequential Brain
+* Trust Issues
+* Trying to Save Callbacks
+* Review
+
+## Plain old way to deal with async
+
+* from the beginning of JS
+* no a best async pattern
+
+Let's review it in depth
+
+
+## Continuations
+
+```js
+// A  - now
+ajax( "..", function(..){
+	// C - later
+} );
+// B -now 
+```
+
+Let's make the code even simpler:
+
+```js
+// A
+setTimeout( function(){
+	// C
+}, 1000 );
+// B
+```
+
+* stop for a moment and think
+
+
+## Sequence of thoughts 
+
+1. Do A, then set up a timeout to wait 1,000 milliseconds, then once that fires, do C.
+1. Do A, setup the timeout for 1,000 milliseconds, then do B, then after the timeout fires, do C
+
+## Sequential Brain
+
+* it's a fake multitasking, just fast context switcher
+* our brain works kinda `event loop`
+
+### Doing Versus Planning
+
+* following mental plan, however switching happens
+* desire to relay for sequence A -> B -> C
+
+### Plan things out carefully, sequentially
+
+```js
+// swap `x` and `y` (via temp variable `z`)
+z = x;
+x = y;
+y = z;
+```
+
+* Thankfully, we don't need to bother with async here
+
+### Async evented code is hard to reason
+
+Because it's not how our brain planning works
+
+Especially when all in callbacks ... 
+
+### Nested/Chained Callbacks
+
+```js
+listen( "click", function handler(evt){
+	setTimeout( function request(){
+		ajax( "http://some.url.1", function response(text){
+			if (text == "hello") {
+				handler();
+			}
+			else if (text == "world") {
+				request();
+			}
+		} );
+	}, 500) ;
+} );
+```
+
+* "callback hell"
+* "pyramid of doom"
+
+
+### Split in `now` and `later`
+
+First (*now*), we:
+
+```js
+listen( "..", function handler(..){
+	// ..
+} );
+```
+
+Then *later*, we:
+
+```js
+setTimeout( function request(..){
+	// ..
+}, 500) ;
+```
+
+Then still *later*, we:
+
+```js
+ajax( "..", function response(..){
+	// ..
+} );
+```
+
+And finally (most *later*), we:
+
+```js
+if ( .. ) {
+	// ..
+}
+else ..
+```
+
+### Another Scenario
+
+```js
+doA( function(){
+	doB();
+
+	doC( function(){
+		doD();
+	} )
+
+	doE();
+} );
+
+doF();
+```
+
+* `doA()`
+* `doF()`
+* `doB()`
+* `doC()`
+* `doE()`
+* `doD()`
+
+### Name in top-down order
+
+```js
+doA( function(){
+	doC();
+
+	doD( function(){
+		doF();
+	} )
+
+	doE();
+} );
+
+doB();
+```
+
+### Review Order
+
+`A -> B -> C -> D -> E -> F`
+
+What if `doA(..)` or `doD(..)` aren't actually async ?
+
+`A -> C -> D -> F -> E -> B`
+
+### "Callback Hell"
+
+It's not about nesting/identation
+
+It's about reasoning about your async flow 
+
