@@ -847,3 +847,200 @@ It's not about nesting/identation
 
 It's about reasoning about your async flow 
 
+
+### Trust Issue
+
+```js
+// A
+ajax( "..", function(..){
+	// C
+} );
+// B
+```
+
+We call this "inversion of control," when you take part of your program and give over control of its execution to another third party
+
+### Tale of Five Callbacks
+
+```js
+analytics.trackPurchase( purchaseData, function(){
+	chargeCreditCard();
+	displayThankyouPage();
+} );
+```
+
+What's next?
+
+### 5 months later
+
+```js
+var tracked = false;
+
+analytics.trackPurchase( purchaseData, function(){
+	if (!tracked) {
+		tracked = true;
+		chargeCreditCard();
+		displayThankyouPage();
+	}
+} );
+```
+
+### List of things that could go wrong
+
+* Call the callback too early (before it's been tracked)
+* Call the callback too late (or never)
+* Call the callback too few or too many times (like the problem you encountered!)
+* Fail to pass along any necessary environment/parameters to your callback
+* Swallow any errors/exceptions that may happen
+* ...
+
+### Overly trusting of input
+
+```js
+function addNumbers(x,y) {
+	// + is overloaded with coercion to also be
+	// string concatenation, so this operation
+	// isn't strictly safe depending on what's
+	// passed in.
+	return x + y;
+}
+
+addNumbers( 21, 21 );	// 42
+addNumbers( 21, "21" );	// "2121"
+```
+
+### Defensive against untrusted input
+
+```js
+function addNumbers(x,y) {
+	// ensure numerical input
+	x = Number( x );
+	y = Number( y );
+
+	// + will safely do numeric addition
+	return x + y;
+}
+
+addNumbers( 21, 21 );	// 42
+addNumbers( 21, "21" );	// 42
+```
+
+### Most troublesome problem with callbacks
+
+*inversion of control* leading to a complete breakdown along all  trust lines
+
+## Trying to Save Callbacks
+
+```js
+function success(data) {
+	console.log( data );
+}
+
+function failure(err) {
+	console.error( err );
+}
+
+ajax( "http://some.url.1", success, failure );
+```
+
+* error and success callbacks
+
+### "Error-first style"
+
+```js
+function response(err,data) {
+	// error?
+	if (err) {
+		console.error( err );
+	}
+	// otherwise, assume success
+	else {
+		console.log( data );
+	}
+}
+
+ajax( "http://some.url.1", response );
+```
+
+###  What about the trust issue of never being called?
+
+```js
+function timeoutify(fn,delay) {
+	var intv = setTimeout( function(){
+			intv = null;
+			fn( new Error( "Timeout!" ) );
+		}, delay )
+	;
+
+	return function() {
+		// timeout hasn't happened yet?
+		if (intv) {
+			clearTimeout( intv );
+			fn.apply( this, [ null ].concat( [].slice.call( arguments ) ) );
+		}
+	};
+}
+```
+
+### Timeoutify
+
+```js
+// using "error-first style" callback design
+function foo(err,data) {
+	if (err) {
+		console.error( err );
+	}
+	else {
+		console.log( data );
+	}
+}
+
+ajax( "http://some.url.1", timeoutify( foo, 500 ) );
+```
+
+### Nondeterminism with sync-or-async
+
+* ["Callbacks, synchronous and asynchronous"](http://blog.ometer.com/2011/07/24/callbacks-synchronous-and-asynchronous/)
+
+* ["Designing APIs for Asynchrony"](http://blog.izs.me/post/59142742143/designing-apis-for-asynchrony)
+
+
+### "Never release Zalgo"
+
+```js
+function result(data) {
+	console.log( a );
+}
+
+var a = 0;
+
+ajax( "..pre-cached-url..", result );
+a++;
+```
+
+Always be async
+
+### `asyncify(..)` boilerplate
+
+```js
+function result(data) {
+	console.log( a );
+}
+
+var a = 0;
+
+ajax( "..pre-cached-url..", asyncify( result ) );
+a++;
+```
+
+* problem solved, but it inefficient
+* better to use build-in language mechanics to deal with it
+
+## Review
+
+* callbacks are the fundamental unit of asynchrony in JS
+* our brains desire sequential thinking
+* we need express async in more sync more
+* callbacks suffer from *inversion of control*
+* all async problems could be solved with callback, however code would be clunkier
+* JS demands for more sophisticated and capable async patterns

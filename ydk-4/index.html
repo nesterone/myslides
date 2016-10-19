@@ -591,6 +591,285 @@ schedule( function(){
 <li>Concurrency is when two or more chains of events interleave over time</li>
 <li>It&#39;s often necessary to do some form of interaction coordination between these concurrent &quot;processes&quot;</li>
 </ul>
+</section><section><h2 id="callbacks">Callbacks</h2>
+<ul>
+<li>Continuations</li>
+<li>Sequential Brain</li>
+<li>Trust Issues</li>
+<li>Trying to Save Callbacks</li>
+<li>Review</li>
+</ul>
+</section><section><h2 id="plain-old-way-to-deal-with-async">Plain old way to deal with async</h2>
+<ul>
+<li>from the beginning of JS</li>
+<li>no a best async pattern</li>
+</ul>
+<p>Let&#39;s review it in depth</p>
+</section><section><h2 id="continuations">Continuations</h2>
+<pre><code class="lang-js">// A  - now
+ajax( &quot;..&quot;, function(..){
+    // C - later
+} );
+// B -now</code></pre>
+<p>Let&#39;s make the code even simpler:</p>
+<pre><code class="lang-js">// A
+setTimeout( function(){
+    // C
+}, 1000 );
+// B</code></pre>
+<ul>
+<li>stop for a moment and think</li>
+</ul>
+</section><section><h2 id="sequence-of-thoughts">Sequence of thoughts</h2>
+<ol>
+<li>Do A, then set up a timeout to wait 1,000 milliseconds, then once that fires, do C.</li>
+<li>Do A, setup the timeout for 1,000 milliseconds, then do B, then after the timeout fires, do C</li>
+</ol>
+</section><section><h2 id="sequential-brain">Sequential Brain</h2>
+<ul>
+<li>it&#39;s a fake multitasking, just fast context switcher</li>
+<li>our brain works kinda <code>event loop</code></li>
+</ul>
+</section><section><h3 id="doing-versus-planning">Doing Versus Planning</h3>
+<ul>
+<li>following mental plan, however switching happens</li>
+<li>desire to relay for sequence A -&gt; B -&gt; C</li>
+</ul>
+</section><section><h3 id="plan-things-out-carefully-sequentially">Plan things out carefully, sequentially</h3>
+<pre><code class="lang-js">// swap `x` and `y` (via temp variable `z`)
+z = x;
+x = y;
+y = z;</code></pre>
+<ul>
+<li>Thankfully, we don&#39;t need to bother with async here</li>
+</ul>
+</section><section><h3 id="async-evented-code-is-hard-to-reason">Async evented code is hard to reason</h3>
+<p>Because it&#39;s not how our brain planning works</p>
+<p>Especially when all in callbacks ... </p>
+</section><section><h3 id="nested-chained-callbacks">Nested/Chained Callbacks</h3>
+<pre><code class="lang-js">listen( &quot;click&quot;, function handler(evt){
+    setTimeout( function request(){
+        ajax( &quot;http://some.url.1&quot;, function response(text){
+            if (text == &quot;hello&quot;) {
+                handler();
+            }
+            else if (text == &quot;world&quot;) {
+                request();
+            }
+        } );
+    }, 500) ;
+} );</code></pre>
+<ul>
+<li>&quot;callback hell&quot;</li>
+<li>&quot;pyramid of doom&quot;</li>
+</ul>
+</section><section><h3 id="split-in-now-and-later-">Split in <code>now</code> and <code>later</code></h3>
+<p>First (<em>now</em>), we:</p>
+<pre><code class="lang-js">listen( &quot;..&quot;, function handler(..){
+    // ..
+} );</code></pre>
+<p>Then <em>later</em>, we:</p>
+<pre><code class="lang-js">setTimeout( function request(..){
+    // ..
+}, 500) ;</code></pre>
+<p>Then still <em>later</em>, we:</p>
+<pre><code class="lang-js">ajax( &quot;..&quot;, function response(..){
+    // ..
+} );</code></pre>
+<p>And finally (most <em>later</em>), we:</p>
+<pre><code class="lang-js">if ( .. ) {
+    // ..
+}
+else ..</code></pre>
+</section><section><h3 id="another-scenario">Another Scenario</h3>
+<pre><code class="lang-js">doA( function(){
+    doB();
+
+    doC( function(){
+        doD();
+    } )
+
+    doE();
+} );
+
+doF();</code></pre>
+<ul>
+<li><code>doA()</code></li>
+<li><code>doF()</code></li>
+<li><code>doB()</code></li>
+<li><code>doC()</code></li>
+<li><code>doE()</code></li>
+<li><code>doD()</code></li>
+</ul>
+</section><section><h3 id="name-in-top-down-order">Name in top-down order</h3>
+<pre><code class="lang-js">doA( function(){
+    doC();
+
+    doD( function(){
+        doF();
+    } )
+
+    doE();
+} );
+
+doB();</code></pre>
+</section><section><h3 id="review-order">Review Order</h3>
+<p><code>A -&gt; B -&gt; C -&gt; D -&gt; E -&gt; F</code></p>
+<p>What if <code>doA(..)</code> or <code>doD(..)</code> aren&#39;t actually async ?</p>
+<p><code>A -&gt; C -&gt; D -&gt; F -&gt; E -&gt; B</code></p>
+</section><section><h3 id="-callback-hell-">&quot;Callback Hell&quot;</h3>
+<p>It&#39;s not about nesting/identation</p>
+<p>It&#39;s about reasoning about your async flow </p>
+</section><section><h3 id="trust-issue">Trust Issue</h3>
+<pre><code class="lang-js">// A
+ajax( &quot;..&quot;, function(..){
+    // C
+} );
+// B</code></pre>
+<p>We call this &quot;inversion of control,&quot; when you take part of your program and give over control of its execution to another third party</p>
+</section><section><h3 id="tale-of-five-callbacks">Tale of Five Callbacks</h3>
+<pre><code class="lang-js">analytics.trackPurchase( purchaseData, function(){
+    chargeCreditCard();
+    displayThankyouPage();
+} );</code></pre>
+<p>What&#39;s next?</p>
+</section><section><h3 id="5-months-later">5 months later</h3>
+<pre><code class="lang-js">var tracked = false;
+
+analytics.trackPurchase( purchaseData, function(){
+    if (!tracked) {
+        tracked = true;
+        chargeCreditCard();
+        displayThankyouPage();
+    }
+} );</code></pre>
+</section><section><h3 id="list-of-things-that-could-go-wrong">List of things that could go wrong</h3>
+<ul>
+<li>Call the callback too early (before it&#39;s been tracked)</li>
+<li>Call the callback too late (or never)</li>
+<li>Call the callback too few or too many times (like the problem you encountered!)</li>
+<li>Fail to pass along any necessary environment/parameters to your callback</li>
+<li>Swallow any errors/exceptions that may happen</li>
+<li>...</li>
+</ul>
+</section><section><h3 id="overly-trusting-of-input">Overly trusting of input</h3>
+<pre><code class="lang-js">function addNumbers(x,y) {
+    // + is overloaded with coercion to also be
+    // string concatenation, so this operation
+    // isn&#39;t strictly safe depending on what&#39;s
+    // passed in.
+    return x + y;
+}
+
+addNumbers( 21, 21 );    // 42
+addNumbers( 21, &quot;21&quot; );    // &quot;2121&quot;</code></pre>
+</section><section><h3 id="defensive-against-untrusted-input">Defensive against untrusted input</h3>
+<pre><code class="lang-js">function addNumbers(x,y) {
+    // ensure numerical input
+    x = Number( x );
+    y = Number( y );
+
+    // + will safely do numeric addition
+    return x + y;
+}
+
+addNumbers( 21, 21 );    // 42
+addNumbers( 21, &quot;21&quot; );    // 42</code></pre>
+</section><section><h3 id="most-troublesome-problem-with-callbacks">Most troublesome problem with callbacks</h3>
+<p><em>inversion of control</em> leading to a complete breakdown along all  trust lines</p>
+</section><section><h2 id="trying-to-save-callbacks">Trying to Save Callbacks</h2>
+<pre><code class="lang-js">function success(data) {
+    console.log( data );
+}
+
+function failure(err) {
+    console.error( err );
+}
+
+ajax( &quot;http://some.url.1&quot;, success, failure );</code></pre>
+<ul>
+<li>error and success callbacks</li>
+</ul>
+</section><section><h3 id="-error-first-style-">&quot;Error-first style&quot;</h3>
+<pre><code class="lang-js">function response(err,data) {
+    // error?
+    if (err) {
+        console.error( err );
+    }
+    // otherwise, assume success
+    else {
+        console.log( data );
+    }
+}
+
+ajax( &quot;http://some.url.1&quot;, response );</code></pre>
+</section><section><h3 id="what-about-the-trust-issue-of-never-being-called-">What about the trust issue of never being called?</h3>
+<pre><code class="lang-js">function timeoutify(fn,delay) {
+    var intv = setTimeout( function(){
+            intv = null;
+            fn( new Error( &quot;Timeout!&quot; ) );
+        }, delay )
+    ;
+
+    return function() {
+        // timeout hasn&#39;t happened yet?
+        if (intv) {
+            clearTimeout( intv );
+            fn.apply( this, [ null ].concat( [].slice.call( arguments ) ) );
+        }
+    };
+}</code></pre>
+</section><section><h3 id="timeoutify">Timeoutify</h3>
+<pre><code class="lang-js">// using &quot;error-first style&quot; callback design
+function foo(err,data) {
+    if (err) {
+        console.error( err );
+    }
+    else {
+        console.log( data );
+    }
+}
+
+ajax( &quot;http://some.url.1&quot;, timeoutify( foo, 500 ) );</code></pre>
+</section><section><h3 id="nondeterminism-with-sync-or-async">Nondeterminism with sync-or-async</h3>
+<ul>
+<li><p><a href="http://blog.ometer.com/2011/07/24/callbacks-synchronous-and-asynchronous/">&quot;Callbacks, synchronous and asynchronous&quot;</a></p>
+</li>
+<li><p><a href="http://blog.izs.me/post/59142742143/designing-apis-for-asynchrony">&quot;Designing APIs for Asynchrony&quot;</a></p>
+</li>
+</ul>
+</section><section><h3 id="-never-release-zalgo-">&quot;Never release Zalgo&quot;</h3>
+<pre><code class="lang-js">function result(data) {
+    console.log( a );
+}
+
+var a = 0;
+
+ajax( &quot;..pre-cached-url..&quot;, result );
+a++;</code></pre>
+<p>Always be async</p>
+</section><section><h3 id="-asyncify-boilerplate"><code>asyncify(..)</code> boilerplate</h3>
+<pre><code class="lang-js">function result(data) {
+    console.log( a );
+}
+
+var a = 0;
+
+ajax( &quot;..pre-cached-url..&quot;, asyncify( result ) );
+a++;</code></pre>
+<ul>
+<li>problem solved, but it inefficient</li>
+<li>better to use build-in language mechanics to deal with it</li>
+</ul>
+</section><section><h2 id="review">Review</h2>
+<ul>
+<li>callbacks are the fundamental unit of asynchrony in JS</li>
+<li>our brains desire sequential thinking</li>
+<li>we need express async in more sync more</li>
+<li>callbacks suffer from <em>inversion of control</em></li>
+<li>all async problems could be solved with callback, however code would be clunkier</li>
+<li>JS demands for more sophisticated and capable async patterns</li>
+</ul>
 </section>
 			</div>
 
