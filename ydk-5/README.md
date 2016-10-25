@@ -933,10 +933,206 @@ var o2 = {
 Object.setPrototypeOf( o2, o1 );
 ```
 
+### Object `super`
+
+```js
+var o1 = {
+	foo() {
+		console.log( "o1:foo" );
+	}
+};
+
+var o2 = {
+	foo() {
+		super.foo();
+		console.log( "o2:foo" );
+	}
+};
+
+Object.setPrototypeOf( o2, o1 );
+
+o2.foo();		// o1:foo
+				// o2:foo
+```
+* `super` allowed only in concise methods
+
 
 ## Template Literals
 
+It's not only about templating like (Mustache, Handlebars, etc)
+
+More appropriate name would be *interpolated string literals*
+
+* ", ', `
+
+### Template Literals Usage
+
+Here's the old pre-ES6 way:
+
+```js
+var name = "Kyle";
+
+var greeting = "Hello " + name + "!";
+
+console.log( greeting );			// "Hello Kyle!"
+console.log( typeof greeting );		// "string"
+```
+
+Now, consider the new ES6 way:
+
+```js
+var name = "Kyle";
+
+var greeting = `Hello ${name}!`;
+
+console.log( greeting );			// "Hello Kyle!"
+console.log( typeof greeting );		// "string"
+```
+
+### Multiple Lines
+
+```js
+var text =
+`Now is the time for all good men
+to come to the aid of their
+country!`;
+
+console.log( text );
+// Now is the time for all good men
+// to come to the aid of their
+// country!
+```
+
+### Interpolated Expressions
+
+```js
+function upper(s) {
+	return s.toUpperCase();
+}
+
+var who = "reader";
+
+var text =
+`A very ${upper( "warm" )} welcome
+to all of you ${upper( `${who}s` )}!`;
+
+console.log( text );
+// A very WARM welcome
+// to all of you READERS!
+```
+
+Any valid expression is allowed to appear inside `${..}` in an interpolated string literal
+
+### Expression Scope
+
+```js
+function foo(str) {
+	var name = "foo";
+	console.log( str );
+}
+
+function bar() {
+	var name = "bar";
+	foo( `Hello from ${name}!` );
+}
+
+var name = "global";
+
+bar();					// "Hello from bar!"
+```
+
+### Tagged Template Literals
+
+```js
+function foo(strings, ...values) {
+	console.log( strings );
+	console.log( values );
+}
+
+var desc = "awesome";
+
+foo`Everything is ${desc}!`;
+// [ "Everything is ", "!"]
+// [ "awesome" ]
+```
+
+### Tagged Template Literals Use Case
+
+
+```js
+function dollabillsyall(strings, ...values) {
+	return strings.reduce( function(s,v,idx){
+		if (idx > 0) {
+			if (typeof values[idx-1] == "number") {
+				// look, also using interpolated
+				// string literals!
+				s += `$${values[idx-1].toFixed( 2 )}`;
+			}
+			else {
+				s += values[idx-1];
+			}
+		}
+		return s + v;
+	}, "" );
+}
+var amt1 = 11.99,
+	amt2 = amt1 * 1.08,
+	name = "Kyle";
+var text = dollabillsyall
+`Thanks for your purchase, ${name}! Your
+product cost was ${amt1}, which with tax
+comes out to ${amt2}.`
+
+console.log( text );
+// Thanks for your purchase, Kyle! Your
+// product cost was $11.99, which with tax
+// comes out to $12.95.
+```
+
 ## Arrow Functions
+
+```js
+function foo(x,y) {
+	return x + y;
+}
+
+// versus
+
+var foo = (x,y) => x + y;
+```
+
+```js
+var a = [1,2,3,4,5];
+
+a = a.map( v => v * 2 );
+
+console.log( a );				// [2,4,6,8,10]
+```
+
+### Not Just Shorter Syntax, But `this`
+
+```js
+var controller = {
+	makeRequest: (..) => {
+		// ..
+		this.helper(..);
+	},
+	helper: (..) => {
+		// ..
+	}
+};
+
+controller.makeRequest(..);
+```
+
+### Set of rules for when `=>`
+ 
+1. Single-statement inline function expression
+1. No any `this` issues
+1. No self-referencing (recursion)
+
+For learn more, take at look [here](img/fig1.png)
+
 
 ## `for..of` Loops
 
