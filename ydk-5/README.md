@@ -1133,13 +1133,238 @@ controller.makeRequest(..);
 
 For learn more, take at look [here](img/fig1.png)
 
-
 ## `for..of` Loops
+
+The value you loop over with `for..of` must be an *iterable*
+
+### Pre-ES6 version of the `for..of`
+
+```js
+var a = ["a","b","c","d","e"],
+	k = Object.keys( a );
+
+for (var val, i = 0; i < k.length; i++) {
+	val = a[ k[i] ];
+	console.log( val );
+}
+// "a" "b" "c" "d" "e"
+```
+
+### ES6 but non-`for..of` equivalent
+
+```js
+var a = ["a","b","c","d","e"];
+
+for (var val, ret, it = a[Symbol.iterator]();
+	(ret = it.next()) && !ret.done;
+) {
+	val = ret.value;
+	console.log( val );
+}
+// "a" "b" "c" "d" "e"
+```
+
+### Default Iterables 
+
+* Arrays
+* Strings
+* Generators
+* Collections / TypedArrays 
+
+## `for..of` Loops Usage
+
+```js
+for (var c of "hello") {
+	console.log( c );
+}
+// "h" "e" "l" "l" "o"
+```
+
+```js
+var o = {};
+
+for (o.a of [1,2,3]) {
+	console.log( o.a );
+}
+// 1 2 3
+
+for ({x: o.a} of [ {x: 1}, {x: 2}, {x: 3} ]) {
+  console.log( o.a );
+}
+// 1 2 3
+```
 
 ## Regular Expressions
 
+Couple of new tricks in ES6
+
+### Unicode Flag
+
+```js
+/𝄞/.test( "𝄞-clef" );			// true
+```
+
+```js
+/^.-clef/ .test( "𝄞-clef" );		// false
+/^.-clef/u.test( "𝄞-clef" );		// true
+```
+
+### Sticky Flag
+
+```js
+var re1 = /foo/,
+	str = "++foo++";
+
+re1.lastIndex;			// 0
+re1.test( str );		// true
+re1.lastIndex;			// 0 -- not updated
+
+re1.lastIndex = 4;
+re1.test( str );		// true -- ignored `lastIndex`
+re1.lastIndex;			// 4 -- not updated
+```
+
+### Sticky Positioning
+
+```js
+var re = /\d+\.\s(.*?)(?:\s|$)/y
+	str = "1. foo 2. bar 3. baz";
+
+str.match( re );		// [ "1. foo ", "foo" ]
+
+re.lastIndex;			// 7 -- correct position!
+str.match( re );		// [ "2. bar ", "bar" ]
+
+re.lastIndex;			// 14 -- correct position!
+str.match( re );		// ["3. baz", "baz"]
+```
+
 ## Number Literal Extensions
+
+```js
+var dec = 42,
+	oct = 052,
+	hex = 0x2a;
+```
+
+```js
+Number( "42" );				// 42
+Number( "052" );			// 52
+Number( "0x2a" );			// 42
+```
+
+```js
+Number( "42" );			// 42
+Number( "0o52" );		// 42
+Number( "0x2a" );		// 42
+Number( "0b101010" );	// 42
+```
 
 ## Symbols
 
+```js
+var sym = Symbol( "some optional description" );
+
+typeof sym;		// "symbol"
+
+sym.toString();		// "Symbol(some optional description)"
+
+```
+
+### Uniq names
+
+```js
+const EVT_LOGIN = Symbol( "event.login" );
+
+evthub.listen( EVT_LOGIN, function(data){
+	// ..
+} );
+
+```
+
+### Aka Singleton
+
+```js
+const INSTANCE = Symbol( "instance" );
+
+function HappyFace() {
+	if (HappyFace[INSTANCE]) return HappyFace[INSTANCE];
+
+	function smile() { .. }
+
+	return HappyFace[INSTANCE] = {
+		smile: smile
+	};
+}
+
+var me = HappyFace(),
+	you = HappyFace();
+
+me === you;			// true
+```
+
+### Symbol Registry
+
+```js
+const EVT_LOGIN = Symbol.for( "event.login" );
+
+console.log( EVT_LOGIN );		// Symbol(event.login)
+```
+
+And:
+
+```js
+function HappyFace() {
+	const INSTANCE = Symbol.for( "instance" );
+
+	if (HappyFace[INSTANCE]) return HappyFace[INSTANCE];
+
+	// ..
+
+	return HappyFace[INSTANCE] = { .. };
+}
+```
+
+### Symbols as Object Properties
+
+```js
+var o = {
+	foo: 42,
+	[ Symbol( "bar" ) ]: "hello world",
+	baz: true
+};
+
+Object.getOwnPropertyNames( o );	// [ "foo","baz" ]
+```
+
+To retrieve an object's symbol properties:
+
+```js
+Object.getOwnPropertySymbols( o );	// [ Symbol(bar) ]
+```
+
+### Built-In Symbols
+
+```js
+var a = [1,2,3];
+
+a[Symbol.iterator];			// native function
+```
+
+* `@@iterator`, `@@toStringTag`, `@@toPrimitive`
+* not in a Symbol register
+
 ## Review
+
+1. Syntactic sugar for common programming idioms
+    * default values
+    * spread/gather 
+    * destructuring
+    * concise methods/properties
+    * templating literals
+1. `=>` is a nice-syntax, but have issues, like 
+    * non-consistent `this` behaviour
+    * not for long functions
+1. Expanded Unicode support
+1. Extensions for RegExp
+1. New type for meta-programming - `Symbol`
