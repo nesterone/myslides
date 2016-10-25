@@ -1,0 +1,1956 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>You Don't Know JS - scope & closure</title>
+
+		<meta name="description" content="scope & closure">
+		<meta name="author" content="Igor Nesterenko">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.min.css">
+		<link rel="stylesheet" href="css/theme/default.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+		<script>
+			if( window.location.search.match( /print-pdf/gi ) ) {
+				var link = document.createElement( 'link' );
+				link.rel = 'stylesheet';
+				link.type = 'text/css';
+				link.href = 'css/print/pdf.css';
+				document.getElementsByTagName( 'head' )[0].appendChild( link );
+			}
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+
+        <style type="text/css">
+            .left-side {
+                text-align: left;
+
+            }
+        </style>
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+                <section><h3 id="you-don-t-know-js-async-performance">You Don&#39;t Know JS: Async &amp; Performance</h3>
+<h5 id="async-performance">async &amp; performance</h5>
+<p>inspired by <a href="https://github.com/getify/You-Dont-Know-JS/tree/master/async%20%26%20performance">getify</a></p>
+</section><section><h3 id="presented-by">Presented by</h3>
+<ul>
+<li><a href="https://twitter.com/nesterone">Igor Nesterenko</a></li>
+</ul>
+</section><section><h2 id="high-level-overview">High-level Overview</h2>
+<ul>
+<li>Asynchrony: Now &amp; Later</li>
+<li>Callbacks</li>
+<li>Promises</li>
+<li>Program Performance</li>
+</ul>
+</section><section><h2 id="asynchrony-now-later">Asynchrony: Now &amp; Later</h2>
+<ul>
+<li>A Program in Chunks</li>
+<li>Event Loop</li>
+<li>Parallel Threading</li>
+<li>Concurrency</li>
+<li>Jobs</li>
+<li>Review</li>
+</ul>
+</section><section><h3 id="asynchrony-now-later">Asynchrony: Now &amp; Later</h3>
+<ul>
+<li>How to express and manipulate program behavior spread out over a period of time ?</li>
+<li>We&#39;re going to have to understand much more deeply what asynchrony is and how it operates in JS </li>
+</ul>
+</section><section><h3 id="a-program-in-chunks">A Program in Chunks</h3>
+<pre><code class="lang-js">// ajax(..) is some arbitrary Ajax function given by a library
+var data = ajax( &quot;http://some.url.1&quot; );
+
+console.log( data );
+// Oops! `data` generally won&#39;t have the Ajax results</code></pre>
+</section><section><h3 id="callback">Callback</h3>
+<pre><code class="lang-js">// ajax(..) is some arbitrary Ajax function given by a library
+ajax( &quot;http://some.url.1&quot;, function myCallbackFunction(data){
+
+    console.log( data ); // Yay, I gots me some `data`!
+
+} );</code></pre>
+<ul>
+<li>never, ever do sync ajax request...</li>
+</ul>
+</section><section><h3 id="find-now-and-later">Find now and later</h3>
+<pre><code class="lang-js">function now() {
+    return 21;
+}
+
+function later() {
+    answer = answer * 2;
+    console.log( &quot;Meaning of life:&quot;, answer );
+}
+
+var answer = now();
+
+setTimeout( later, 1000 ); // Meaning of life: 42</code></pre>
+</section><section><h3 id="more-explicit">More Explicit</h3>
+<p>Now:</p>
+<pre><code class="lang-js">function now() {
+    return 21;
+}
+
+function later() { .. }
+
+var answer = now();
+
+setTimeout( later, 1000 );</code></pre>
+<p>Later:</p>
+<pre><code class="lang-js">answer = answer * 2;
+console.log( &quot;Meaning of life:&quot;, answer );</code></pre>
+</section><section><h3 id="async-console">Async Console</h3>
+<pre><code class="lang-js">var a = {
+    index: 1
+};
+
+// later
+console.log( a ); // ??
+
+// even later
+a.index++;</code></pre>
+<ul>
+<li><code>console.log</code> doesn&#39;t guaranty immediate output</li>
+<li>breakpoints and <code>JSON.stringify</code> for object snapshot</li>
+</ul>
+</section><section><h2 id="event-loop">Event Loop</h2>
+<ul>
+<li>Before ES6, no direct notion of async build into JS</li>
+<li>JS engine execute single chunk of code when asked... by whom?</li>
+<li>JS engine doesn&#39;t run in isolation, always inside a hosting env.</li>
+</ul>
+</section><section><h3 id="what-is-the-event-loop-">What is the event loop ?</h3>
+<p>Let&#39;s conceptualize:</p>
+<pre><code class="lang-js">// `eventLoop` is an array that acts as a queue (first-in, first-out)
+var eventLoop = [ ];
+var event;
+
+// keep going &quot;forever&quot;
+while (true) {
+    // perform a &quot;tick&quot;
+    if (eventLoop.length &gt; 0) {
+        // get the next event in the queue
+        event = eventLoop.shift();
+
+        // now, execute the next event
+        try {
+            event();
+        }
+        catch (err) {
+            reportError(err);
+        }
+    }
+}</code></pre>
+</section><section><h3 id="-settimeout-"><code>setTimeout(..)</code></h3>
+<p>You&#39;re guaranteed (roughly speaking) that your callback won&#39;t fire <em>before</em> the time interval you specify</p>
+</section><section><h3 id="es6-and-event-loop-">ES6 and <code>event loop</code></h3>
+<ul>
+<li>ES6 now specifies how the event loop works</li>
+<li>main reason is <code>ES6 Promise</code></li>
+</ul>
+</section><section><h2 id="parallel-threading">Parallel Threading</h2>
+<ul>
+<li>&quot;async&quot; - about gat between <code>now</code> and <code>later</code></li>
+<li>&quot;parallel&quot; - about things being able to occur simultaneously</li>
+</ul>
+</section><section><h3 id="parallel-computing">Parallel Computing</h3>
+<ul>
+<li>processes<ul>
+<li>threads (share memory of single process)</li>
+</ul>
+</li>
+<li>separate processors or separate computers</li>
+</ul>
+</section><section><h3 id="event-loop-by-contrast">Event Loop by Contrast</h3>
+<ul>
+<li>break work into tasks and execute them in serial</li>
+<li>disallowing parallel access and changes in memory</li>
+</ul>
+</section><section><h3 id="dozen-different-low-level-operations">Dozen different low-level operations</h3>
+<pre><code class="lang-js">function later() {
+    answer = answer * 2;  
+    console.log( &quot;Meaning of life:&quot;, answer );
+}</code></pre>
+<ul>
+<li>assignment</li>
+<li>reading of <code>answer</code></li>
+<li>multiplication by <code>2</code></li>
+</ul>
+</section><section><h3 id="unpredictable-behaviour-of-parallel-system">Unpredictable Behaviour of Parallel System</h3>
+<pre><code class="lang-js">var a = 20;
+
+function foo() {
+    a = a + 1;
+}
+
+function bar() {
+    a = a * 2;
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( &quot;http://some.url.1&quot;, foo );
+ajax( &quot;http://some.url.2&quot;, bar );</code></pre>
+<ul>
+<li>42 - ?</li>
+<li>41 - ?</li>
+</ul>
+</section><section><h3 id="thread-1-x-and-y-are-temporary-memory-locations-">Thread 1 (<code>X</code> and <code>Y</code> are temporary memory locations)</h3>
+<pre><code>foo():
+  a. load value of `a` in `X`
+  b. store `1` in `Y`
+  c. add `X` and `Y`, store result in `X`
+  d. store value of `X` in `a`</code></pre>
+</section><section><h3 id="thread-2-x-and-y-are-temporary-memory-locations-">Thread 2 (<code>X</code> and <code>Y</code> are temporary memory locations)</h3>
+<pre><code>bar():
+  a. load value of `a` in `X`
+  b. store `2` in `Y`
+  c. multiply `X` and `Y`, store result in `X`
+  d. store value of `X` in `a`</code></pre>
+</section><section><h3 id="if-truly-parallel-then-case-1">If truly parallel, then Case 1</h3>
+<pre><code>1a  (load value of `a` in `X`   ==&gt; `20`)
+2a  (load value of `a` in `X`   ==&gt; `20`)
+1b  (store `1` in `Y`   ==&gt; `1`)
+2b  (store `2` in `Y`   ==&gt; `2`)
+1c  (add `X` and `Y`, store result in `X`   ==&gt; `22`)
+1d  (store value of `X` in `a`   ==&gt; `22`)
+2c  (multiply `X` and `Y`, store result in `X`   ==&gt; `44`)
+2d  (store value of `X` in `a`   ==&gt; `44`)</code></pre>
+<ul>
+<li><code>a</code> will be <code>44</code></li>
+</ul>
+</section><section><h3 id="if-truly-parallel-then-case-1">If truly parallel, then Case 1</h3>
+<pre><code>1a  (load value of `a` in `X`   ==&gt; `20`)
+2a  (load value of `a` in `X`   ==&gt; `20`)
+2b  (store `2` in `Y`   ==&gt; `2`)
+1b  (store `1` in `Y`   ==&gt; `1`)
+2c  (multiply `X` and `Y`, store result in `X`   ==&gt; `20`)
+1c  (add `X` and `Y`, store result in `X`   ==&gt; `21`)
+1d  (store value of `X` in `a`   ==&gt; `21`)
+2d  (store value of `X` in `a`   ==&gt; `21`)</code></pre>
+<ul>
+<li><code>a</code> will be <code>21</code></li>
+<li>yep, threaded programming is very tricky </li>
+</ul>
+</section><section><h3 id="run-to-completion">Run-to-Completion</h3>
+<ul>
+<li>Code inside of <code>foo()</code> (and <code>bar()</code>) is atomic</li>
+</ul>
+<pre><code class="lang-js">var a = 1;
+var b = 2;
+
+function foo() {
+    a++;
+    b = b * a;
+    a = b + 3;
+}
+
+function bar() {
+    b--;
+    a = 8 + b;
+    b = a * 2;
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( &quot;http://some.url.1&quot;, foo );
+ajax( &quot;http://some.url.2&quot;, bar );</code></pre>
+</section><section><h3 id="in-chunks">In Chunks</h3>
+<ul>
+<li>chunk 1 - happens now (sync)</li>
+<li>chunk 2 and 3 happens later (async)</li>
+</ul>
+<p>Chunk 1:</p>
+<pre><code class="lang-js">var a = 1;
+var b = 2;</code></pre>
+<p>Chunk 2 (<code>foo()</code>):</p>
+<pre><code class="lang-js">a++;
+b = b * a;
+a = b + 3;</code></pre>
+<p>Chunk 3 (<code>bar()</code>):</p>
+<pre><code class="lang-js">b--;
+a = 8 + b;
+b = a * 2;</code></pre>
+</section><section><h3 id="outcome-1">Outcome 1</h3>
+<pre><code class="lang-js">var a = 1;
+var b = 2;
+
+// foo()
+a++;
+b = b * a;
+a = b + 3;
+
+// bar()
+b--;
+a = 8 + b;
+b = a * 2;
+
+a; // 11
+b; // 22</code></pre>
+</section><section><h3 id="outcome-2">Outcome 2</h3>
+<pre><code class="lang-js">var a = 1;
+var b = 2;
+
+// bar()
+b--;
+a = 8 + b;
+b = a * 2;
+
+// foo()
+a++;
+b = b * a;
+a = b + 3;
+
+a; // 183
+b; // 180</code></pre>
+</section><section><h3 id="-race-condition-">&quot;Race Condition&quot;</h3>
+<p>Cannot predict reliably how a and b will turn out</p>
+</section><section><h3 id="es6-generators">ES6 Generators</h3>
+<p>Introduces special type of function which doesn&#39;t have &#39;run-to-completion&#39; behaviour</p>
+</section><section><h2 id="concurrency">Concurrency</h2>
+<p>Concurrency is when two or more &quot;processes&quot; are executing simultaneously over the same period</p>
+<blockquote>
+<p>Prefer &quot;process&quot; over &quot;task&quot; because terminology-wise</p>
+</blockquote>
+</section><section><h3 id="use-case-scroll-and-ajax">Use Case: Scroll and Ajax</h3>
+<ul>
+<li>user scrolls fast enought, many <code>onscroll</code> events fired</li>
+<li>ajax responses taking place</li>
+</ul>
+</section><section><h3 id="-process-1-onscroll-events-">&quot;Process&quot; 1 (<code>onscroll</code> events)</h3>
+<pre><code>onscroll, request 1
+onscroll, request 2
+onscroll, request 3
+onscroll, request 4
+onscroll, request 5
+onscroll, request 6
+onscroll, request 7</code></pre>
+</section><section><h3 id="-process-2-ajax-response-events-">&quot;Process&quot; 2 (Ajax response events)</h3>
+<pre><code>response 1
+response 2
+response 3
+response 4
+response 5
+response 6
+response 7</code></pre>
+</section><section><h3 id="-onscroll-and-ajax-request-at-the-same-moment">&#39;onscroll&#39; and Ajax request at the same moment</h3>
+<pre><code>onscroll, request 1
+onscroll, request 2          response 1
+onscroll, request 3          response 2
+response 3
+onscroll, request 4
+onscroll, request 5
+onscroll, request 6          response 4
+onscroll, request 7
+response 6
+response 5
+response 7</code></pre>
+</section><section><h3 id="event-loop-queue">Event Loop Queue</h3>
+<pre><code>onscroll, request 1   &lt;--- Process 1 starts
+onscroll, request 2
+response 1            &lt;--- Process 2 starts
+onscroll, request 3
+response 2
+response 3
+onscroll, request 4
+onscroll, request 5
+onscroll, request 6
+response 4
+onscroll, request 7   &lt;--- Process 1 finishes
+response 6
+response 5
+response 7            &lt;--- Process 2 finishes</code></pre>
+<p>Notice how <code>response 6</code> and <code>response 5</code> came back out of expected order?</p>
+</section><section><h3 id="noninteracting">Noninteracting</h3>
+<pre><code class="lang-js">var res = {};
+
+function foo(results) {
+    res.foo = results;
+}
+
+function bar(results) {
+    res.bar = results;
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( &quot;http://some.url.1&quot;, foo );
+ajax( &quot;http://some.url.2&quot;, bar );</code></pre>
+<ul>
+<li>if not interaction then non-determinism is perfectly acceptable</li>
+</ul>
+</section><section><h3 id="sometimes-broken-without-coordination">Sometimes broken without coordination</h3>
+<pre><code class="lang-js">var res = [];
+
+function response(data) {
+    res.push( data );
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( &quot;http://some.url.1&quot;, response );
+ajax( &quot;http://some.url.2&quot;, response );</code></pre>
+</section><section><h3 id="coordinated-interaction">Coordinated Interaction</h3>
+<pre><code class="lang-js">var res = [];
+
+function response(data) {
+    if (data.url == &quot;http://some.url.1&quot;) {
+        res[0] = data;
+    }
+    else if (data.url == &quot;http://some.url.2&quot;) {
+        res[1] = data;
+    }
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( &quot;http://some.url.1&quot;, response );
+ajax( &quot;http://some.url.2&quot;, response );</code></pre>
+</section><section><h3 id="always-broken-without-coordination">Always broken without coordination</h3>
+<pre><code class="lang-js">var a, b;
+
+function foo(x) {
+    a = x * 2;
+    baz();
+}
+
+function bar(y) {
+    b = y * 2;
+    baz();
+}
+
+function baz() {
+    console.log(a + b); // ops !!!
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( &quot;http://some.url.1&quot;, foo );
+ajax( &quot;http://some.url.2&quot;, bar );</code></pre>
+</section><section><h3 id="simple-way-to-address-issue">Simple way to address issue</h3>
+<pre><code class="lang-js">var a, b;
+
+function foo(x) {
+    a = x * 2;
+    if (a &amp;&amp; b) {
+        baz();
+    }
+}
+
+function bar(y) {
+    b = y * 2;
+    if (a &amp;&amp; b) {
+        baz();
+    }
+}
+
+function baz() {
+    console.log( a + b );
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( &quot;http://some.url.1&quot;, foo );
+ajax( &quot;http://some.url.2&quot;, bar );</code></pre>
+</section><section><h3 id="another-broken-code">Another broken code</h3>
+<pre><code class="lang-js">var a;
+
+function foo(x) {
+    a = x * 2;
+    baz();
+}
+
+function bar(x) {
+    a = x / 2;
+    baz();
+}
+
+function baz() {
+    console.log( a );
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( &quot;http://some.url.1&quot;, foo );
+ajax( &quot;http://some.url.2&quot;, bar );</code></pre>
+</section><section><h3 id="let-only-the-first-to-got-thought">Let only the first to got thought</h3>
+<pre><code class="lang-js">var a;
+
+function foo(x) {
+    if (a == undefined) {
+        a = x * 2;
+        baz();
+    }
+}
+function bar(x) {
+    if (a == undefined) {
+        a = x / 2;
+        baz();
+    }
+}
+function baz() {
+    console.log( a );
+}
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( &quot;http://some.url.1&quot;, foo );
+ajax( &quot;http://some.url.2&quot;, bar );</code></pre>
+</section><section><h3 id="cooperation">Cooperation</h3>
+<pre><code class="lang-js">var res = [];
+
+// `response(..)` receives array of results from the Ajax call
+function response(data) {
+    // add onto existing `res` array
+    res = res.concat(
+        // make a new transformed array with all `data` values doubled
+        data.map( function(val){
+            return val * 2;
+        } )
+    );
+}
+
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( &quot;http://some.url.1&quot;, response );
+ajax( &quot;http://some.url.2&quot;, response );</code></pre>
+<ul>
+<li>with really bug <code>data</code> can hangs UI for few seconds</li>
+</ul>
+</section><section><h3 id="break-long-running-process-into-steps">Break long-running &quot;process&quot; into steps</h3>
+<pre><code class="lang-js">var res = [];
+// `response(..)` receives array of results from the Ajax call
+function response(data) {
+    // let&#39;s just do 1000 at a time
+    var chunk = data.splice( 0, 1000 );
+
+    // add onto existing `res` array
+    res = res.concat(
+        // make a new transformed array with all `chunk` values doubled
+        chunk.map( function(val){
+            return val * 2;
+        } )
+    );
+    // anything left to process?
+    if (data.length &gt; 0) {
+        // async schedule next batch
+        setTimeout( function(){
+            response( data );
+        }, 0 );
+    }
+}
+// ajax(..) is some arbitrary Ajax function given by a library
+ajax( &quot;http://some.url.1&quot;, response );
+ajax( &quot;http://some.url.2&quot;, response );</code></pre>
+</section><section><h3 id="controlling-event-loop-ordering">Controlling Event Loop Ordering</h3>
+<ul>
+<li>no single direct way to ensure async event ordering</li>
+<li><code>setTimeout(..)</code> hack to push function at the end of event loop queue</li>
+<li><code>process.nextTick(..)</code> Node.js analog</li>
+</ul>
+</section><section><h2 id="jobs">Jobs</h2>
+<ul>
+<li>ES6 provides &quot;Job queue&quot; concept</li>
+</ul>
+<pre><code class="lang-js">console.log( &quot;A&quot; );
+
+setTimeout( function(){
+    console.log( &quot;B&quot; );
+}, 0 );
+
+// theoretical &quot;Job API&quot;
+schedule( function(){
+    console.log( &quot;C&quot; );
+
+    schedule( function(){
+        console.log( &quot;D&quot; );
+    } );
+} );</code></pre>
+<ul>
+<li>print out <code>A C D B</code> instead of <code>A B C D</code></li>
+</ul>
+</section><section><h2 id="review">Review</h2>
+<ul>
+<li>JS program is (practically) always broken into chucks (now and later)</li>
+<li>The event loop runs until the queue is empty</li>
+<li>Each iteration of the event loop is a &quot;tick&quot;</li>
+<li>UI, IO, timers are events in queue</li>
+<li>Only one event can be processed from the queue at a time</li>
+<li>Concurrency is when two or more chains of events interleave over time</li>
+<li>It&#39;s often necessary to do some form of interaction coordination between these concurrent &quot;processes&quot;</li>
+</ul>
+</section><section><h2 id="callbacks">Callbacks</h2>
+<ul>
+<li>Continuations</li>
+<li>Sequential Brain</li>
+<li>Trust Issues</li>
+<li>Trying to Save Callbacks</li>
+<li>Review</li>
+</ul>
+</section><section><h2 id="plain-old-way-to-deal-with-async">Plain old way to deal with async</h2>
+<ul>
+<li>from the beginning of JS</li>
+<li>no a best async pattern</li>
+</ul>
+<p>Let&#39;s review it in depth</p>
+</section><section><h2 id="continuations">Continuations</h2>
+<pre><code class="lang-js">// A  - now
+ajax( &quot;..&quot;, function(..){
+    // C - later
+} );
+// B -now</code></pre>
+<p>Let&#39;s make the code even simpler:</p>
+<pre><code class="lang-js">// A
+setTimeout( function(){
+    // C
+}, 1000 );
+// B</code></pre>
+<ul>
+<li>stop for a moment and think</li>
+</ul>
+</section><section><h2 id="sequence-of-thoughts">Sequence of thoughts</h2>
+<ol>
+<li>Do A, then set up a timeout to wait 1,000 milliseconds, then once that fires, do C.</li>
+<li>Do A, setup the timeout for 1,000 milliseconds, then do B, then after the timeout fires, do C</li>
+</ol>
+</section><section><h2 id="sequential-brain">Sequential Brain</h2>
+<ul>
+<li>it&#39;s a fake multitasking, just fast context switcher</li>
+<li>our brain works kinda <code>event loop</code></li>
+</ul>
+</section><section><h3 id="doing-versus-planning">Doing Versus Planning</h3>
+<ul>
+<li>following mental plan, however switching happens</li>
+<li>desire to relay for sequence A -&gt; B -&gt; C</li>
+</ul>
+</section><section><h3 id="plan-things-out-carefully-sequentially">Plan things out carefully, sequentially</h3>
+<pre><code class="lang-js">// swap `x` and `y` (via temp variable `z`)
+z = x;
+x = y;
+y = z;</code></pre>
+<ul>
+<li>Thankfully, we don&#39;t need to bother with async here</li>
+</ul>
+</section><section><h3 id="async-evented-code-is-hard-to-reason">Async evented code is hard to reason</h3>
+<p>Because it&#39;s not how our brain planning works</p>
+<p>Especially when all in callbacks ... </p>
+</section><section><h3 id="nested-chained-callbacks">Nested/Chained Callbacks</h3>
+<pre><code class="lang-js">listen( &quot;click&quot;, function handler(evt){
+    setTimeout( function request(){
+        ajax( &quot;http://some.url.1&quot;, function response(text){
+            if (text == &quot;hello&quot;) {
+                handler();
+            }
+            else if (text == &quot;world&quot;) {
+                request();
+            }
+        } );
+    }, 500) ;
+} );</code></pre>
+<ul>
+<li>&quot;callback hell&quot;</li>
+<li>&quot;pyramid of doom&quot;</li>
+</ul>
+</section><section><h3 id="split-in-now-and-later-">Split in <code>now</code> and <code>later</code></h3>
+<p>First (<em>now</em>), we:</p>
+<pre><code class="lang-js">listen( &quot;..&quot;, function handler(..){
+    // ..
+} );</code></pre>
+<p>Then <em>later</em>, we:</p>
+<pre><code class="lang-js">setTimeout( function request(..){
+    // ..
+}, 500) ;</code></pre>
+<p>Then still <em>later</em>, we:</p>
+<pre><code class="lang-js">ajax( &quot;..&quot;, function response(..){
+    // ..
+} );</code></pre>
+<p>And finally (most <em>later</em>), we:</p>
+<pre><code class="lang-js">if ( .. ) {
+    // ..
+}
+else ..</code></pre>
+</section><section><h3 id="another-scenario">Another Scenario</h3>
+<pre><code class="lang-js">doA( function(){
+    doB();
+
+    doC( function(){
+        doD();
+    } )
+
+    doE();
+} );
+
+doF();</code></pre>
+<ul>
+<li><code>doA()</code></li>
+<li><code>doF()</code></li>
+<li><code>doB()</code></li>
+<li><code>doC()</code></li>
+<li><code>doE()</code></li>
+<li><code>doD()</code></li>
+</ul>
+</section><section><h3 id="name-in-top-down-order">Name in top-down order</h3>
+<pre><code class="lang-js">doA( function(){
+    doC();
+
+    doD( function(){
+        doF();
+    } )
+
+    doE();
+} );
+
+doB();</code></pre>
+</section><section><h3 id="review-order">Review Order</h3>
+<p><code>A -&gt; B -&gt; C -&gt; D -&gt; E -&gt; F</code></p>
+<p>What if <code>doA(..)</code> or <code>doD(..)</code> aren&#39;t actually async ?</p>
+<p><code>A -&gt; C -&gt; D -&gt; F -&gt; E -&gt; B</code></p>
+</section><section><h3 id="-callback-hell-">&quot;Callback Hell&quot;</h3>
+<p>It&#39;s not about nesting/identation</p>
+<p>It&#39;s about reasoning about your async flow </p>
+</section><section><h3 id="trust-issue">Trust Issue</h3>
+<pre><code class="lang-js">// A
+ajax( &quot;..&quot;, function(..){
+    // C
+} );
+// B</code></pre>
+<p>We call this &quot;inversion of control,&quot; when you take part of your program and give over control of its execution to another third party</p>
+</section><section><h3 id="tale-of-five-callbacks">Tale of Five Callbacks</h3>
+<pre><code class="lang-js">analytics.trackPurchase( purchaseData, function(){
+    chargeCreditCard();
+    displayThankyouPage();
+} );</code></pre>
+<p>What&#39;s next?</p>
+</section><section><h3 id="5-months-later">5 months later</h3>
+<pre><code class="lang-js">var tracked = false;
+
+analytics.trackPurchase( purchaseData, function(){
+    if (!tracked) {
+        tracked = true;
+        chargeCreditCard();
+        displayThankyouPage();
+    }
+} );</code></pre>
+</section><section><h3 id="list-of-things-that-could-go-wrong">List of things that could go wrong</h3>
+<ul>
+<li>Call the callback too early (before it&#39;s been tracked)</li>
+<li>Call the callback too late (or never)</li>
+<li>Call the callback too few or too many times (like the problem you encountered!)</li>
+<li>Fail to pass along any necessary environment/parameters to your callback</li>
+<li>Swallow any errors/exceptions that may happen</li>
+<li>...</li>
+</ul>
+</section><section><h3 id="overly-trusting-of-input">Overly trusting of input</h3>
+<pre><code class="lang-js">function addNumbers(x,y) {
+    // + is overloaded with coercion to also be
+    // string concatenation, so this operation
+    // isn&#39;t strictly safe depending on what&#39;s
+    // passed in.
+    return x + y;
+}
+
+addNumbers( 21, 21 );    // 42
+addNumbers( 21, &quot;21&quot; );    // &quot;2121&quot;</code></pre>
+</section><section><h3 id="defensive-against-untrusted-input">Defensive against untrusted input</h3>
+<pre><code class="lang-js">function addNumbers(x,y) {
+    // ensure numerical input
+    x = Number( x );
+    y = Number( y );
+
+    // + will safely do numeric addition
+    return x + y;
+}
+
+addNumbers( 21, 21 );    // 42
+addNumbers( 21, &quot;21&quot; );    // 42</code></pre>
+</section><section><h3 id="most-troublesome-problem-with-callbacks">Most troublesome problem with callbacks</h3>
+<p><em>inversion of control</em> leading to a complete breakdown along all  trust lines</p>
+</section><section><h2 id="trying-to-save-callbacks">Trying to Save Callbacks</h2>
+<pre><code class="lang-js">function success(data) {
+    console.log( data );
+}
+
+function failure(err) {
+    console.error( err );
+}
+
+ajax( &quot;http://some.url.1&quot;, success, failure );</code></pre>
+<ul>
+<li>error and success callbacks</li>
+</ul>
+</section><section><h3 id="-error-first-style-">&quot;Error-first style&quot;</h3>
+<pre><code class="lang-js">function response(err,data) {
+    // error?
+    if (err) {
+        console.error( err );
+    }
+    // otherwise, assume success
+    else {
+        console.log( data );
+    }
+}
+
+ajax( &quot;http://some.url.1&quot;, response );</code></pre>
+</section><section><h3 id="what-about-the-trust-issue-of-never-being-called-">What about the trust issue of never being called?</h3>
+<pre><code class="lang-js">function timeoutify(fn,delay) {
+    var intv = setTimeout( function(){
+            intv = null;
+            fn( new Error( &quot;Timeout!&quot; ) );
+        }, delay )
+    ;
+
+    return function() {
+        // timeout hasn&#39;t happened yet?
+        if (intv) {
+            clearTimeout( intv );
+            fn.apply( this, [ null ].concat( [].slice.call( arguments ) ) );
+        }
+    };
+}</code></pre>
+</section><section><h3 id="timeoutify">Timeoutify</h3>
+<pre><code class="lang-js">// using &quot;error-first style&quot; callback design
+function foo(err,data) {
+    if (err) {
+        console.error( err );
+    }
+    else {
+        console.log( data );
+    }
+}
+
+ajax( &quot;http://some.url.1&quot;, timeoutify( foo, 500 ) );</code></pre>
+</section><section><h3 id="nondeterminism-with-sync-or-async">Nondeterminism with sync-or-async</h3>
+<ul>
+<li><p><a href="http://blog.ometer.com/2011/07/24/callbacks-synchronous-and-asynchronous/">&quot;Callbacks, synchronous and asynchronous&quot;</a></p>
+</li>
+<li><p><a href="http://blog.izs.me/post/59142742143/designing-apis-for-asynchrony">&quot;Designing APIs for Asynchrony&quot;</a></p>
+</li>
+</ul>
+</section><section><h3 id="-never-release-zalgo-">&quot;Never release Zalgo&quot;</h3>
+<pre><code class="lang-js">function result(data) {
+    console.log( a );
+}
+
+var a = 0;
+
+ajax( &quot;..pre-cached-url..&quot;, result );
+a++;</code></pre>
+<p>Always be async</p>
+</section><section><h3 id="-asyncify-boilerplate"><code>asyncify(..)</code> boilerplate</h3>
+<pre><code class="lang-js">function result(data) {
+    console.log( a );
+}
+
+var a = 0;
+
+ajax( &quot;..pre-cached-url..&quot;, asyncify( result ) );
+a++;</code></pre>
+<ul>
+<li>problem solved, but it inefficient</li>
+<li>better to use build-in language mechanics to deal with it</li>
+</ul>
+</section><section><h2 id="review">Review</h2>
+<ul>
+<li>callbacks are the fundamental unit of asynchrony in JS</li>
+<li>our brains desire sequential thinking</li>
+<li>we need express async in more sync more</li>
+<li>callbacks suffer from <em>inversion of control</em></li>
+<li>all async problems could be solved with callback, however code would be clunkier</li>
+<li>JS demands for more sophisticated and capable async patterns</li>
+</ul>
+</section><section><h2 id="promises">Promises</h2>
+<ul>
+<li>What Is a Promise?</li>
+<li>Thenable Duck Typing</li>
+<li>Promise Trust</li>
+<li>Chain Flow</li>
+<li>Error Handling</li>
+<li>Promise Patterns</li>
+<li>Promise API Recap</li>
+<li>Promise Limitations</li>
+<li>Review</li>
+</ul>
+</section><section><h2 id="what-is-a-promise-">What Is a Promise?</h2>
+<ul>
+<li>Future Value</li>
+<li>Completion Event</li>
+</ul>
+</section><section><h3 id="promise-as-future-value">Promise as Future Value</h3>
+<p>Cheesburger metaphor </p>
+</section><section><h3 id="values-now-and-later">Values Now and Later</h3>
+<pre><code class="lang-js">var x, y = 2;
+
+console.log( x + y ); // NaN  &lt;-- because `x` isn&#39;t set yet</code></pre>
+</section><section><h3 id="solve-with-callbacks">Solve with callbacks</h3>
+<pre><code class="lang-js">function add(getX,getY,cb) {
+    var x, y;
+    getX( function(xVal){
+        x = xVal;
+        // both are ready?
+        if (y != undefined) {
+            cb( x + y );    // send along sum
+        }
+    } );
+    getY( function(yVal){
+        y = yVal;
+        // both are ready?
+        if (x != undefined) {
+            cb( x + y );    // send along sum
+        }
+    } );
+}
+
+// `fetchX()` and `fetchY()` are sync or async
+// functions
+add( fetchX, fetchY, function(sum){
+    console.log( sum ); // that was easy, huh?
+} );</code></pre>
+</section><section><h3 id="promise-value">Promise Value</h3>
+<pre><code class="lang-js">function add(xPromise,yPromise) {
+    // `Promise.all([ .. ])` takes an array of promises,
+    // and returns a new promise that waits on them
+    // all to finish
+    return Promise.all( [xPromise, yPromise] )
+
+    // when that promise is resolved, let&#39;s take the
+    // received `X` and `Y` values and add them together.
+    .then( function(values){
+        // `values` is an array of the messages from the
+        // previously resolved promises
+        return values[0] + values[1];
+    } );
+}
+// `fetchX()` and `fetchY()` return promises for
+// their respective values, which may be ready
+// *now* or *later*.
+add( fetchX(), fetchY() )
+
+// we get a promise back for the sum of those
+// two numbers.
+// now we chain-call `then(..)` to wait for the
+// resolution of that returned promise.
+.then( function(sum){
+    console.log( sum ); // that was easier!
+} );</code></pre>
+</section><section><h3 id="too-layers-of-promises">Too Layers of Promises</h3>
+<ol>
+<li><code>fetchX()</code> and <code>fetchY()</code> </li>
+<li><code>Promise.all([ .. ])</code> </li>
+</ol>
+<p>and chaining with <code>.then(..)</code></p>
+</section><section><h3 id="promise-as-completion-event">Promise as Completion Event</h3>
+<p>Create control-flow mechanic: <code>this-then-that</code></p>
+<pre><code class="lang-js">function foo(x) {
+    // start doing something that could take a while
+
+    // make a `listener` event notification
+    // capability to return
+
+    return listener;
+}
+
+var evt = foo( 42 );
+
+evt.on( &quot;completion&quot;, function(){
+    // now we can do the next step!
+} );
+
+evt.on( &quot;failure&quot;, function(err){
+    // oops, something went wrong in `foo(..)`
+} );</code></pre>
+<ul>
+<li><em>separation of concerns</em></li>
+<li>inversion of inversion of control -&gt; restoring control back</li>
+</ul>
+</section><section><h3 id="promise-events-">Promise &quot;Events&quot;</h3>
+<pre><code class="lang-js">function foo(x) {
+    // start doing something that could take a while
+
+    // construct and return a promise
+    return new Promise( function(resolve,reject){
+        // eventually, call `resolve(..)` or `reject(..)`,
+        // which are the resolution callbacks for
+        // the promise.
+    } );
+}
+
+var p = foo( 42 );
+
+bar( p );
+
+baz( p );</code></pre>
+</section><section><h3 id="promise-events-usage">Promise &quot;Events&quot; Usage</h3>
+<pre><code class="lang-js">function bar(fooPromise) {
+    // listen for `foo(..)` to complete
+    fooPromise.then(
+        function(){
+            // `foo(..)` has now finished, so
+            // do `bar(..)`&#39;s task
+        },
+        function(){
+            // oops, something went wrong in `foo(..)`
+        }
+    );
+}
+
+// ditto for `baz(..)`</code></pre>
+</section><section><h3 id="in-another-way">In Another Way</h3>
+<pre><code class="lang-js">function bar() {
+    // `foo(..)` has definitely finished, so
+    // do `bar(..)`&#39;s task
+}
+
+function oopsBar() {
+    // oops, something went wrong in `foo(..)`,
+    // so `bar(..)` didn&#39;t run
+}
+
+// ditto for `baz()` and `oopsBaz()`
+
+var p = foo( 42 );
+
+p.then( bar, oopsBar ); // other error handline approach
+
+p.then( baz, oopsBaz );  //  chaining isn`t used here ...</code></pre>
+</section><section><h2 id="thenable-duck-typing">Thenable Duck Typing</h2>
+<p><code>Promise.resolve(..)</code> try to use your input as <code>thenable</code> object before wrapping in promise</p>
+</section><section><h2 id="promise-trust">Promise Trust</h2>
+<ul>
+<li>Call the callback too early</li>
+<li>Call the callback too late (or never)</li>
+<li>Call the callback too few or too many times</li>
+<li>Fail to pass along any necessary environment/parameters</li>
+<li>Swallow any errors/exceptions that may happen</li>
+</ul>
+</section><section><h3 id="calling-too-early">Calling Too Early</h3>
+<p>It&#39;s about sync-or-async issue</p>
+<p>Promise can&#39;t be observed synchronously</p>
+<blockquote>
+<p>&quot;Jobs&quot; extension to <code>event-loop</code> in ES6</p>
+</blockquote>
+</section><section><h3 id="calling-too-late">Calling Too Late</h3>
+<pre><code class="lang-js">p.then( function(){
+    p.then( function(){
+        console.log( &quot;C&quot; );
+    } );
+    console.log( &quot;A&quot; );
+} );
+p.then( function(){
+    console.log( &quot;B&quot; );
+} );
+// A B C</code></pre>
+<p>Here, <code>&quot;C&quot;</code> cannot interrupt and precede <code>&quot;B&quot;</code>, by virtue of how Promises are defined to operate.</p>
+</section><section><h3 id="promise-scheduling-quirks">Promise Scheduling Quirks</h3>
+<pre><code class="lang-js">var p3 = new Promise( function(resolve,reject){
+    resolve( &quot;B&quot; );
+} );
+
+var p1 = new Promise( function(resolve,reject){
+    resolve( p3 );
+} );
+
+var p2 = new Promise( function(resolve,reject){
+    resolve( &quot;A&quot; );
+} );
+
+p1.then( function(v){
+    console.log( v );
+} );
+
+p2.then( function(v){
+    console.log( v );
+} );
+
+// A B  &lt;-- not  B A  as you might expect</code></pre>
+</section><section><h3 id="never-calling-the-callback">Never Calling the Callback</h3>
+<pre><code class="lang-js">// a utility for timing out a Promise
+function timeoutPromise(delay) {
+    return new Promise( function(resolve,reject){
+        setTimeout( function(){
+            reject( &quot;Timeout!&quot; );
+        }, delay );
+    } );
+}
+
+// setup a timeout for `foo()`
+Promise.race( [
+    foo(),                    // attempt `foo()`
+    timeoutPromise( 3000 )    // give it 3 seconds
+] )
+.then(
+    function(){
+        // `foo(..)` fulfilled in time!
+    },
+    function(err){
+        // either `foo()` rejected, or it just
+        // didn&#39;t finish in time, so inspect
+        // `err` to know which
+    }
+);</code></pre>
+</section><section><h3 id="calling-too-few-or-too-many-times">Calling Too Few or Too Many Times</h3>
+<p>Promise can only be resolved once</p>
+</section><section><h3 id="failing-to-pass-along-any-parameters-environment">Failing to Pass Along Any Parameters/Environment</h3>
+<ul>
+<li>Promises can have, at most, one resolution value (fulfillment or rejection)</li>
+<li><code>resolve(..)</code> or <code>reject(..)</code> silently ignore other than first value</li>
+</ul>
+</section><section><h3 id="swallowing-any-errors-exceptions">Swallowing Any Errors/Exceptions</h3>
+<pre><code class="lang-js">var p = new Promise( function(resolve,reject){
+    foo.bar();    // `foo` is not defined, so error!
+    resolve( 42 );    // never gets here :(
+} );
+
+p.then(
+    function fulfilled(){
+        // never gets here :(
+    },
+    function rejected(err){
+        // `err` will be a `TypeError` exception object
+        // from the `foo.bar()` line.
+    }
+);</code></pre>
+<ul>
+<li>solve &quot;Zalgo&quot; moment when error can convert async in sync </li>
+</ul>
+</section><section><h3 id="error-handing-and-immutability-side-effect">Error Handing and immutability side effect</h3>
+<pre><code class="lang-js">var p = new Promise( function(resolve,reject){
+    resolve( 42 );
+} );
+
+p.then(
+    function fulfilled(msg){
+        foo.bar();          // throw an error
+        console.log( msg );    // never gets here :(
+    },
+    function rejected(err){
+        // never gets here either :(
+    }
+);</code></pre>
+</section><section><h3 id="trustable-promise-">Trustable Promise?</h3>
+<p>Convert non-Promise to promise</p>
+<pre><code class="lang-js">var p1 = Promise.resolve( 42 );
+
+var p2 = Promise.resolve( p1 );
+
+p1 === p2; // true</code></pre>
+</section><section><h3 id="converting-thenables">Converting thenables</h3>
+<pre><code class="lang-js">var p = {
+    then: function(cb) {
+        cb( 42 );
+    }
+};
+
+// this works OK, but only by good fortune
+p
+.then(
+    function fulfilled(val){
+        console.log( val ); // 42
+    },
+    function rejected(err){
+        // never gets here
+    }
+);</code></pre>
+</section><section><h3 id="converting-thenables">Converting thenables</h3>
+<pre><code class="lang-js">var p = {
+    then: function(cb,errcb) {
+        cb( 42 );
+        errcb( &quot;evil laugh&quot; );
+    }
+};
+
+p
+.then(
+    function fulfilled(val){
+        console.log( val ); // 42
+    },
+    function rejected(err){
+        // oops, shouldn&#39;t have run
+        console.log( err ); // evil laugh
+    }
+);</code></pre>
+</section><section><h3 id="converting-thenables">Converting thenables</h3>
+<pre><code class="lang-js">Promise.resolve( p )
+.then(
+    function fulfilled(val){
+        console.log( val ); // 42
+    },
+    function rejected(err){
+        // never gets here
+    }
+);</code></pre>
+<ul>
+<li><code>Promise.resolve(..)</code> make sure it&#39;s always a Promise</li>
+</ul>
+</section><section><h3 id="trust-built">Trust Built</h3>
+<p>Promise was designed specifically to bring sanity to our async</p>
+</section><section><h2 id="chain-flow">Chain Flow</h2>
+<ul>
+<li>build a chanin of promises with <code>.then(..)</code> (aka sequence of actions)</li>
+<li>result for <code>then(..)</code> is a fullfilment for next promise in a chain</li>
+</ul>
+</section><section><h3 id="create-async-sequences-of-flow-control">Create Async Sequences of Flow Control</h3>
+<pre><code class="lang-js"> var p = Promise.resolve( 21 );
+
+ var p2 = p.then( function(v){
+     console.log( v );    // 21
+
+     // fulfill `p2` with value `42`
+     return v * 2;
+ } );
+
+ // chain off `p2`
+ p2.then( function(v){
+     console.log( v );    // 42
+ } );</code></pre>
+</section><section><h3 id="create-async-sequences-of-flow-control">Create Async Sequences of Flow Control</h3>
+<pre><code class="lang-js">var p = Promise.resolve( 21 );
+
+p
+.then( function(v){
+    console.log( v );    // 21
+
+    // fulfill the chained promise with value `42`
+    return v * 2;
+} )
+// here&#39;s the chained promise
+.then( function(v){
+    console.log( v );    // 42
+} );</code></pre>
+</section><section><h3 id="delay-utility-as-example">Delay Utility as Example</h3>
+<pre><code class="lang-js">function delay(time) {
+    return new Promise( function(resolve,reject){
+        setTimeout( resolve, time );
+    } );
+}
+
+delay( 100 ) // step 1
+.then( function STEP2(){
+    console.log( &quot;step 2 (after 100ms)&quot; );
+    return delay( 200 );
+} )
+.then( function STEP3(){
+    console.log( &quot;step 3 (after another 200ms)&quot; );
+} )
+.then( function STEP4(){
+    console.log( &quot;step 4 (next Job)&quot; );
+    return delay( 50 );
+} )
+.then( function STEP5(){
+    console.log( &quot;step 5 (after another 50ms)&quot; );
+} )
+...</code></pre>
+</section><section><h3 id="play-with-ajax">Play with Ajax</h3>
+<pre><code class="lang-js">request( &quot;http://some.url.1/&quot; )
+.then( function(response1){
+    return request( &quot;http://some.url.2/?v=&quot; + response1 );
+} )
+.then( function(response2){
+    console.log( response2 );
+} );</code></pre>
+</section><section><h3 id="play-with-ajax">Play with Ajax</h3>
+<pre><code class="lang-js">// step 1:
+request( &quot;http://some.url.1/&quot; )
+// step 2:
+.then( function(response1){
+    foo.bar(); // undefined, error!
+
+    // never gets here
+    return request( &quot;http://some.url.2/?v=&quot; + response1 );
+} )
+// step 3:
+.then(
+    function fulfilled(response2){
+        // never gets here
+    },
+    // rejection handler to catch the error
+    function rejected(err){
+        console.log( err );    // `TypeError` from `foo.bar()` error
+        return 42;
+    }
+)
+// step 4:
+.then( function(msg){
+    console.log( msg );        // 42
+} );</code></pre>
+</section><section><h3 id="rejection-omitted">Rejection Omitted</h3>
+<pre><code class="lang-js">var p = new Promise( function(resolve,reject){
+    reject( &quot;Oops&quot; );
+} );
+
+var p2 = p.then(
+    function fulfilled(){
+        // never gets here
+    }
+    // assumed rejection handler, if omitted or
+    // any other non-function value passed
+    // function(err) {
+    //     throw err;
+    // }
+);</code></pre>
+</section><section><h3 id="resolution-omitted">Resolution Omitted</h3>
+<pre><code class="lang-js">var p = Promise.resolve( 42 );
+
+p.then(
+    // assumed fulfillment handler, if omitted or
+    // any other non-function value passed
+    // function(v) {
+    //     return v;
+    // }
+    null,
+    function rejected(err){
+        // never gets here
+    }
+);</code></pre>
+</section><section><h2 id="error-handling">Error Handling</h2>
+<p><code>try..catch</code> construct is synchronous-only</p>
+<pre><code class="lang-js">function foo() {
+    setTimeout( function(){
+        baz.bar();
+    }, 100 );
+}
+
+try {
+    foo();
+    // later throws global error from `baz.bar()`
+}
+catch (err) {
+    // never gets here
+}</code></pre>
+</section><section><h3 id="error-first-callback-style">Error-First Callback Style</h3>
+<pre><code class="lang-js">function foo(cb) {
+    setTimeout( function(){
+        try {
+            var x = baz.bar();
+            cb( null, x ); // success!
+        }
+        catch (err) {
+            cb( err );
+        }
+    }, 100 );
+}
+
+foo( function(err,val){
+    if (err) {
+        console.error( err ); // bummer :(
+    }
+    else {
+        console.log( val );
+    }
+} );</code></pre>
+</section><section><h3 id="promise-rejected-">Promise <code>rejected(..)</code></h3>
+<pre><code class="lang-js"> var p = Promise.reject( &quot;Oops&quot; );
+
+ p.then(
+     function fulfilled(){
+         // never gets here
+     },
+     function rejected(err){
+         console.log( err ); // &quot;Oops&quot;
+     }
+ );</code></pre>
+</section><section><h3 id="nuances">Nuances</h3>
+<pre><code class="lang-js">var p = Promise.resolve( 42 );
+
+p.then(
+    function fulfilled(msg){
+        // numbers don&#39;t have string functions,
+        // so will throw an error
+        console.log( msg.toLowerCase() );
+    },
+    function rejected(err){
+        // never gets here
+    }
+);</code></pre>
+</section><section><h3 id="pit-of-despair">Pit of Despair</h3>
+<p><a href="http://blog.codinghorror.com/falling-into-the-pit-of-success">&quot;pit of despair&quot;</a> </p>
+<pre><code class="lang-js">var p = Promise.resolve( 42 );
+
+p.then(
+    function fulfilled(msg){
+        // numbers don&#39;t have string functions,
+        // so will throw an error
+        console.log( msg.toLowerCase() );
+    }
+)
+.catch( handleErrors );</code></pre>
+</section><section><h3 id="pit-of-success-by-workaround-">Pit of Success (by workaround)</h3>
+<pre><code class="lang-js">var p = Promise.reject( &quot;Oops&quot; ).defer();
+
+// `foo(..)` is Promise-aware
+foo( 42 )
+.then(
+    function fulfilled(){
+        return p;
+    },
+    function rejected(err){
+        // handle `foo(..)` error
+    }
+);
+...</code></pre>
+<ul>
+<li>not a ES6 standard</li>
+</ul>
+</section><section><h2 id="promise-patterns">Promise Patterns</h2>
+<p>Review common async control flow patterns</p>
+<p>Two of them already defined in ES6</p>
+</section><section><h3 id="promise-all-">Promise.all([ .. ])</h3>
+<pre><code class="lang-js">// `request(..)` is a Promise-aware Ajax utility,
+// like we defined earlier in the chapter
+
+var p1 = request( &quot;http://some.url.1/&quot; );
+var p2 = request( &quot;http://some.url.2/&quot; );
+
+Promise.all( [p1,p2] )
+.then( function(msgs){
+    // both `p1` and `p2` fulfill and pass in
+    // their messages here
+    return request(
+        &quot;http://some.url.3/?v=&quot; + msgs.join(&quot;,&quot;)
+    );
+} )
+.then( function(msg){
+    console.log( msg );
+} );</code></pre>
+</section><section><h3 id="promise-race-">Promise.race([ .. ])</h3>
+<pre><code class="lang-js">// `request(..)` is a Promise-aware Ajax utility,
+// like we defined earlier in the chapter
+
+var p1 = request( &quot;http://some.url.1/&quot; );
+var p2 = request( &quot;http://some.url.2/&quot; );
+
+Promise.race( [p1,p2] )
+.then( function(msg){
+    // either `p1` or `p2` will win the race
+    return request(
+        &quot;http://some.url.3/?v=&quot; + msg
+    );
+} )
+.then( function(msg){
+    console.log( msg );
+} );</code></pre>
+</section><section><h3 id="timeout-race">Timeout Race</h3>
+<pre><code class="lang-js">// `foo()` is a Promise-aware function
+
+// `timeoutPromise(..)`, defined ealier, returns
+// a Promise that rejects after a specified delay
+
+// setup a timeout for `foo()`
+Promise.race( [
+    foo(),                    // attempt `foo()`
+    timeoutPromise( 3000 )    // give it 3 seconds
+] )
+.then(
+    function(){
+        // `foo(..)` fulfilled in time!
+    },
+    function(err){
+        // either `foo()` rejected, or it just
+        // didn&#39;t finish in time, so inspect
+        // `err` to know which
+    }
+);</code></pre>
+</section><section><h3 id="-finally-">&quot;Finally&quot;</h3>
+<p>Promise can&#39;t be canceled</p>
+<pre><code class="lang-js">var p = Promise.resolve( 42 );
+
+p.then( something )
+.finally( cleanup )
+.then( another )
+.finally( cleanup );</code></pre>
+<p>To clean up or do some after tasks (logging etc)</p>
+<ul>
+<li>may appear in ES7+</li>
+</ul>
+</section><section><h3 id="other-way-observe-not-in-standard-">Other way <code>.observe(..)</code> (not in standard)</h3>
+<pre><code class="lang-js">// polyfill-safe guard check
+if (!Promise.observe) {
+    Promise.observe = function(pr,cb) {
+        // side-observe `pr`&#39;s resolution
+        pr.then(
+            function fulfilled(msg){
+                // schedule callback async (as Job)
+                Promise.resolve( msg ).then( cb );
+            },
+            function rejected(err){
+                // schedule callback async (as Job)
+                Promise.resolve( err ).then( cb );
+            }
+        );
+
+        // return original promise
+        return pr;
+    };
+}</code></pre>
+</section><section><h3 id="other-way-observe-not-in-standard-">Other way <code>.observe(..)</code> (not in standard)</h3>
+<pre><code class="lang-js">Promise.race( [
+    Promise.observe(
+        foo(),                    // attempt `foo()`
+        function cleanup(msg){
+            // clean up after `foo()`, even if it
+            // didn&#39;t finish before the timeout
+        }
+    ),
+    timeoutPromise( 3000 )    // give it 3 seconds
+] )</code></pre>
+</section><section><h3 id="variations-on-all-and-race-">Variations on all([ .. ]) and race([ .. ])</h3>
+<p>Not ES6 </p>
+<ul>
+<li><code>none([ .. ])</code> - all rejected</li>
+<li><code>any([ .. ])</code>  - ignore rejection, one have to be fullfill</li>
+<li><code>first([ .. ])</code> - lake a <code>race([..])</code> but ignore rejections</li>
+<li><code>last([ .. ])</code> is like <code>first([ .. ])</code>, but only the latest fulfillment wins.</li>
+</ul>
+</section><section><h3 id="concurrent-iterations-not-in-standart-">Concurrent Iterations (not in standart)</h3>
+<pre><code class="lang-js">var p1 = Promise.resolve( 21 );
+var p2 = Promise.resolve( 42 );
+var p3 = Promise.reject( &quot;Oops&quot; );
+
+// double values in list even if they&#39;re in
+// Promises
+Promise.map( [p1,p2,p3], function(pr,done){
+    // make sure the item itself is a Promise
+    Promise.resolve( pr )
+    .then(
+        // extract value as `v`
+        function(v){
+            // map fulfillment `v` to new value
+            done( v * 2 );
+        },
+        // or, map to promise rejection message
+        done
+    );
+} )
+.then( function(vals){
+    console.log( vals );    // [42,84,&quot;Oops&quot;]
+} );</code></pre>
+</section><section><h3 id="concurrent-iterations-not-in-standart-">Concurrent Iterations (not in standart)</h3>
+<pre><code class="lang-js">if (!Promise.map) {
+    Promise.map = function(vals,cb) {
+        // new promise that waits for all mapped promises
+        return Promise.all(
+            // note: regular array `map(..)`, turns
+            // the array of values into an array of
+            // promises
+            vals.map( function(val){
+                // replace `val` with a new promise that
+                // resolves after `val` is async mapped
+                return new Promise( function(resolve){
+                    cb( val, resolve );
+                } );
+            } )
+        );
+    };
+}</code></pre>
+</section><section><h2 id="promise-api-recap">Promise API Recap</h2>
+<p>Let&#39;s review the ES6 <code>Promise</code> API that we&#39;ve already seen unfold in bits and pieces throughout this chapter.</p>
+</section><section><h3 id="new-promise-constructor">new Promise(..) Constructor</h3>
+<pre><code class="lang-js">var p = new Promise( function(resolve,reject){
+    // `resolve(..)` to resolve/fulfill the promise
+    // `reject(..)` to reject the promise
+} );</code></pre>
+</section><section><h3 id="promise-resolve-and-promise-reject-">Promise.resolve(..) and Promise.reject(..)</h3>
+<pre><code class="lang-js">var p1 = new Promise( function(resolve,reject){
+    reject( &quot;Oops&quot; );
+} );
+
+var p2 = Promise.reject( &quot;Oops&quot; );</code></pre>
+</section><section><h3 id="promise-resolve-and-promise-reject-">Promise.resolve(..) and Promise.reject(..)</h3>
+<pre><code class="lang-js">var fulfilledTh = {
+    then: function(cb) { cb( 42 ); }
+};
+var rejectedTh = {
+    then: function(cb,errCb) {
+        errCb( &quot;Oops&quot; );
+    }
+};
+
+var p1 = Promise.resolve( fulfilledTh );
+var p2 = Promise.resolve( rejectedTh );
+
+// `p1` will be a fulfilled promise
+// `p2` will be a rejected promise</code></pre>
+</section><section><h3 id="then-and-catch-">then(..) and catch(..)</h3>
+<pre><code class="lang-js">p.then( fulfilled );
+
+p.then( fulfilled, rejected );
+
+p.catch( rejected ); // or `p.then( null, rejected )`</code></pre>
+</section><section><h3 id="promise-all-and-promise-race-">Promise.all([ .. ]) and Promise.race([ .. ])</h3>
+<pre><code class="lang-js">var p1 = Promise.resolve( 42 );
+var p2 = Promise.resolve( &quot;Hello World&quot; );
+var p3 = Promise.reject( &quot;Oops&quot; );
+
+Promise.race( [p1,p2,p3] )
+.then( function(msg){
+    console.log( msg );        // 42
+} );
+
+Promise.all( [p1,p2,p3] )
+.catch( function(err){
+    console.error( err );    // &quot;Oops&quot;
+} );
+
+Promise.all( [p1,p2] )
+.then( function(msgs){
+    console.log( msgs );    // [42,&quot;Hello World&quot;]
+} );</code></pre>
+<blockquote>
+<p>empty array and <code>Promise.race([ .. ])</code> will hang forever and never resolve.</p>
+</blockquote>
+</section><section><h2 id="promise-limitations">Promise Limitations</h2>
+<p>Review Limitations</p>
+</section><section><h3 id="sequence-error-handling">Sequence Error Handling</h3>
+<p>Usually you have a reference to <em>last</em> promisse, so errors propagated</p>
+<pre><code class="lang-js">// `foo(..)`, `STEP2(..)` and `STEP3(..)` are
+// all promise-aware utilities
+
+var p = foo( 42 )
+.then( STEP2 )
+.then( STEP3 );
+
+// if other error hadlers in chain we won&#39;t be aware of error
+p.catch( handleErrors );</code></pre>
+<p>Like <code>try..catch</code>, it&#39;s lack of information about rejection errors</p>
+</section><section><h3 id="single-value">Single Value</h3>
+<p>Usually a signal to split params in promises </p>
+</section><section><h3 id="splitting-values">Splitting Values</h3>
+<pre><code class="lang-js">function getY(x) {
+    return new Promise( function(resolve,reject){
+        setTimeout( function(){
+            resolve( (3 * x) - 1 );
+        }, 100 );
+    } );
+}
+
+function foo(bar,baz) {
+    var x = bar * baz;
+
+    return getY( x )
+    .then( function(y){
+        // wrap both values into container
+        return [x,y];
+    } );
+}
+
+foo( 10, 20 )
+.then( function(msgs){
+    var x = msgs[0];
+    var y = msgs[1];
+
+    console.log( x, y );    // 200 599
+} );</code></pre>
+</section><section><h3 id="splitting-values">Splitting Values</h3>
+<pre><code class="lang-js">function foo(bar,baz) {
+    var x = bar * baz;
+
+    // return both promises
+    return [
+        Promise.resolve( x ),
+        getY( x )
+    ];
+}
+
+Promise.all(
+    foo( 10, 20 )
+)
+.then( function(msgs){
+    var x = msgs[0];
+    var y = msgs[1];
+
+    console.log( x, y );
+} );</code></pre>
+</section><section><h3 id="unwrap-spread-arguments">Unwrap/Spread Arguments</h3>
+<pre><code class="lang-js">function spread(fn) {
+    return Function.apply.bind( fn, null );
+}
+
+Promise.all(
+    foo( 10, 20 )
+)
+.then(
+    spread( function(x,y){
+        console.log( x, y );    // 200 599
+    } )
+)</code></pre>
+</section><section><h3 id="unwrap-spread-arguments-es6-">Unwrap/Spread Arguments (ES6)</h3>
+<pre><code class="lang-js">Promise.all(
+    foo( 10, 20 )
+)
+.then( function(msgs){
+    var [x,y] = msgs;       // destructuring
+
+    console.log( x, y );    // 200 599
+} );
+
+// or
+
+Promise.all(
+    foo( 10, 20 )
+)
+.then( function([x,y]){     // params destructuring
+    console.log( x, y );    // 200 599
+} );</code></pre>
+</section><section><h3 id="single-resolution">Single Resolution</h3>
+<p>There&#39;s also a lot of async cases that fit into a different model -- one that&#39;s more akin to events and/or streams of data</p>
+<p>It&#39;s not for promises</p>
+</section><section><h3 id="promise-uncancelable">Promise Uncancelable</h3>
+<pre><code class="lang-js">var p = foo( 42 );
+
+Promise.race( [
+    p,
+    timeoutPromise( 3000 )
+] )
+.then(
+    doSomething,
+    handleError
+);
+
+p.then( function(){
+    // still happens even in the timeout case :(
+} );</code></pre>
+</section><section><h3 id="promise-uncancelable">Promise Uncancelable</h3>
+<pre><code class="lang-js">var OK = true;
+
+var p = foo( 42 );
+
+Promise.race( [
+    p,
+    timeoutPromise( 3000 )
+    .catch( function(err){
+        OK = false;
+        throw err;
+    } )
+] )
+.then(
+    doSomething,
+    handleError
+);
+
+p.then( function(){
+    if (OK) {
+        // only happens if no timeout! :)
+    }
+} );</code></pre>
+</section><section><h3 id="promise-uncancelable">Promise Uncancelable</h3>
+<p>Cancel in promise would bring us to <a href="http://en.wikipedia.org/wiki/Action_at_a_distance_%28computer_programming%29">Action at a distance anti-pattern</a>]</p>
+<p>Promise doesn&#39;t provide you with full control-flow mehanis, you need more high-level abstraction</p>
+<p>For example entity <em>sequence</em>  could be cancelable (refer to Promises libs)</p>
+</section><section><h3 id="promise-performance">Promise Performance</h3>
+<p>Both simple and complex</p>
+<ul>
+<li>a &#39;bit&#39; slower that callbacks, it&#39;s kind of an apples-to-oranges comparison</li>
+<li>build main code base with Promises and optimize critical parts if any with callbacks</li>
+</ul>
+</section><section><h2 id="review">Review</h2>
+<ol>
+<li>Promises are awesome. Use them.</li>
+<li>They don&#39;t get rid of callbacks, they just can help in redirect the orchestration of those callbacks</li>
+<li>Promise chains also begin to address (though certainly not perfectly) a better way of expressing async flow in sequential fashion,</li>
+</ol>
+</section><section><h2 id="program-performance">Program Performance</h2>
+<ul>
+<li>Web Workers</li>
+<li>SIMD</li>
+<li>asm.js</li>
+<li>Review</li>
+</ul>
+</section><section><h2 id="web-workers">Web Workers</h2>
+<pre><code class="lang-js">var w1 = new Worker( &quot;http://some.url.1/mycoolworker.js&quot; );</code></pre>
+<pre><code class="lang-js">w1.addEventListener( &quot;message&quot;, function(evt){
+    // evt.data
+} );</code></pre>
+<pre><code class="lang-js">w1.postMessage( &quot;something cool to say&quot; );</code></pre>
+<p>Inside the Worker, the messaging is totally symmetrical:</p>
+<pre><code class="lang-js">// &quot;mycoolworker.js&quot;
+
+addEventListener( &quot;message&quot;, function(evt){
+    // evt.data
+} );
+
+postMessage( &quot;a really cool reply&quot; );</code></pre>
+</section><section><h3 id="worker-environment">Worker Environment</h3>
+<ul>
+<li>no DOM and global variables assess </li>
+<li>network operations available</li>
+</ul>
+<pre><code class="lang-js">// inside the Worker
+importScripts( &quot;foo.js&quot;, &quot;bar.js&quot; );</code></pre>
+</section><section><h3 id="web-workers-use-cases">Web Workers Use Cases</h3>
+<ul>
+<li>Processing intensive math calculations</li>
+<li>Sorting large data sets</li>
+<li>Data operations (compression, audio analysis, image pixel manipulations, etc.)</li>
+<li>High-traffic network communications</li>
+</ul>
+</section><section><h3 id="data-transfer">Data Transfer</h3>
+<ol>
+<li>By default data copied and transferred as a strings</li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/Guide/API/DOM/The_structured_clone_algorithm">&quot;Structured Cloning Algorithm&quot;</a></li>
+<li><a href="http://updates.html5rocks.com/2011/12/Transferable-Objects-Lightning-Fast">&quot;Transferable Objects&quot;</a></li>
+</ol>
+</section><section><h3 id="shared-workers">Shared Workers</h3>
+<pre><code class="lang-js">var w1 = new SharedWorker( &quot;http://some.url.1/mycoolworker.js&quot; );</code></pre>
+<pre><code class="lang-js">w1.port.addEventListener( &quot;message&quot;, handleMessages );
+
+// ..
+
+w1.port.postMessage( &quot;something cool&quot; );</code></pre>
+<pre><code class="lang-js">w1.port.start();</code></pre>
+</section><section><h3 id="inside-the-shared-worker">Inside the Shared Worker</h3>
+<pre><code class="lang-js">// inside the shared Worker
+addEventListener( &quot;connect&quot;, function(evt){
+    // the assigned port for this connection
+    var port = evt.ports[0];
+
+    port.addEventListener( &quot;message&quot;, function(evt){
+        // ..
+
+        port.postMessage( .. );
+
+        // ..
+    } );
+
+    // initialize the port connection
+    port.start();
+} );</code></pre>
+</section><section><h3 id="polyfilling-web-workers">Polyfilling Web Workers</h3>
+<p>No any try multithreading, just hask with <code>setTimeout(..)</code></p>
+<ul>
+<li><a href="https://github.com/Modernizr/Modernizr/wiki/HTML5-Cross-Browser-Polyfills#web-workers">Modernizer Polyfill</a></li>
+<li>[Sketch <code>Worker</code>] here (<a href="https://gist.github.com/getify/1b26accb1a09aa53ad25">https://gist.github.com/getify/1b26accb1a09aa53ad25</a>)</li>
+</ul>
+</section><section><h2 id="simd-single-instruction-multiple-data-">SIMD (Single instruction, multiple data)</h2>
+<p>&#39;Data Parallelism&#39; instead of &#39;Task Parallelism&#39;</p>
+<pre><code class="lang-js">var v1 = SIMD.float32x4( 3.14159, 21.0, 32.3, 55.55 );
+var v2 = SIMD.float32x4( 2.1, 3.2, 4.3, 5.4 );
+
+var v3 = SIMD.int32x4( 10, 101, 1001, 10001 );
+var v4 = SIMD.int32x4( 10, 20, 30, 40 );
+
+SIMD.float32x4.mul( v1, v2 );    // [ 6.597339, 67.2, 138.89, 299.97 ]
+SIMD.int32x4.add( v3, v4 );        // [ 20, 121, 1031, 10041 ]</code></pre>
+<ul>
+<li>very raw</li>
+</ul>
+</section><section><h2 id="asm-js">asm.js</h2>
+<p>&quot;asm.js&quot; (<a href="http://asmjs.org/">http://asmjs.org/</a>) is a label for a highly optimizable subset of the JavaScript language</p>
+<p>Handling specialized tasks such as intensive math operations</p>
+</section><section><h3 id="how-to-optimize-with-asm-js">How to Optimize with asm.js</h3>
+<pre><code class="lang-js">var a = 42;
+
+// ..
+
+var b = a;</code></pre>
+<p>became </p>
+<pre><code class="lang-js">var a = 42;
+
+// ..
+
+var b = a | 0;</code></pre>
+<p>Operation should be 32-bit integer</p>
+</section><section><h3 id="asm-js-modules">asm.js Modules</h3>
+<p>expect for stdlib namespace with helpers</p>
+<pre><code class="lang-js">var heap = new ArrayBuffer( 0x10000 );    // 64k heap</code></pre>
+<pre><code class="lang-js">var arr = new Float64Array( heap );</code></pre>
+</section><section><h3 id="asm-js-modules">asm.js Modules</h3>
+<pre><code class="lang-js">function fooASM(stdlib,foreign,heap) {
+    &quot;use asm&quot;;
+
+    var arr = new stdlib.Int32Array( heap );
+
+    function foo(x,y) {
+        x = x | 0;
+        y = y | 0;
+
+        var i = 0;
+        var p = 0;
+        var sum = 0;
+        var count = ((y|0) - (x|0)) | 0;
+
+        // calculate all the inner adjacent multiplications
+        for (i = x | 0;
+            (i | 0) &lt; (y | 0);
+            p = (p + 8) | 0, i = (i + 1) | 0
+        ) {
+            // store result
+            arr[ p &gt;&gt; 3 ] = (i * (i + 1)) | 0;
+        }
+
+        // calculate average of all intermediate values
+        for (i = 0, p = 0;
+            (i | 0) &lt; (count | 0);
+            p = (p + 8) | 0, i = (i + 1) | 0
+        ) {
+            sum = (sum + arr[ p &gt;&gt; 3 ]) | 0;
+        }
+
+        return +(sum / count);
+    }
+
+    return {
+        foo: foo
+    };
+}
+
+var heap = new ArrayBuffer( 0x1000 );
+var foo = fooASM( window, null, heap ).foo;
+
+foo( 10, 20 );        // 233</code></pre>
+</section><section><h2 id="review">Review</h2>
+<ol>
+<li>Async coding patterns give you the ability to write more performant code</li>
+<li>Web Workers let you run a JS file (aka program) in a separate thread using async events to message between the threads</li>
+<li>SIMD proposes to map CPU-level parallel math operations to JavaScript APIs for high-performance data-parallel operations</li>
+<li>asm.js small subset of JS to avoid hard-to-optimize parts of JS, good target for cross-compilation from other languages like C/C++</li>
+</ol>
+</section>
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.min.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+                slideNumber: true,
+
+				theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+				transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+				// Parallax scrolling
+				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+				// parallaxBackgroundSize: '2100px 900px',
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
