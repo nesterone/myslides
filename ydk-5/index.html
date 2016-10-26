@@ -1019,6 +1019,705 @@ a[Symbol.iterator];            // native function</code></pre>
 <li>Extensions for RegExp</li>
 <li>New type for meta-programming - <code>Symbol</code></li>
 </ol>
+</section><section><h2 id="organization">Organization</h2>
+<ul>
+<li>Iterators</li>
+<li>Generators</li>
+<li>Modules</li>
+<li>Classes</li>
+</ul>
+</section><section><h2 id="iterators">Iterators</h2>
+<p>An <em>iterator</em> is a structured pattern for pulling information from a source in one-at-a-time fashion</p>
+</section><section><h3 id="iterators-specification-interfaces">Iterators Specification Interfaces</h3>
+<pre><code>Iterator [required]
+    next() {method}: retrieves next IteratorResult</code></pre>
+<pre><code>Iterator [optional]
+    return() {method}: stops iterator and returns IteratorResult
+    throw() {method}: signals error and returns IteratorResult</code></pre>
+<pre><code>IteratorResult
+    value {property}: current iteration value or final return value
+        (optional if `undefined`)
+    done {property}: boolean, indicates completion status</code></pre>
+<pre><code>Iterable
+    @@iterator() {method}: produces an Iterator</code></pre>
+<h4 id="iteratorresult">IteratorResult</h4>
+<pre><code class="lang-js">{ value: .. , done: true / false }</code></pre>
+<p><code>@@iterator</code> is the special built-in <code>symbol</code> </p>
+</section><section><h3 id="-next-iteration"><code>next()</code> Iteration</h3>
+<pre><code class="lang-js">var arr = [1,2,3];
+
+var it = arr[Symbol.iterator]();
+
+it.next();        // { value: 1, done: false }
+it.next();        // { value: 2, done: false }
+it.next();        // { value: 3, done: false }
+
+it.next();        // { value: undefined, done: true }</code></pre>
+<p><code>done: true</code> when you receive the <code>3</code> value. You have to call <code>next()</code> again</p>
+</section><section><h3 id="primitives-iterables-by-default">Primitives Iterables By Default</h3>
+<pre><code class="lang-js">var greeting = &quot;hello world&quot;;
+
+var it = greeting[Symbol.iterator]();
+
+it.next();        // { value: &quot;h&quot;, done: false }
+it.next();        // { value: &quot;e&quot;, done: false }
+..</code></pre>
+</section><section><h3 id="collection-iterables-by-default">Collection Iterables by Default</h3>
+<pre><code class="lang-js">var m = new Map();
+m.set( &quot;foo&quot;, 42 );
+m.set( { cool: true }, &quot;hello world&quot; );
+
+var it1 = m[Symbol.iterator]();
+var it2 = m.entries();
+
+it1.next();        // { value: [ &quot;foo&quot;, 42 ], done: false }
+it2.next();        // { value: [ &quot;foo&quot;, 42 ], done: false }
+..</code></pre>
+</section><section><h3 id="optional-return-and-throw-">Optional: <code>return(..)</code> and <code>throw(..)</code></h3>
+<ul>
+<li><code>return(..)</code> is defined as sending a signal to an iterator that the consuming code is complete</li>
+<li><code>throw(..)</code> is used to signal an exception/error to an iterator</li>
+</ul>
+<p><code>return(..)</code>  -  imply stop, however <code>throw(..)</code> doesn&#39;t necessary stop iterator </p>
+</section><section><h3 id="iterator-loop">Iterator Loop</h3>
+<pre><code class="lang-js">var it = {
+    // make the `it` iterator an iterable
+    [Symbol.iterator]() { return this; },
+
+    next() { .. },
+    ..
+};
+
+it[Symbol.iterator]() === it;        // true
+
+for (var v of it) {
+    console.log( v );
+}</code></pre>
+</section><section><h3 id="iterator-loop-with-old-school-loop">Iterator Loop with Old School Loop</h3>
+<pre><code class="lang-js">for (var v, res; (res = it.next()) &amp;&amp; !res.done; ) {
+    v = res.value;
+    console.log( v );
+}</code></pre>
+</section><section><h3 id="custom-iterators-fibonacci">Custom Iterators - Fibonacci</h3>
+<pre><code class="lang-js">var Fib = {
+    [Symbol.iterator]() {
+        var n1 = 1, n2 = 1;
+
+        return {
+            // make the iterator an iterable
+            [Symbol.iterator]() { return this; },
+
+            next() {
+                var current = n2;
+                n2 = n1;
+                n1 = n1 + current;
+                return { value: current, done: false };
+            },
+
+            return(v) {
+                console.log(
+                    &quot;Fibonacci sequence abandoned.&quot;
+                );
+                return { value: v, done: true };
+            }
+        };
+    }
+};
+
+for (var v of Fib) {
+    console.log( v );
+
+    if (v &gt; 50) break;
+}
+// 1 1 2 3 5 8 13 21 34 55
+// Fibonacci sequence abandoned.</code></pre>
+</section><section><h3 id="custom-iterators-actions">Custom Iterators - Actions</h3>
+<pre><code class="lang-js">var tasks = {
+    [Symbol.iterator]() {
+        var steps = this.actions.slice();
+
+        return {
+            // make the iterator an iterable
+            [Symbol.iterator]() { return this; },
+
+            next(...args) {
+                if (steps.length &gt; 0) {
+                    let res = steps.shift()( ...args );
+                    return { value: res, done: false };
+                }
+                else {
+                    return { done: true }
+                }
+            },
+
+            return(v) {
+                steps.length = 0;
+                return { value: v, done: true };
+            }
+        };
+    },
+    actions: []
+};</code></pre>
+</section><section><h3 id="custom-iterators-actions">Custom Iterators - Actions</h3>
+<pre><code class="lang-js">tasks.actions.push(
+    function step1(x){
+        console.log( &quot;step 1:&quot;, x );
+        return x * 2;
+    },
+    function step2(x,y){
+        console.log( &quot;step 2:&quot;, x, y );
+        return x + (y * 2);
+    },
+    function step3(x,y,z){
+        console.log( &quot;step 3:&quot;, x, y, z );
+        return (x * y) + z;
+    }
+);
+
+var it = tasks[Symbol.iterator]();
+
+it.next( 10 );            // step 1: 10
+                        // { value:   20, done: false }
+
+it.next( 20, 50 );        // step 2: 20 50
+                        // { value:  120, done: false }
+
+it.next( 20, 50, 120 );    // step 3: 20 50 120
+                        // { value: 1120, done: false }
+
+it.next();                // { done: true }</code></pre>
+</section><section><h3 id="custom-iterator-range">Custom Iterator - Range</h3>
+<p>Customization of <code>Number.prototype</code> can give next trick</p>
+<pre><code class="lang-js">for (var i of 3) {
+    console.log( i );
+}
+// 0 1 2 3
+
+[...-3];                // [0,-1,-2,-3]</code></pre>
+</section><section><h3 id="iterator-consumption">Iterator Consumption</h3>
+<pre><code class="lang-js">var a = [1,2,3,4,5];    //any iterable here
+
+function foo(x,y,z,w,p) {
+    console.log( x + y + z + w + p );
+}
+foo( ...a );            // 15
+
+var b = [ 0, ...a, 6 ];
+b;                        // [0,1,2,3,4,5,6]
+
+var it = a[Symbol.iterator]();
+
+var [x,y] = it;            // take just the first two elements from `it`
+var [z, ...w] = it;        // take the third, then the rest all at once
+
+// is `it` fully exhausted? Yep.
+it.next();                // { value: undefined, done: true }
+
+x;                        // 1
+y;                        // 2
+z;                        // 3
+w;                        // [4,5]</code></pre>
+</section><section><h2 id="generators">Generators</h2>
+<p>It can pause itseld in mid-execution, and can be resumed right away or at later time</p>
+</section><section><h3 id="syntax">Syntax</h3>
+<pre><code class="lang-js">function *foo() {
+    // ..
+}</code></pre>
+<p>All valid</p>
+<pre><code class="lang-js">function *foo()  { .. }
+function* foo()  { .. }
+function * foo() { .. }
+function*foo()   { .. }
+..</code></pre>
+<p>Concise Method</p>
+<pre><code class="lang-js">var a = {
+    *foo() { .. }
+};</code></pre>
+</section><section><h3 id="executing-a-generator">Executing a Generator</h3>
+<pre><code class="lang-js">foo();</code></pre>
+<p>You can still pass it arguments, as in:</p>
+<pre><code class="lang-js">function *foo(x,y) {
+    // ..
+}
+
+foo( 5, 10 );</code></pre>
+</section><section><h3 id="iterator-as-result">Iterator as Result</h3>
+<pre><code class="lang-js">function *foo() {
+    // ..
+}
+
+var it = foo();
+
+// to start/advanced `*foo()`, call
+// `it.next(..)`</code></pre>
+<h4 id="-yield-"><code>yield</code></h4>
+<pre><code class="lang-js">function *foo() {
+    var x = 10;
+    var y = 20;
+
+    yield;
+
+    var z = x + y;
+}</code></pre>
+<p><code>yield</code> is not just a pause point. It&#39;s an expression </p>
+<pre><code class="lang-js">function *foo() {
+    while (true) {
+        yield Math.random();
+    }
+}</code></pre>
+</section><section><h3 id="-yield-can-appear-anywhere-a-normal-expression-can"><code>yield</code> can appear anywhere a normal expression can</h3>
+<pre><code class="lang-js">function *foo() {
+    var arr = [ yield 1, yield 2, yield 3 ];
+    console.log( arr, yield 4 );
+}</code></pre>
+<p>Precedence</p>
+<pre><code class="lang-js">var a, b;
+
+a = 3;                    // valid
+b = 2 + a = 3;            // invalid
+b = 2 + (a = 3);        // valid
+
+yield 3;                // valid
+a = 2 + yield 3;        // invalid
+a = 2 + (yield 3);        // valid</code></pre>
+</section><section><h3 id="-yield-"><code>yield *</code></h3>
+<ul>
+<li><code>yield * ..</code> requires an iterable</li>
+<li>delegates its own host generator&#39;s control to that iterator </li>
+</ul>
+<pre><code class="lang-js">function *foo() {
+    yield *[1,2,3];
+}</code></pre>
+<pre><code class="lang-js">function *foo() {
+    yield 1;
+    yield 2;
+    yield 3;
+}
+
+function *bar() {
+    yield *foo();
+}</code></pre>
+</section><section><h3 id="generator-recursion">Generator Recursion</h3>
+<pre><code class="lang-js">function *foo(x) {
+    if (x &lt; 3) {
+        x = yield *foo( x + 1 );
+    }
+    return x * 2;
+}
+
+foo( 1 );</code></pre>
+</section><section><h3 id="iterator-control">Iterator Control</h3>
+<pre><code class="lang-js">function *foo() {
+    yield 1;
+    yield 2;
+    yield 3;
+}
+
+var it = foo();
+
+it.next();                // { value: 1, done: false }
+it.next();                // { value: 2, done: false }
+it.next();                // { value: 3, done: false }
+
+it.next();                // { value: undefined, done: true }</code></pre>
+</section><section><h3 id="progressive-code-execution">Progressive Code Execution</h3>
+<pre><code class="lang-js">function *foo() {
+    var x = yield 1;
+    var y = yield 2;
+    var z = yield 3;
+    console.log( x, y, z );
+}</code></pre>
+<pre><code class="lang-js">var it = foo();
+
+// start up the generator
+it.next();                // { value: 1, done: false }
+
+// answer first question
+it.next( &quot;foo&quot; );        // { value: 2, done: false }
+
+// answer second question
+it.next( &quot;bar&quot; );        // { value: 3, done: false }
+
+// answer third question
+it.next( &quot;baz&quot; );        // &quot;foo&quot; &quot;bar&quot; &quot;baz&quot;
+                        // { value: undefined, done: true }</code></pre>
+</section><section><h3 id="early-completion">Early Completion</h3>
+<pre><code class="lang-js">function *foo() {
+    yield 1;
+    yield 2;
+    yield 3;
+}
+
+var it = foo();
+
+it.next();                // { value: 1, done: false }
+
+it.return( 42 );        // { value: 42, done: true }
+
+it.next();                // { value: undefined, done: true }</code></pre>
+<p><code>return(..)</code> called automatically at the end of iteration</p>
+</section><section><h3 id="clean-up-tasks">Clean Up Tasks</h3>
+<pre><code class="lang-js">function *foo() {
+    try {
+        yield 1;
+        yield 2;
+        yield 3;
+    }
+    finally {
+        console.log( &quot;cleanup!&quot; );
+    }
+}
+
+for (var v of foo()) {
+    console.log( v );
+}
+// 1 2 3
+// cleanup!
+
+var it = foo();
+
+it.next();                // { value: 1, done: false }
+it.return( 42 );        // cleanup!
+                        // { value: 42, done: true }</code></pre>
+<p><strong>Warning:</strong> Do not put a <code>yield</code> statement inside the <code>finally</code> clause!</p>
+</section><section><h3 id="early-abort">Early Abort</h3>
+<pre><code class="lang-js">function *foo() {
+    yield 1;
+    yield 2;
+    yield 3;
+}
+
+var it = foo();
+
+it.next();                // { value: 1, done: false }
+
+try {
+    it.throw( &quot;Oops!&quot; );
+}
+catch (err) {
+    console.log( err );    // Exception: Oops!
+}
+
+it.next();                // { value: undefined, done: true }</code></pre>
+</section><section><h3 id="error-handling">Error Handling</h3>
+<pre><code class="lang-js">function *foo() {
+    try {
+        yield 1;
+    }
+    catch (err) {
+        console.log( err );
+    }
+
+    yield 2;
+
+    throw &quot;Hello!&quot;;
+}
+
+var it = foo();
+
+it.next();                // { value: 1, done: false }
+
+try {
+    it.throw( &quot;Hi!&quot; );    // Hi!
+                        // { value: 2, done: false }
+    it.next();
+
+    console.log( &quot;never gets here&quot; );
+}
+catch (err) {
+    console.log( err );    // Hello!
+}</code></pre>
+</section><section><h3 id="error-propagation-in-both-directions">Error Propagation in Both Directions</h3>
+<pre><code class="lang-js">function *foo() {
+    try {
+        yield 1;
+    }
+    catch (err) {
+        console.log( err );
+    }
+
+    yield 2;
+
+    throw &quot;foo: e2&quot;;
+}
+
+function *bar() {
+    try {
+        yield *foo();
+
+        console.log( &quot;never gets here&quot; );
+    }
+    catch (err) {
+        console.log( err );
+    }
+}
+
+var it = bar();
+
+try {
+    it.next();            // { value: 1, done: false }
+
+    it.throw( &quot;e1&quot; );    // e1
+                        // { value: 2, done: false }
+
+    it.next();            // foo: e2
+                        // { value: undefined, done: true }
+}
+catch (err) {
+    console.log( &quot;never gets here&quot; );
+}
+
+it.next();                // { value: undefined, done: true }</code></pre>
+<p>The error doesn&#39;t pass through <code>*bar()</code> like the <code>1</code> value did.</p>
+</section><section><h3 id="transpiling-a-generator">Transpiling a Generator</h3>
+<p>For example Facebook&#39;s Regenerator tool (<a href="https://facebook.github.io/regenerator/">https://facebook.github.io/regenerator/</a>).</p>
+</section><section><h3 id="generator-uses">Generator Uses</h3>
+<ul>
+<li><em>Producing a series of values</em></li>
+<li><em>Queue of tasks to perform serially</em></li>
+</ul>
+</section><section><h2 id="modules">Modules</h2>
+<p>Most important code organization pattern in all of JavaScript</p>
+</section><section><h3 id="the-old-way">The Old Way</h3>
+<p>The traditional module pattern is based on an outer function with inner variables and functions, and a returned &quot;public API&quot; with methods that have closure over the inner data and capabilities. It&#39;s often expressed like this:</p>
+<pre><code class="lang-js">var me = (function Hello(name){
+    function greeting() {
+        console.log( &quot;Hello &quot; + name + &quot;!&quot; );
+    }
+
+    // public API
+    return {
+        greeting: greeting
+    };
+})( &quot;Kyle&quot; );
+
+me.greeting();            // Hello Kyle!</code></pre>
+</section><section><h3 id="moving-forward">Moving Forward</h3>
+<ul>
+<li>ES6 uses file-based modules, meaning one module per file</li>
+<li>The API of an ES6 module is static</li>
+<li>ES6 modules are singletons</li>
+<li>The properties and methods of module are bindings</li>
+<li>Importing a module is the same thing as statically requesting it to load </li>
+</ul>
+<h4 id="commonjs-amd-umd">CommonJS, AMD/UMD</h4>
+<p>Transpilers will be an absolute necessity in the way to ES6 modules</p>
+</section><section><h3 id="the-new-way">The New Way</h3>
+<p>The two main new keywords that enable ES6 modules are <code>import</code> and <code>export</code>.</p>
+<h4 id="-export-ing-api-members"><code>export</code>ing API Members</h4>
+<pre><code class="lang-js">export function foo() {
+    // ..
+}
+
+export var awesome = 42;
+
+var bar = [1,2,3];
+export { bar };</code></pre>
+<p>Another way of expressing the same exports:</p>
+<pre><code class="lang-js">function foo() {
+    // ..
+}
+
+var awesome = 42;
+var bar = [1,2,3];
+
+export { foo, awesome, bar };</code></pre>
+<p>Rename aka alias</p>
+<pre><code class="lang-js">function foo() { .. }
+
+export { foo as bar };</code></pre>
+</section><section><h3 id="-default-export">&#39;default&#39; export</h3>
+<pre><code class="lang-js">function foo(..) {
+    // ..
+}
+
+export default foo;</code></pre>
+<p>And this one:</p>
+<pre><code class="lang-js">function foo(..) {
+    // ..
+}
+
+export { foo as default };</code></pre>
+<pre><code class="lang-js">export default function foo(..) {
+    // ..
+}</code></pre>
+</section><section><h3 id="-import-ing-api-members"><code>import</code>ing API Members</h3>
+<pre><code class="lang-js">import { foo, bar, baz } from &quot;foo&quot;;</code></pre>
+<ul>
+<li>not a destructuring</li>
+<li>&quot;foo&quot; - <em>module specifier</em> any string (aka path), ES6 doesn&#39;t care</li>
+</ul>
+</section><section><h3 id="different-imports">Different imports</h3>
+<pre><code class="lang-js">import { foo } from &quot;foo&quot;;
+
+foo();</code></pre>
+<pre><code class="lang-js">import { foo as theFooFunc } from &quot;foo&quot;;
+
+theFooFunc();</code></pre>
+<pre><code class="lang-js">import foo from &quot;foo&quot;;
+
+// or:
+import { default as foo } from &quot;foo&quot;;</code></pre>
+</section><section><h3 id="entire-api-to-single-module">Entire API to single module</h3>
+<pre><code class="lang-js">import * as foo from &quot;foo&quot;;
+
+foo.bar();
+foo.x;            // 42
+foo.baz();</code></pre>
+<p>or </p>
+<pre><code class="lang-js">export default function foo() { .. }
+export function bar() { .. }
+export function baz() { .. }</code></pre>
+<p>And this <code>import</code>:</p>
+<pre><code class="lang-js">import foofn, * as hello from &quot;world&quot;;
+
+foofn();
+hello.default();
+hello.bar();
+hello.baz();</code></pre>
+</section><section><h3 id="es6-s-module-philosophy">ES6`s module philosophy</h3>
+<p>Import only specific bindings which you need</p>
+</section><section><h3 id="immutable-read-only-binding">Immutable read-only binding</h3>
+<pre><code class="lang-js">import foofn, * as hello from &quot;world&quot;;
+
+foofn = 42;            // (runtime) TypeError!
+hello.default = 42;    // (runtime) TypeError!
+hello.bar = 42;        // (runtime) TypeError!
+hello.baz = 42;        // (runtime) TypeError!</code></pre>
+</section><section><h3 id="-import-are-hoisted-"><code>import</code> are &quot;hoisted&quot;</h3>
+<pre><code class="lang-js">foo();
+
+import { foo } from &quot;foo&quot;;</code></pre>
+</section><section><h3 id="basic-import-">Basic <code>import</code></h3>
+<pre><code class="lang-js">import &quot;foo&quot;;</code></pre>
+</section><section><h3 id="circular-module-dependency">Circular Module Dependency</h3>
+<p>Let&#39;s consider how ES6 handles this. First, module <code>&quot;A&quot;</code>:</p>
+<pre><code class="lang-js">import bar from &quot;B&quot;;
+
+export default function foo(x) {
+    if (x &gt; 10) return bar( x - 1 );
+    return x * 2;
+}</code></pre>
+<p>Now, module <code>&quot;B&quot;</code>:</p>
+<pre><code class="lang-js">import foo from &quot;A&quot;;
+
+export default function bar(y) {
+    if (y &gt; 5) return foo( y / 2 );
+    return y * 3;
+}</code></pre>
+</section><section><h3 id="in-a-rough-conceptual-sense">In a rough conceptual sense</h3>
+<ol>
+<li>Start analyzing &#39;A&#39;, find out A&#39;s API, fetch B </li>
+<li>Analyzing B, find out B&#39;s API, finish A, finish B </li>
+</ol>
+</section><section><h3 id="module-loading">Module Loading</h3>
+<ul>
+<li>another specification <a href="http://whatwg.github.io/loader/">http://whatwg.github.io/loader/</a></li>
+</ul>
+</section><section><h2 id="classes">Classes</h2>
+<pre><code class="lang-js">class Foo {
+    constructor(a,b) {
+        this.x = a;
+        this.y = b;
+    }
+
+    gimmeXY() {
+        return this.x * this.y;
+    }
+}</code></pre>
+</section><section><h3 id="old-way">Old Way</h3>
+<pre><code class="lang-js">function Foo(a,b) {
+    this.x = a;
+    this.y = b;
+}
+
+Foo.prototype.gimmeXY = function() {
+    return this.x * this.y;
+}</code></pre>
+</section><section><h3 id="usage-pre-es6-and-es6">Usage pre-ES6 and ES6</h3>
+<pre><code class="lang-js">var f = new Foo( 5, 15 );
+
+f.x;                        // 5
+f.y;                        // 15
+f.gimmeXY();                // 75</code></pre>
+</section><section><h3 id="-extends-and-super-"><code>extends</code> and <code>super</code></h3>
+<pre><code class="lang-js">class Bar extends Foo {
+    constructor(a,b,c) {
+        super( a, b );
+        this.z = c;
+    }
+
+    gimmeXYZ() {
+        return super.gimmeXY() * this.z;
+    }
+}
+
+var b = new Bar( 5, 15, 25 );
+
+b.x;                        // 5
+b.y;                        // 15
+b.z;                        // 25
+b.gimmeXYZ();                // 1875</code></pre>
+<h4 id="-extend-ing-natives"><code>extend</code>ing Natives</h4>
+<pre><code class="lang-js">class MyCoolArray extends Array {
+    first() { return this[0]; }
+    last() { return this[this.length - 1]; }
+}
+
+var a = new MyCoolArray( 1, 2, 3 );
+
+a.length;                    // 3
+a;                            // [1,2,3]
+
+a.first();                    // 1
+a.last();                    // 3</code></pre>
+<h4 id="-extend-ing-natives"><code>extend</code>ing Natives</h4>
+<pre><code class="lang-js">class Oops extends Error {
+    constructor(reason) {
+        super(reason);
+        this.oops = reason;
+    }
+}
+
+// later:
+var ouch = new Oops( &quot;I messed up!&quot; );
+throw ouch;</code></pre>
+</section><section><h3 id="-static-"><code>static</code></h3>
+<pre><code class="lang-js">class Foo {
+    static cool() { console.log( &quot;cool&quot; ); }
+    wow() { console.log( &quot;wow&quot; ); }
+}
+
+class Bar extends Foo {
+    static awesome() {
+        super.cool();
+        console.log( &quot;awesome&quot; );
+    }
+    neat() {
+        super.wow();
+        console.log( &quot;neat&quot; );
+    }
+}
+
+Foo.cool();                    // &quot;cool&quot;
+Bar.cool();                    // &quot;cool&quot;
+Bar.awesome();                // &quot;cool&quot;
+                            // &quot;awesome&quot;
+
+var b = new Bar();
+b.neat();                    // &quot;wow&quot;
+                            // &quot;neat&quot;
+
+b.awesome;                    // undefined
+b.cool;                        // undefined</code></pre>
+</section><section><h2 id="review">Review</h2>
+<ul>
+<li>ES6 provides several new features for code organization</li>
+<li>Iterators provide sequential access to data or operations</li>
+<li>Generators are locally pause/resume capable functions controlled by an iterator</li>
+<li>Modules allow private encapsulation of implementation details with a publicly exported API</li>
+<li>Classes provide cleaner syntax around prototype-based coding</li>
+</ul>
 </section>
 			</div>
 

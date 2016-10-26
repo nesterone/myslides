@@ -2200,5 +2200,134 @@ export default function bar(y) {
 
 * another specification http://whatwg.github.io/loader/
 
-
 ## Classes
+
+```js
+class Foo {
+	constructor(a,b) {
+		this.x = a;
+		this.y = b;
+	}
+
+	gimmeXY() {
+		return this.x * this.y;
+	}
+}
+```
+
+### Old Way
+
+```js
+function Foo(a,b) {
+	this.x = a;
+	this.y = b;
+}
+
+Foo.prototype.gimmeXY = function() {
+	return this.x * this.y;
+}
+```
+
+### Usage pre-ES6 and ES6
+
+```js
+var f = new Foo( 5, 15 );
+
+f.x;						// 5
+f.y;						// 15
+f.gimmeXY();				// 75
+```
+
+### `extends` and `super`
+
+```js
+class Bar extends Foo {
+	constructor(a,b,c) {
+		super( a, b );
+		this.z = c;
+	}
+
+	gimmeXYZ() {
+		return super.gimmeXY() * this.z;
+	}
+}
+
+var b = new Bar( 5, 15, 25 );
+
+b.x;						// 5
+b.y;						// 15
+b.z;						// 25
+b.gimmeXYZ();				// 1875
+```
+
+#### `extend`ing Natives
+
+```js
+class MyCoolArray extends Array {
+	first() { return this[0]; }
+	last() { return this[this.length - 1]; }
+}
+
+var a = new MyCoolArray( 1, 2, 3 );
+
+a.length;					// 3
+a;							// [1,2,3]
+
+a.first();					// 1
+a.last();					// 3
+```
+
+#### `extend`ing Natives
+
+```js
+class Oops extends Error {
+	constructor(reason) {
+		super(reason);
+		this.oops = reason;
+	}
+}
+
+// later:
+var ouch = new Oops( "I messed up!" );
+throw ouch;
+```
+
+### `static`
+
+```js
+class Foo {
+	static cool() { console.log( "cool" ); }
+	wow() { console.log( "wow" ); }
+}
+
+class Bar extends Foo {
+	static awesome() {
+		super.cool();
+		console.log( "awesome" );
+	}
+	neat() {
+		super.wow();
+		console.log( "neat" );
+	}
+}
+
+Foo.cool();					// "cool"
+Bar.cool();					// "cool"
+Bar.awesome();				// "cool"
+							// "awesome"
+
+var b = new Bar();
+b.neat();					// "wow"
+							// "neat"
+
+b.awesome;					// undefined
+b.cool;						// undefined
+```
+
+## Review
+
+* ES6 provides several new features for code organization
+* Iterators provide sequential access to data or operations
+* Generators are locally pause/resume capable functions controlled by an iterator
+* Modules allow private encapsulation of implementation details with a publicly exported API
+* Classes provide cleaner syntax around prototype-based coding
