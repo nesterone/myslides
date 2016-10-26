@@ -1368,3 +1368,271 @@ a[Symbol.iterator];			// native function
 1. Expanded Unicode support
 1. Extensions for RegExp
 1. New type for meta-programming - `Symbol`
+
+## Organization
+
+* Iterators
+* Generators
+* Modules
+* Classes
+
+
+## Iterators
+
+An *iterator* is a structured pattern for pulling information from a source in one-at-a-time fashion
+
+### Iterators Specification Interfaces
+
+```
+Iterator [required]
+	next() {method}: retrieves next IteratorResult
+```
+
+```
+Iterator [optional]
+	return() {method}: stops iterator and returns IteratorResult
+	throw() {method}: signals error and returns IteratorResult
+```
+
+```
+IteratorResult
+	value {property}: current iteration value or final return value
+		(optional if `undefined`)
+	done {property}: boolean, indicates completion status
+```
+
+```
+Iterable
+	@@iterator() {method}: produces an Iterator
+```
+
+#### IteratorResult
+
+```js
+{ value: .. , done: true / false }
+```
+
+`@@iterator` is the special built-in `symbol` 
+
+### `next()` Iteration
+
+```js
+var arr = [1,2,3];
+
+var it = arr[Symbol.iterator]();
+
+it.next();		// { value: 1, done: false }
+it.next();		// { value: 2, done: false }
+it.next();		// { value: 3, done: false }
+
+it.next();		// { value: undefined, done: true }
+```
+
+`done: true` when you receive the `3` value. You have to call `next()` again
+
+### Primitives Iterables By Default
+
+```js
+var greeting = "hello world";
+
+var it = greeting[Symbol.iterator]();
+
+it.next();		// { value: "h", done: false }
+it.next();		// { value: "e", done: false }
+..
+```
+
+### Collection Iterables by Default
+
+```js
+var m = new Map();
+m.set( "foo", 42 );
+m.set( { cool: true }, "hello world" );
+
+var it1 = m[Symbol.iterator]();
+var it2 = m.entries();
+
+it1.next();		// { value: [ "foo", 42 ], done: false }
+it2.next();		// { value: [ "foo", 42 ], done: false }
+..
+```
+
+### Optional: `return(..)` and `throw(..)`
+
+* `return(..)` is defined as sending a signal to an iterator that the consuming code is complete
+*  `throw(..)` is used to signal an exception/error to an iterator
+
+`return(..)`  -  imply stop, however `throw(..)` doesn't necessary stop iterator 
+
+### Iterator Loop
+
+```js
+var it = {
+	// make the `it` iterator an iterable
+	[Symbol.iterator]() { return this; },
+
+	next() { .. },
+	..
+};
+
+it[Symbol.iterator]() === it;		// true
+
+for (var v of it) {
+	console.log( v );
+}
+```
+
+### Iterator Loop with Old School Loop
+
+```js
+for (var v, res; (res = it.next()) && !res.done; ) {
+	v = res.value;
+	console.log( v );
+}
+```
+
+### Custom Iterators - Fibonacci
+
+```js
+var Fib = {
+	[Symbol.iterator]() {
+		var n1 = 1, n2 = 1;
+
+		return {
+			// make the iterator an iterable
+			[Symbol.iterator]() { return this; },
+
+			next() {
+				var current = n2;
+				n2 = n1;
+				n1 = n1 + current;
+				return { value: current, done: false };
+			},
+
+			return(v) {
+				console.log(
+					"Fibonacci sequence abandoned."
+				);
+				return { value: v, done: true };
+			}
+		};
+	}
+};
+
+for (var v of Fib) {
+	console.log( v );
+
+	if (v > 50) break;
+}
+// 1 1 2 3 5 8 13 21 34 55
+// Fibonacci sequence abandoned.
+```
+
+
+### Custom Iterators - Actions
+
+```js
+var tasks = {
+	[Symbol.iterator]() {
+		var steps = this.actions.slice();
+
+		return {
+			// make the iterator an iterable
+			[Symbol.iterator]() { return this; },
+
+			next(...args) {
+				if (steps.length > 0) {
+					let res = steps.shift()( ...args );
+					return { value: res, done: false };
+				}
+				else {
+					return { done: true }
+				}
+			},
+
+			return(v) {
+				steps.length = 0;
+				return { value: v, done: true };
+			}
+		};
+	},
+	actions: []
+};
+```
+
+### Custom Iterators - Actions
+
+```js
+tasks.actions.push(
+	function step1(x){
+		console.log( "step 1:", x );
+		return x * 2;
+	},
+	function step2(x,y){
+		console.log( "step 2:", x, y );
+		return x + (y * 2);
+	},
+	function step3(x,y,z){
+		console.log( "step 3:", x, y, z );
+		return (x * y) + z;
+	}
+);
+
+var it = tasks[Symbol.iterator]();
+
+it.next( 10 );			// step 1: 10
+						// { value:   20, done: false }
+
+it.next( 20, 50 );		// step 2: 20 50
+						// { value:  120, done: false }
+
+it.next( 20, 50, 120 );	// step 3: 20 50 120
+						// { value: 1120, done: false }
+
+it.next();				// { done: true }
+```
+
+### Custom Iterator - Range
+
+Customization of `Number.prototype` can give next trick
+
+```js
+for (var i of 3) {
+	console.log( i );
+}
+// 0 1 2 3
+
+[...-3];				// [0,-1,-2,-3]
+```
+
+### Iterator Consumption
+
+```js
+var a = [1,2,3,4,5];    //any iterable here
+
+function foo(x,y,z,w,p) {
+	console.log( x + y + z + w + p );
+}
+foo( ...a );			// 15
+
+var b = [ 0, ...a, 6 ];
+b;						// [0,1,2,3,4,5,6]
+
+var it = a[Symbol.iterator]();
+
+var [x,y] = it;			// take just the first two elements from `it`
+var [z, ...w] = it;		// take the third, then the rest all at once
+
+// is `it` fully exhausted? Yep.
+it.next();				// { value: undefined, done: true }
+
+x;						// 1
+y;						// 2
+z;						// 3
+w;						// [4,5]
+
+```
+
+## Generators
+## Modules
+## Classes
