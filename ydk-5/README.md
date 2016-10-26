@@ -1634,5 +1634,373 @@ w;						// [4,5]
 ```
 
 ## Generators
+
+It can pause itseld in mid-execution, and can be resumed right away or at later time
+
+### Syntax
+
+```js
+function *foo() {
+	// ..
+}
+```
+
+All valid
+
+```js
+function *foo()  { .. }
+function* foo()  { .. }
+function * foo() { .. }
+function*foo()   { .. }
+..
+```
+
+Concise Method
+
+```js
+var a = {
+	*foo() { .. }
+};
+```
+
+### Executing a Generator
+
+```js
+foo();
+```
+
+You can still pass it arguments, as in:
+
+```js
+function *foo(x,y) {
+	// ..
+}
+
+foo( 5, 10 );
+```
+
+### Iterator as Result
+
+```js
+function *foo() {
+	// ..
+}
+
+var it = foo();
+
+// to start/advanced `*foo()`, call
+// `it.next(..)`
+```
+
+#### `yield`
+
+```js
+function *foo() {
+	var x = 10;
+	var y = 20;
+
+	yield;
+
+	var z = x + y;
+}
+```
+
+`yield` is not just a pause point. It's an expression 
+
+```js
+function *foo() {
+	while (true) {
+		yield Math.random();
+	}
+}
+```
+
+### `yield` can appear anywhere a normal expression can
+
+```js
+function *foo() {
+	var arr = [ yield 1, yield 2, yield 3 ];
+	console.log( arr, yield 4 );
+}
+```
+
+Precedence
+ 
+```js
+var a, b;
+
+a = 3;					// valid
+b = 2 + a = 3;			// invalid
+b = 2 + (a = 3);		// valid
+
+yield 3;				// valid
+a = 2 + yield 3;		// invalid
+a = 2 + (yield 3);		// valid
+```
+
+### `yield *`
+
+* `yield * ..` requires an iterable
+* delegates its own host generator's control to that iterator 
+
+```js
+function *foo() {
+	yield *[1,2,3];
+}
+```
+
+```js
+function *foo() {
+	yield 1;
+	yield 2;
+	yield 3;
+}
+
+function *bar() {
+	yield *foo();
+}
+```
+
+### Generator Recursion
+
+```js
+function *foo(x) {
+	if (x < 3) {
+		x = yield *foo( x + 1 );
+	}
+	return x * 2;
+}
+
+foo( 1 );
+```
+
+### Iterator Control
+
+```js
+function *foo() {
+	yield 1;
+	yield 2;
+	yield 3;
+}
+
+var it = foo();
+
+it.next();				// { value: 1, done: false }
+it.next();				// { value: 2, done: false }
+it.next();				// { value: 3, done: false }
+
+it.next();				// { value: undefined, done: true }
+```
+
+### Progressive Code Execution
+
+```js
+function *foo() {
+	var x = yield 1;
+	var y = yield 2;
+	var z = yield 3;
+	console.log( x, y, z );
+}
+```
+```js
+var it = foo();
+
+// start up the generator
+it.next();				// { value: 1, done: false }
+
+// answer first question
+it.next( "foo" );		// { value: 2, done: false }
+
+// answer second question
+it.next( "bar" );		// { value: 3, done: false }
+
+// answer third question
+it.next( "baz" );		// "foo" "bar" "baz"
+						// { value: undefined, done: true }
+```
+
+### Early Completion
+
+```js
+function *foo() {
+	yield 1;
+	yield 2;
+	yield 3;
+}
+
+var it = foo();
+
+it.next();				// { value: 1, done: false }
+
+it.return( 42 );		// { value: 42, done: true }
+
+it.next();				// { value: undefined, done: true }
+```
+
+`return(..)` called automatically at the end of iteration
+
+### Clean Up Tasks
+
+```js
+function *foo() {
+	try {
+		yield 1;
+		yield 2;
+		yield 3;
+	}
+	finally {
+		console.log( "cleanup!" );
+	}
+}
+
+for (var v of foo()) {
+	console.log( v );
+}
+// 1 2 3
+// cleanup!
+
+var it = foo();
+
+it.next();				// { value: 1, done: false }
+it.return( 42 );		// cleanup!
+						// { value: 42, done: true }
+```
+
+**Warning:** Do not put a `yield` statement inside the `finally` clause!
+
+### Early Abort
+
+```js
+function *foo() {
+	yield 1;
+	yield 2;
+	yield 3;
+}
+
+var it = foo();
+
+it.next();				// { value: 1, done: false }
+
+try {
+	it.throw( "Oops!" );
+}
+catch (err) {
+	console.log( err );	// Exception: Oops!
+}
+
+it.next();				// { value: undefined, done: true }
+```
+
+### Error Handling
+
+```js
+function *foo() {
+	try {
+		yield 1;
+	}
+	catch (err) {
+		console.log( err );
+	}
+
+	yield 2;
+
+	throw "Hello!";
+}
+
+var it = foo();
+
+it.next();				// { value: 1, done: false }
+
+try {
+	it.throw( "Hi!" );	// Hi!
+						// { value: 2, done: false }
+	it.next();
+
+	console.log( "never gets here" );
+}
+catch (err) {
+	console.log( err );	// Hello!
+}
+```
+
+### Error Propagation in Both Directions
+
+```js
+function *foo() {
+	try {
+		yield 1;
+	}
+	catch (err) {
+		console.log( err );
+	}
+
+	yield 2;
+
+	throw "foo: e2";
+}
+
+function *bar() {
+	try {
+		yield *foo();
+
+		console.log( "never gets here" );
+	}
+	catch (err) {
+		console.log( err );
+	}
+}
+
+var it = bar();
+
+try {
+	it.next();			// { value: 1, done: false }
+
+	it.throw( "e1" );	// e1
+						// { value: 2, done: false }
+
+	it.next();			// foo: e2
+						// { value: undefined, done: true }
+}
+catch (err) {
+	console.log( "never gets here" );
+}
+
+it.next();				// { value: undefined, done: true }
+```
+
+The error doesn't pass through `*bar()` like the `1` value did.
+
+### Transpiling a Generator
+
+For example Facebook's Regenerator tool (https://facebook.github.io/regenerator/).
+
+### Generator Uses
+
+* *Producing a series of values*
+* *Queue of tasks to perform serially*
+
 ## Modules
+
+Most important code organization pattern in all of JavaScript
+
+### The Old Way
+
+The traditional module pattern is based on an outer function with inner variables and functions, and a returned "public API" with methods that have closure over the inner data and capabilities. It's often expressed like this:
+
+```js
+function Hello(name) {
+	function greeting() {
+		console.log( "Hello " + name + "!" );
+	}
+
+	// public API
+	return {
+		greeting: greeting
+	};
+}
+
+var me = Hello( "Kyle" );
+me.greeting();			// Hello Kyle!
+```
+
 ## Classes
