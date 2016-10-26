@@ -1988,7 +1988,7 @@ Most important code organization pattern in all of JavaScript
 The traditional module pattern is based on an outer function with inner variables and functions, and a returned "public API" with methods that have closure over the inner data and capabilities. It's often expressed like this:
 
 ```js
-function Hello(name) {
+var me = (function Hello(name){
 	function greeting() {
 		console.log( "Hello " + name + "!" );
 	}
@@ -1997,10 +1997,208 @@ function Hello(name) {
 	return {
 		greeting: greeting
 	};
-}
+})( "Kyle" );
 
-var me = Hello( "Kyle" );
 me.greeting();			// Hello Kyle!
 ```
+
+### Moving Forward
+
+* ES6 uses file-based modules, meaning one module per file
+* The API of an ES6 module is static
+* ES6 modules are singletons
+* The properties and methods of module are bindings
+* Importing a module is the same thing as statically requesting it to load 
+
+#### CommonJS, AMD/UMD
+
+Transpilers will be an absolute necessity in the way to ES6 modules
+
+### The New Way
+
+The two main new keywords that enable ES6 modules are `import` and `export`.
+
+#### `export`ing API Members
+
+```js
+export function foo() {
+	// ..
+}
+
+export var awesome = 42;
+
+var bar = [1,2,3];
+export { bar };
+```
+
+Another way of expressing the same exports:
+
+```js
+function foo() {
+	// ..
+}
+
+var awesome = 42;
+var bar = [1,2,3];
+
+export { foo, awesome, bar };
+```
+
+Rename aka alias
+
+```js
+function foo() { .. }
+
+export { foo as bar };
+```
+
+### 'default' export
+
+```js
+function foo(..) {
+	// ..
+}
+
+export default foo;
+```
+
+And this one:
+
+```js
+function foo(..) {
+	// ..
+}
+
+export { foo as default };
+```
+
+```js
+export default function foo(..) {
+	// ..
+}
+```
+
+### `import`ing API Members
+
+```js
+import { foo, bar, baz } from "foo";
+```
+
+* not a destructuring
+* "foo" - *module specifier* any string (aka path), ES6 doesn't care
+
+### Different imports
+
+```js
+import { foo } from "foo";
+
+foo();
+```
+
+```js
+import { foo as theFooFunc } from "foo";
+
+theFooFunc();
+```
+
+```js
+import foo from "foo";
+
+// or:
+import { default as foo } from "foo";
+```
+
+### Entire API to single module
+
+```js
+import * as foo from "foo";
+
+foo.bar();
+foo.x;			// 42
+foo.baz();
+```
+
+or 
+
+```js
+export default function foo() { .. }
+export function bar() { .. }
+export function baz() { .. }
+```
+
+And this `import`:
+
+```js
+import foofn, * as hello from "world";
+
+foofn();
+hello.default();
+hello.bar();
+hello.baz();
+```
+
+### ES6`s module philosophy
+
+Import only specific bindings which you need
+
+### Immutable read-only binding
+
+```js
+import foofn, * as hello from "world";
+
+foofn = 42;			// (runtime) TypeError!
+hello.default = 42;	// (runtime) TypeError!
+hello.bar = 42;		// (runtime) TypeError!
+hello.baz = 42;		// (runtime) TypeError!
+```
+
+### `import` are "hoisted" 
+
+```js
+foo();
+
+import { foo } from "foo";
+```
+
+### Basic `import` 
+
+```js
+import "foo";
+```
+
+### Circular Module Dependency
+
+
+Let's consider how ES6 handles this. First, module `"A"`:
+
+```js
+import bar from "B";
+
+export default function foo(x) {
+	if (x > 10) return bar( x - 1 );
+	return x * 2;
+}
+```
+
+Now, module `"B"`:
+
+```js
+import foo from "A";
+
+export default function bar(y) {
+	if (y > 5) return foo( y / 2 );
+	return y * 3;
+}
+```
+
+### In a rough conceptual sense
+
+1. Start analyzing 'A', find out A's API, fetch B 
+2. Analyzing B, find out B's API, finish A, finish B 
+
+### Module Loading
+
+* another specification http://whatwg.github.io/loader/
+
 
 ## Classes
