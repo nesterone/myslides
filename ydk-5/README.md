@@ -9,11 +9,6 @@ inspired by [getify](https://github.com/getify/You-Dont-Know-JS/tree/master/asyn
 
 * Syntax
 * Organization
-* Async Flow Control
-* Collections
-* API Additions
-* Meta Programming
-* Beyond ES6
 
 
 ## Syntax
@@ -2260,7 +2255,7 @@ b.z;						// 25
 b.gimmeXYZ();				// 1875
 ```
 
-#### `extend`ing Natives
+### `extend`ing Natives
 
 ```js
 class MyCoolArray extends Array {
@@ -2277,7 +2272,7 @@ a.first();					// 1
 a.last();					// 3
 ```
 
-#### `extend`ing Natives
+### `extend`ing Natives
 
 ```js
 class Oops extends Error {
